@@ -5,7 +5,12 @@ hpp_net <- function(dat, type) {
     filter(intervention == "placebo") %>%
     nrow()
 
-  if (n_placebo == 0) stop("no placebo")
+  ref <- 
+    ifelse(
+      nrow(n_placebo) > 0,
+      "placebo",
+      NULL
+    )
 
   if (type == "smd") {
     set_agd_arm(

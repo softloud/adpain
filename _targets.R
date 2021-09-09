@@ -70,7 +70,7 @@ options(mc.cores = parallel::detectCores() - 1)
 # buffer limit reached ----------------------------------------------------
 
 # run this
-Sys.setenv("VROOM_CONNECTION_SIZE" = 2*131072)
+Sys.setenv("VROOM_CONNECTION_SIZE" = 2 * 131072)
 
 
 # begin targets -----------------------------------------------------------
@@ -103,10 +103,10 @@ list(
       left_join(w_class,
                 by = c("class" = "original")) %>%
       mutate(class = case_when(
-        !is.na(hollie) ~ hollie, !is.na(charles) ~ charles,
+        !is.na(hollie) ~ hollie,!is.na(charles) ~ charles,
         TRUE ~ class
       )) %>%
-      select(-charles, -hollie)
+      select(-charles,-hollie)
   ),
   
   
@@ -242,7 +242,7 @@ list(
         measure_type = map_chr(measure_matches, 3),
         covidence_desc = map_chr(measure_matches, 2)
       ) %>%
-      select(-measure_matches,-covidence_colname) %>%
+      select(-measure_matches, -covidence_colname) %>%
       mutate(across(everything(), tolower)) %>%
       left_join(m_key, by = "outcome")
     ,
@@ -268,7 +268,7 @@ list(
                              "odds ratio",
                              # don't forget to scale!
                              "standardised mean difference")
-      ) %>% 
+      ) %>%
       left_join(w_outcome_labels)
     
   ),
@@ -385,20 +385,18 @@ list(
                 msg = "NAs in either study or title label")
   }),
   
-
-# where obs have cov join labels correct ----------------------------------
-
-tar_target(
-  w_obs_long_final,
-  w_obs_study_fix
-),  
+  
+  # where obs have cov join labels correct ----------------------------------
+  
+  tar_target(w_obs_long_final,
+             w_obs_study_fix),
   
   # go wide -----------------------------------------------------------------
   
   tar_target(
     w_obs_wide,
     w_obs_long_final %>%
-      select(-study_h, -title_h) %>%
+      select(-study_h,-title_h) %>%
       pivot_wider(names_from = measure_type,
                   values_from = covidence_value)
   ),
@@ -558,7 +556,7 @@ tar_target(
             distinct() %>% pull(scale_category)
         }
       )) %>%
-      select(-scale_matches, -cat_n) %>%
+      select(-scale_matches,-cat_n) %>%
       ungroup()
   ),
   
@@ -883,25 +881,46 @@ tar_target(
   
   # models ------------------------------------------------------------------
   
+  
+  # outcome, timepoint ------------------------------------------------------
+  
+  
   tar_target(
-    m_all_in,
+    m_o_t_group,
+    w_obs_m %>%
+      group_by(outcome, timepoint) %>%
+      tar_group(),
+    iteration = "group"
+  ),
+  
+  
+  tar_target(
+    m_o_t,
     {
       dat <-
-        w_obs_m %>%
-        filter(outcome == w_outcomes) %>%
-        hppapp::viable_observations()
+        m_o_t_group %>%
+        viable_observations()
+      
       m_type <-
         m_key %>%
-        filter(outcome == w_outcomes) %>%
         pull(model_type)
       
       hpp_net(dat, m_type) %>%
-        nma(trt_effects = "random")
+        safe_nma(trt_effects = "random")
     },
-    pattern = map(w_outcomes),
+    pattern = map(m_o_t_group),
     iteration = "list"
   ),
   
+  tar_target(m_o_t_key,
+             if (is.null(m_o_t$error)) {
+               m_o_t %>%
+                 pluck("result", "network", "agd_arm") %>%
+                 summarise(outcome = unique(outcome),
+                           timepoint = unique(timepoint))
+               
+             },
+             pattern = map(m_o_t)),
   
   # models by condition -----------------------------------------------------
   
@@ -923,7 +942,8 @@ tar_target(
       
       if (nrow(dat) == 0) {
         return("no obs")
-      } else if ((dat %>% filter(type == "placebo") %>% nrow) == 0) {
+      } else if ((dat %>%
+                  filter(type == "placebo") %>% nrow) == 0) {
         return("no placebo")
       } else if ((dat %>% pull(study) %>% unique() %>% length()) == 1) {
         "only one study"
@@ -1057,7 +1077,7 @@ tar_target(
     # select an arbitrary lor model
     m_model_key_row <-
       m_model_key %>%
-      filter(model_type == "smd",!is.na(condition)) %>%
+      filter(model_type == "smd", !is.na(condition)) %>%
       tail(1)
     
     print("--] Selected row from m_model_key")
@@ -1162,7 +1182,7 @@ tar_target(
                # select an arbitrary lor model
                m_model_key_row <-
                  m_model_key %>%
-                 filter(model_type == "lor",!is.na(condition)) %>%
+                 filter(model_type == "lor", !is.na(condition)) %>%
                  tail(1)
                
                print("--] Selected row from m_model_key")
@@ -1222,27 +1242,28 @@ tar_target(
                  )
                
                int_dat_wide %>%
-                 names() %>% 
+                 names() %>%
                  print()
                
                print("--] escalc")
                
                int_escalc <-
                  int_dat_wide %>%
-                 escalc(data = .,
-                        ai = r_amitriptyline,
-                        ci = r_placebo,
-                        n1i = n_amitriptyline,
-                        n2i = n_placebo,
-                        measure = "OR",
-                        slab = study
-                        )
+                 escalc(
+                   data = .,
+                   ai = r_amitriptyline,
+                   ci = r_placebo,
+                   n1i = n_amitriptyline,
+                   n2i = n_placebo,
+                   measure = "OR",
+                   slab = study
+                 )
                
                int_escalc %>% print()
                
                print("--] Meta-analyse!")
                
-               int_escalc %>% 
+               int_escalc %>%
                  rma(yi, vi, data = ., measure = "OR")
                
              }),
