@@ -10,7 +10,7 @@ suppressMessages({
   library(assertthat)
   library(rmarkdown)
   library(multinma)
-  library(hppapp)
+  # library(hppapp) # should be calling from this app
   library(metafor)
   
   conflicted::conflict_prefer("filter", "dplyr")
@@ -1323,15 +1323,16 @@ tar_target(
                  )
                
                int_dat_wide %>%
+                 names() %>% 
                  print()
                
                print("--] escalc")
                
-               int_escalc <-
-                 int_dat_wide %>%
-                 escalc(data = .,
-                        ai,  
-                        )
+               # int_escalc <-
+               #   int_dat_wide %>%
+               #   escalc(data = .,
+               #          ai,  
+               #          )
                
                
              }),
