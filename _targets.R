@@ -67,103 +67,46 @@ tar_option_set(packages = "dplyr")
 options(mc.cores = parallel::detectCores() - 1)
 
 
+# buffer limit reached ----------------------------------------------------
+
+# run this
+Sys.setenv("VROOM_CONNECTION_SIZE" = 2*131072)
+
+
+# begin targets -----------------------------------------------------------
+
 list(
-  # pipeline design ---------------------------------------------------------
-  
-  tar_target(test_empty_tar,
-             NULL),
+  # outcome labels ----------------------------------------------------------
   
   tar_target(
-    p_metapar,
-    tibble(
-      study = "unique study identifier",
-      arm = "unique arm identifier",
-      type = "Intervention Type",
-      design = "Group",
-      condition = "Chronic pain conditions(s)",
-      class = "Intervention Class",
-      main_aim = "Main aim (Pain..."
-    )
+    w_outcome_labels,
+    read_csv(
+      "data/labels/outcome-2021-09-09 03:37:04.csv",
+      col_types = cols(.default = "c")
+    ) %>%
+      clean_names()
+  ),
+  
+  # class labels ------------------------------------------------------------
+  tar_target(
+    w_class,
+    read_csv(
+      "data/labels/class-2021-09-06 04:08:54.csv",
+      col_types = cols(.default = "c")
+    ) %>%
+      clean_names()
   ),
   
   tar_target(
-    p_metapar_tab,
-    p_metapar %>%
-      gt() %>%
-      hpp_tab(vertical_divider = "arm") %>%
-      tab_header("Study-level information drawn from Covidence")
-  ),
-  
-  tar_target(
-    p_obs,
-    tibble(
-      outcome = "mood, pain, etc.",
-      study = p_metapar %>% pull(study),
-      arm = p_metapar %>% pull(arm),
-      obs = "columns with mean, sd, counts, sample size, etc.",
-      obs_info = "information extracted from column headers:
-        timepoint, scale, etc."
-    )
-  ),
-  
-  tar_target(
-    p_obs_tab,
-    p_obs  %>%
-      gt() %>%
-      hpp_tab(vertical_divider = "arm") %>%
-      tab_header("Outcome-level observational from data extracted by Hollie")
-  ),
-  
-  
-  tar_target(p_output_raw,
-             p_obs %>%
-               left_join(p_metapar, by = c("study", "arm"))),
-  
-  
-  tar_target(
-    p_output,
-    p_output_raw %>%
-      gt() %>%
-      hpp_tab(vertical_divider = "arm") %>%
-      tab_header("Each row provides observations for one arm of one study",
-                 subtitle = "Study-level and observational variables included")
-  ),
-  
-  # variables ---------------------------------------------------------------
-  
-  # table with covidence column names and preferred column names
-  tar_target(
-    r_variables,
-    read_csv("data/variables-2021-07-12_16:37:56.csv")
-  ),
-  
-  # output table of variables
-  tar_target(
-    e_variables,
-    r_variables %>%
-      select(variable, role, description, covidence) %>%
-      mutate(across(everything(), as.character)) %>%
-      mutate(
-        covidence = if_else(
-          str_detect(covidence, "[A-Z]"),
-          glue("`{covidence}`"),
-          covidence
-        ),
-        variable = glue("`{variable}`")
-      ) %>%
-      gt(groupname_col = "role") %>%
-      hpp_tab(vertical_divider = "variable") %>%
-      cols_label(
-        variable = "Variable",
-        description = "Description",
-        covidence = "Covidence"
-      ) %>%
-      fmt_markdown(columns = c("covidence", "variable")) %>%
-      tab_source_note(
-        "Variable column indicates what the cleaned output data
-                     column headers are, the Covidence column indicates what the
-                     column is labelled as in the raw export."
-      )
+    w_cov_class,
+    w_cov_intervention %>%
+      left_join(w_class,
+                by = c("class" = "original")) %>%
+      mutate(class = case_when(
+        !is.na(hollie) ~ hollie, !is.na(charles) ~ charles,
+        TRUE ~ class
+      )) %>%
+      select(-charles, -hollie)
   ),
   
   
@@ -172,7 +115,7 @@ list(
   tar_target(
     r_covidence,
     #suppressWarnings(suppressMessages(
-    read_csv("data/review_91309_extracted_data_csv_20210820014615.csv")
+    read_csv("data/review_91309_extracted_data_csv_20210909121500.csv")
     #))
   ),
   
@@ -195,49 +138,49 @@ list(
   
   tar_target(r_h_outcome_adverse,
              suppressWarnings(suppressMessages(
-               read_csv("data/outcomes-2021-08-16/Adverse Events.csv")
+               read_csv("data/outcomes-2021-09-09/Adverse Events.csv")
              ))),
   
   tar_target(r_h_outcome_mood,
              suppressWarnings(suppressMessages(
-               read_csv("data/outcomes-2021-08-16/Mood.csv"),
+               read_csv("data/outcomes-2021-09-09/Mood.csv"),
              ))),
   
   tar_target(r_h_outcome_pain_int,
              suppressWarnings(suppressMessages(
-               read_csv("data/outcomes-2021-08-16/Pain intensity.csv")
+               read_csv("data/outcomes-2021-09-09/Pain intensity.csv")
              ))),
   
   # bring in the new stuff
   # the 2021-07-07 h_ exports have the same number of rows
   tar_target(r_h_outcome_pain_mod,
              suppressWarnings(suppressMessages(
-               read_csv("data/outcomes-2021-08-16/Moderate pain relief.csv")
+               read_csv("data/outcomes-2021-09-09/Moderate pain relief.csv")
              ))),
   
   tar_target(r_h_outcome_physical,
              suppressWarnings(suppressMessages(
-               read_csv("data/outcomes-2021-08-16/Physical function.csv")
+               read_csv("data/outcomes-2021-09-09/Physical function.csv")
              ))),
   
   tar_target(r_h_outcome_qol,
              suppressWarnings(suppressMessages(
-               read_csv("data/outcomes-2021-08-16/Quality of life.csv")
+               read_csv("data/outcomes-2021-09-09/Quality of life.csv")
              ))),
   
   tar_target(r_h_outcome_sleep,
              suppressWarnings(suppressMessages(
-               read_csv("data/outcomes-2021-08-16/Sleep.csv")
+               read_csv("data/outcomes-2021-09-09/Sleep.csv")
              ))),
   
   tar_target(r_h_outcome_withdrawal,
              suppressWarnings(suppressMessages(
-               read_csv("data/outcomes-2021-08-16/Withdrawal.csv")
+               read_csv("data/outcomes-2021-09-09/Withdrawal.csv")
              ))),
   
   tar_target(r_h_outcome_pain_sub,
              suppressWarnings(suppressMessages(
-               read_csv("data/outcomes-2021-08-16/Substantial pain relief.csv")
+               read_csv("data/outcomes-2021-09-09/Substantial pain relief.csv")
              ))),
   
   # put all observations in one list
@@ -325,7 +268,8 @@ list(
                              "odds ratio",
                              # don't forget to scale!
                              "standardised mean difference")
-      )
+      ) %>% 
+      left_join(w_outcome_labels)
     
   ),
   
@@ -848,51 +792,6 @@ tar_target(
   }),
   
   
-  # labels from gs ----------------------------------------------------------
-  # tar_target(
-  #   cov_label_fn,
-  #   function(dat, labels, var) {
-  #     dat %>%
-  #       left_join(labels %>%
-  #                   select(original_label, new_label, hollie_replacement)
-  #                   ) %>%
-  #       mutate({{var}} = case_when(
-  #         !is.na(hollie_replacement) ~ hollie_replacement,
-  #         !is.na(new_label) ~ new_label,
-  #         TRUE ~ {{var}}
-  #       )) %>%
-  #       select(-original_label, new_label, hollie_replacement)
-  #   }
-  # ),
-  
-  # class labels ------------------------------------------------------------
-  tar_target(
-    w_class,
-    read_csv(
-      "data/labels/class-2021-09-06 04:08:54.csv",
-      col_types = cols(.default = "c")
-    ) %>%
-      clean_names()
-  ),
-  
-  # tar_target(
-  #   w_cov_class,
-  #   cov_label_fn(w_cov_intervention, w_class, class)
-  # ),
-  
-  tar_target(
-    w_cov_class,
-    w_cov_intervention %>%
-      left_join(w_class,
-                by = c("class" = "original")) %>%
-      mutate(class = case_when(
-        !is.na(hollie) ~ hollie, !is.na(charles) ~ charles,
-        TRUE ~ class
-      )) %>%
-      select(-charles, -hollie)
-  ),
-  
-  
   # covidence final output --------------------------------------------------
   
   # this target always represents the final cleaned parameters, variables,
@@ -1328,12 +1227,23 @@ tar_target(
                
                print("--] escalc")
                
-               # int_escalc <-
-               #   int_dat_wide %>%
-               #   escalc(data = .,
-               #          ai,  
-               #          )
+               int_escalc <-
+                 int_dat_wide %>%
+                 escalc(data = .,
+                        ai = r_amitriptyline,
+                        ci = r_placebo,
+                        n1i = n_amitriptyline,
+                        n2i = n_placebo,
+                        measure = "OR",
+                        slab = study
+                        )
                
+               int_escalc %>% print()
+               
+               print("--] Meta-analyse!")
+               
+               int_escalc %>% 
+                 rma(yi, vi, data = ., measure = "OR")
                
              }),
   

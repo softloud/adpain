@@ -4,15 +4,28 @@ Check that key points in pipeline have the expected number of joins and meets.
 
 ```{r}
 tar_load(w_covidence)
-
+tar_load(w_obs_long_final)
 ```
 
 ```{r}
+targets <- 
+list(
+  w_covidence = w_covidence,
+  w_obs_long_final = w_obs_long_final
+) 
 
-tribble(
-  ~desc, ~target, ~nrow, ~nstudy, ~narm,
-  "Cleaned input of covidence: joins to observations by study and arm","w_covidence", nrow(w_covidence), w_covidence$study %>% unique() %>% length(), w_covidence$arm %>% unique() %>% length()
-) %>% 
+targets %>% 
+  map_df(.f = function(df) {
+    tibble(
+    nrow = nrow(df),
+    studies = df$study %>% unique() %>% length(),
+    arms = df$arm %>% unique() %>% length()
+    )
+  }) %>% 
+  mutate(
+    target = names(targets)
+  ) %>% 
+  select(target, everything()) %>% 
   gt()
 
 
