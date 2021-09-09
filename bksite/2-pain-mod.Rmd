@@ -1,0 +1,6 @@
+# Moderate pain intensity results
+
+```{r,results='asis', warning=FALSE}
+params <- list(outcome = "pain_mod")
+makechapter(params) -> sink
+```

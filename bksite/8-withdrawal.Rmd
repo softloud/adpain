@@ -1,0 +1,6 @@
+# Withdrawal results
+
+```{r,results='asis', warning=FALSE}
+params <- list(outcome = "withdrawal")
+makechapter(params) -> sink
+```

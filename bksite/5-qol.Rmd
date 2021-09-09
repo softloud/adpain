@@ -1,0 +1,6 @@
+# Quality of life results
+
+```{r,results='asis', warning=FALSE}
+params <- list(outcome = "qol")
+makechapter(params) -> sink
+```

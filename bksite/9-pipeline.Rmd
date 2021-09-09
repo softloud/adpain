@@ -1,0 +1,20 @@
+# Pipeline
+
+Check that key points in pipeline have the expected number of joins and meets.
+
+```{r}
+tar_load(w_covidence)
+
+```
+
+```{r}
+
+tribble(
+  ~desc, ~target, ~nrow, ~nstudy, ~narm,
+  "Cleaned input of covidence: joins to observations by study and arm","w_covidence", nrow(w_covidence), w_covidence$study %>% unique() %>% length(), w_covidence$arm %>% unique() %>% length()
+) %>% 
+  gt()
+
+
+```
+

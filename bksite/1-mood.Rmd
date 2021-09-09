@@ -1,0 +1,6 @@
+# Mood results
+
+```{r,results='asis', warning=FALSE}
+params <- list(outcome = "mood")
+makechapter(params) -> sink
+```

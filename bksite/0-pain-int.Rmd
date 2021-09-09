@@ -1,0 +1,6 @@
+# Pain intensity results
+
+```{r,results='asis', warning=FALSE}
+params <- list(outcome = "pain_int")
+makechapter(params) -> sink
+```

@@ -1,0 +1,2 @@
+bookdown::bs4_book:
+  df_print: kable

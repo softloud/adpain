@@ -1,0 +1,7 @@
+# render book in browser
+
+# system("rm bksite/_main.md")
+
+browseURL(
+  xfun::in_dir("bksite", bookdown::render_book("index.Rmd"))
+)

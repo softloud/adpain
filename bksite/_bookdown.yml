@@ -1,0 +1,4 @@
+book_filename: _main
+output_dir: ../docs
+new_session: no
+delete_merged_file: true
