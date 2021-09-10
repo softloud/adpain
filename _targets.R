@@ -33,7 +33,8 @@ c(
   "viable_observations",
   "scale_match",
   "hpp_forest",
-  "forest_multinma"
+  "forest_multinma",
+  "pw_wide"
 ) %>%
   paste0("R/", ., ".R") %>%
   map(source)
@@ -269,7 +270,8 @@ list(
                              # don't forget to scale!
                              "standardised mean difference")
       ) %>%
-      left_join(w_outcome_labels)
+      left_join(w_outcome_labels) %>%
+      rename(outcome_direction = direction_of_improvement)
     
   ),
   
@@ -408,7 +410,9 @@ list(
       dplyr::mutate(
         # specific study changes
         timepoint = dplyr::case_when(
-          # see issue # 26
+          # change points have change in covidence 
+          str_detect(covidence_desc, "change") ~ "change_score",
+          # see issue # 26 hpp
           str_detect(study, "pirbudak 2003") &
             str_detect(covidence_desc, "9_months") ~ 'post_int',
           str_detect(study, "pirbudak 2003") &
@@ -498,6 +502,7 @@ list(
     w_scales,
     # add upper
     w_scales_aka %>%
+      mutate(across(everything(), tolower)) %>%
       ungroup() %>%
       mutate(
         upper_range_num = map(upper_range, ~ unlist(.x) %>% as.numeric()),
@@ -545,8 +550,25 @@ list(
              w_obs_scale_counts %>%
                filter(cat_n != 1)),
   
+  # patch in september labels
   tar_target(
-    w_obs_scales_viable,
+    w_obs_scale_fix_dat,
+    read_csv("data/labels/scale_unmatched-2021-09-09 04:57:48.csv") %>%
+      select(hollie_scale, covidence_desc, outcome, study)
+  ),
+  
+  
+  tar_target(
+    w_obs_scale_fix,
+    w_obs_scale_excluded %>%
+      left_join(w_obs_scale_fix_dat) %>%
+      filter(!str_detect(hollie_scale, "DELETE")) %>%
+      rename(scale = hollie_scale)
+  ),
+  
+  
+  tar_target(
+    w_obs_scales_viable_matching,
     w_obs_scale_counts %>%
       filter(cat_n == 1) %>%
       mutate(scale = map_chr(
@@ -561,6 +583,11 @@ list(
   ),
   
   tar_target(
+    w_obs_scales_viable,
+    bind_rows(w_obs_scale_fix, w_obs_scales_viable_matching)
+  ),
+  
+  tar_target(
     w_obs_scale_ranked,
     w_obs_scales_viable %>%
       group_by(outcome, scale) %>%
@@ -568,7 +595,7 @@ list(
       arrange(outcome, desc(n)) %>%
       group_by(outcome) %>%
       mutate(outcome_scale_rank = row_number()) %>%
-      mutate(number_of_scales_per_outcome = n)
+      rename(number_of_scales_per_outcome = n)
   ),
   
   tar_target(
@@ -642,25 +669,36 @@ list(
   tar_target(
     w_obs_scale_direction,
     w_obs_calc %>%
+      select(-scale_matches,-cat_n) %>%
+      # some of the scales haven't got direction of improvement
+      select(-direction_of_improvement) %>%
+      left_join(
+        w_scales %>% select(scale = scale_category,
+                            direction_of_improvement)
+      ) %>%
       mutate(
         mean = if_else(
-          direction_of_improvement == "Higher" &
-            !is.na(upper_range_num),
-          upper_range_num - mean,
+          is.character(direction_of_improvement) &
+            direction_of_improvement != outcome_direction,-mean,
           mean
-        ),
-        direction_of_improvement = if_else(
-          direction_of_improvement == "Higher" &
-            !is.na(upper_range_num),
-          "Lower",
-          direction_of_improvement
         )
+      )
+  ),
+  
+  tar_target(
+    w_obs_direction_exclusions,
+    w_obs_scale_direction %>%
+      filter(model_type == "smd") %>%
+      filter(
+        is.na(direction_of_improvement) |
+          direction_of_improvement == "unknown"
       )
   ),
   
   tar_target(
     w_obs_viable,
     w_obs_scale_direction %>%
+      anti_join(w_obs_direction_exclusions) %>%
       mutate(
         model_viable = case_when(
           model_type == "lor" ~ n > 0 & r > 0,
@@ -790,22 +828,53 @@ list(
   }),
   
   
+  tar_target(w_cov_condition_fix, {
+    read_csv("data/labels/condition-2021-09-09 04:57:48.csv",
+             col_types = cols(.default = "c"))
+    
+  }),
+  
+  
+  # type --------------------------------------------------------------------
+  
+  tar_target(
+    w_cov_type_fix,
+    read_csv("data/labels/type-2021-09-09 10:01:24.csv") %>%
+      select(intervention_type, intervention_grouping)
+  ),
+  
+  tar_target(w_cov_type,
+             w_cov_class),
+  
+  # %>%
+  #   left_join(
+  #     w_cov_type_fix,
+  #     by = c("type" = "intervention_type"))),
+  
   # covidence final output --------------------------------------------------
   
   # this target always represents the final cleaned parameters, variables,
   # subgroups, etc. from covidence export
   tar_target(w_cov,
-             w_cov_class),
+             w_cov_type %>%
+               mutate(
+                 condition_general = map2_chr(condition_general, study, function(c, s) {
+                   if (!is.na(c))
+                     c
+                   else
+                     w_cov_condition_fix %>%
+                     filter(study == s) %>%
+                     pull(condition_general)
+                 })
+               )),
   
+  tar_target(w_cov_assert, {
+    assert_that(nrow(w_cov %>% filter(is.na(
+      condition_general
+    ))) == 0,
+    msg = "Unmatched condition_general")
+  }),
   
-  # find out what study arms don't match
-  tar_target(
-    w_cov_befaft,
-    w_covidence %>%
-      select(study, arm)
-    %>%
-      left_join(w_cov %>% select(study, arm))
-  ),
   
   # bundle everything together ----------------------------------------------
   
@@ -838,19 +907,17 @@ list(
         r,
         n,
         se,
-        sd
+        sd,
+        scale
       ) %>%
       distinct()
   ),
   
   tar_target(w_obs_m,
-             w_obs  %>%
-               # apply filters here for now
-               filter(
-                 timepoint == "post_int",
-                 # this is a sledgehammer
-                 type %in% c("placebo", "antidepressant")
-               )),
+             w_obs %>%
+               filter(!is.na(intervention)),
+             !str_detect(covidence, "change")
+             ),
   
   tar_target(w_obs_m_assert, {
     # check means
@@ -874,11 +941,6 @@ list(
   
   # excluded study-arms -----------------------------------------------------
   
-  tar_target(excluded_studies, {
-    before <- w_covidence %>%
-      select()
-  }),
-  
   # models ------------------------------------------------------------------
   
   
@@ -895,7 +957,7 @@ list(
   
   
   tar_target(
-    m_o_t,
+    m_o_t_e,
     {
       dat <-
         m_o_t_group %>%
@@ -912,12 +974,19 @@ list(
     iteration = "list"
   ),
   
+  tar_target(
+    m_o_t,
+    m_o_t_e %>% 
+      keep(~is.null(.x$error)) 
+  ),
+  
   tar_target(m_o_t_key,
-             if (is.null(m_o_t$error)) {
+              {
                m_o_t %>%
                  pluck("result", "network", "agd_arm") %>%
                  summarise(outcome = unique(outcome),
-                           timepoint = unique(timepoint))
+                           timepoint = unique(timepoint)) %>%
+                 mutate(target = "m_o_t")
                
              },
              pattern = map(m_o_t)),
@@ -925,144 +994,122 @@ list(
   # models by condition -----------------------------------------------------
   
   tar_target(
-    m_condition_group,
+    m_con_o_t_group,
     w_obs_m %>%
-      group_by(outcome, condition_general) %>%
+      group_by(outcome, timepoint, condition_general) %>%
       tar_group(),
     iteration = "group"
-    
   ),
   
+  
   tar_target(
-    m_condition,
+    m_con_o_t,
     {
       dat <-
-        m_condition_group %>%
-        hppapp::viable_observations()
+        m_con_o_t_group %>%
+        viable_observations()
       
-      if (nrow(dat) == 0) {
-        return("no obs")
-      } else if ((dat %>%
-                  filter(type == "placebo") %>% nrow) == 0) {
-        return("no placebo")
-      } else if ((dat %>% pull(study) %>% unique() %>% length()) == 1) {
-        "only one study"
-      }  else {
-        m_type <-
-          m_condition_group %>%
-          pull(model_type) %>% unique()
-        
-        # return(m_type)
-        
-        hpp_net(dat, m_type) %>%
-          nma(trt_effects = "random")
-      }
+      m_type <-
+        m_key %>%
+        pull(model_type)
+      
+      hpp_net(dat, m_type) %>%
+        safe_nma(trt_effects = "random")
     },
-    pattern = map(m_condition_group),
+    pattern = map(m_con_o_t_group),
     iteration = "list"
   ),
+  
+  tar_target(m_con_o_t_key,
+             if (is.null(m_o_t$error)) {
+               m_o_t %>%
+                 pluck("result", "network", "agd_arm") %>%
+                 summarise(outcome = unique(outcome),
+                           timepoint = unique(timepoint)) %>%
+                 mutate(target = "m_o_t")
+               
+             },
+             pattern = map(m_con_o_t)),
   
   
   # bundle models -----------------------------------------------------------
   
+  # tar_target(
+  #   m_model_key,
+  #   m_model_key_w_fails %>%
+  #     filter(!is.na(outcome)) %>%
+  #     mutate(plot_index = row_number()) %>%
+  #     left_join(m_key, by = "outcome") %>%
+  #     mutate(
+  #       filename = glue("{outcome}-{condition}"),
+  #       netpath = glue("images/net/{filename}.png"),
+  #       forestpath = glue("images/forest/{filename}.png")
+  #     )
+  # ),
   
-  tar_target(m_models,
-             c(m_all_in, m_condition)),
   
-  tar_target(m_model_key_w_fails,
-             {
-               m_models %>%
-                 map_df(
-                   .f = function(m_models_this) {
-                     if (!is.list(m_models_this))
-                       return(tibble(outcome = NA,
-                                     condition = NA))
+  
+  # wrangle model keys ------------------------------------------------------
+  
+  tar_target(m_keys_df,
+             list(m_o_t = m_o_t_key)),
+  
+  tar_target(m_keys,
+             m_keys_df %>%
+               map(function(df) {
+                 df %>%
+                   unite(filename, -target, sep = "-", remove = FALSE) %>%
+                   mutate(
+                     netpath = glue("images/net/{filename}.png"),
+                     forestpath = glue("images/forest/{filename}.png"),
+                     index = row_number()
                      
-                     this_dat <-
-                       m_models_this$network$agd_arm
-                     
-                     # get outcome
-                     this_outcome <-
-                       this_dat$outcome %>% unique()
-                     
-                     # get conditions
-                     conditions <-
-                       this_dat %>%
-                       pull(condition_general) %>%
-                       unique()
-                     this_condition <-
-                       if (length(conditions) == 1)
-                         conditions
-                     else
-                       "all"
-                     
-                     
-                     # output df
-                     tibble(outcome = this_outcome,
-                            condition = this_condition)
-                     
-                   }
-                 ) %>% mutate(model_index = row_number())
-             }),
-  
-  tar_target(
-    m_model_key,
-    m_model_key_w_fails %>%
-      filter(!is.na(outcome)) %>%
-      mutate(plot_index = row_number()) %>%
-      left_join(m_key, by = "outcome")
-  ),
+                   ) %>%
+                   select(index, everything(), contains("path"))
+               })),
   
   
-  # plots -------------------------------------------------------------------
+  # network plots -----------------------------------------------------------
   
-  tar_target(
-    plot_write_key,
-    
-    # plot_write_key <-
-    m_model_key %>%
-      mutate(
-        filename = glue("{outcome}-{condition}"),
-        netpath = glue("images/net/{filename}.png"),
-        forestpath = glue("images/forest/{filename}.png")
-      )
-  ),
+  # tar_target(),
+  tar_target(plot_net_m_o_t,
+             m_keys %>% 
+             pluck("m_o_t") %>% 
+               select(index, outcome, timepoint, netpath) %>% 
+               pmap(
+                 function(index, outcome, timepoint, netpath) {
+                   plot <- 
+                   m_o_t %>%
+                     pluck(index, "result", "network") %>%
+                     plot() +
+                     labs(
+                       title = glue("Direct evidence for {outcome}"),
+                       subtitle = glue("Subgroups: timepoint {timepoint}")
+                     )
+                   
+                   
+                   glue("--] Writing net plot for m_o_t: 
+                        outcome {outcome}
+                        timepoint {timepoint}") %>% print()
+                   
+                   ggsave(here::here("bksite", netpath), plot)
+                   
+                 }
+               )
+             ),
   
-  
-  tar_target(plot_net, {
-    m_model_key %>%
-      pmap(function(outcome, condition, model_index, ...) {
-        m_models[[model_index]] %>%
-          pluck("network") %>%
-          plot() +
-          labs(
-            title = glue("Direct evidence for {outcome}"),
-            subtitle = glue("Condition: {condition}")
-          )
-      })
-  }),
-  
-  tar_target(
-    plot_net_write,
-    plot_write_key %>%
-      select(plot_index, netpath) %>%
-      pmap(
-        .f = function(plot_index,  netpath) {
-          ggsave(here::here("bksite", netpath), m_net_plot[[plot_index]])
-        }
-      )
-  ),
+
+# forest ------------------------------------------------------------------
+
   
   # this is a check that forest_multinma works
   tar_target(plot_forest_generic, {
     print("--] Select an arbitrary model")
     
     this_mod <-
-      m_model_key %>%
-      head(1) %>%
-      pull(model_index) %>%
-      m_models[[.]]
-    
+      m_o_t %>% 
+      pluck(2, "result")
+
     # print(summary(this_mod))
     
     print("--] Identify the dataframe req for conf ints text")
@@ -1070,7 +1117,7 @@ list(
     
     print("--] Plot generic forest")
     
-    forest_multinma(this_mod)
+   # forest_multinma(this_mod)
   }),
   
   tar_target(plot_forest_dev, {
@@ -1101,7 +1148,7 @@ list(
   
   tar_target(
     plot_forest_write,
-    plot_write_key %>%
+    m_model_key %>%
       select(plot_index, forestpath) %>%
       pmap(
         .f = function(plot_index,  forestpath) {
@@ -1264,12 +1311,15 @@ list(
                print("--] Meta-analyse!")
                
                int_escalc %>%
-                 rma(yi, vi, data = ., measure = "OR")
+                 rma(yi, vi, data = ., measure = "OR") %>% 
+                 forest()
                
              }),
   
-  tar_target(pw_single_smd,
-             NULL),
+  tar_target(pw_single_smd, {
+    
+ 
+  }),
   
   
   # null --------------------------------------------------------------------
