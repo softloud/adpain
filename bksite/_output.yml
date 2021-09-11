@@ -1,2 +1,7 @@
 bookdown::bs4_book:
+  theme:
+    primary: "#526b25"
+    base_font: times
   df_print: kable
+  css: include/style.css
+  

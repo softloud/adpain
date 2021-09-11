@@ -27,7 +27,6 @@ if ("dontpanic" %in% installed_pkg) {
 # functions ---------------------------------------------------------------
 c(
   "study_id",
-  "lotr_study_hash",
   "hpp_net",
   "hpp_themes",
   "viable_observations",
@@ -47,6 +46,7 @@ safe_nma <- safely(nma, otherwise = "failed")
 
 # starts_with labels
 
+# a := assert
 # r := raw
 # w := wrangling
 # m := model
@@ -77,10 +77,14 @@ Sys.setenv("VROOM_CONNECTION_SIZE" = 2 * 131072)
 # begin targets -----------------------------------------------------------
 
 list(
+  # asserts that are currently failing
+  tar_target(a_skip,
+             c("a_obs_timepoint", "a_cov_type")),
+  
   # outcome labels ----------------------------------------------------------
   
   tar_target(
-    w_outcome_labels,
+    r_outcome_labels,
     read_csv(
       "data/labels/outcome-2021-09-09 03:37:04.csv",
       col_types = cols(.default = "c")
@@ -88,52 +92,27 @@ list(
       clean_names()
   ),
   
-  # class labels ------------------------------------------------------------
-  tar_target(
-    w_class,
-    read_csv(
-      "data/labels/class-2021-09-06 04:08:54.csv",
-      col_types = cols(.default = "c")
-    ) %>%
-      clean_names()
-  ),
-  
-  tar_target(
-    w_cov_class,
-    w_cov_intervention %>%
-      left_join(w_class,
-                by = c("class" = "original")) %>%
-      mutate(class = case_when(
-        !is.na(hollie) ~ hollie,!is.na(charles) ~ charles,
-        TRUE ~ class
-      )) %>%
-      select(-charles,-hollie)
-  ),
-  
-  
   # covidence export --------------------------------------------------------
   
   tar_target(
-    r_covidence,
+    r_cov,
     #suppressWarnings(suppressMessages(
     read_csv("data/review_91309_extracted_data_csv_20210909121500.csv")
     #))
   ),
   
   tar_target(
-    w_covidence_cleaned,
-    r_covidence %>%
+    w_cov_cleaned,
+    r_cov %>%
       clean_names() %>%
       select(
-        study_covidence = study_identifier,
+        study_cov = study_identifier,
         arm = intervention,
-        title_covidence = comments,
+        title_cov = comments,
         everything()
       ) %>%
       mutate(across(everything(), tolower))
   ),
-  
-  
   
   # hollie's extractions ----------------------------------------------------
   
@@ -152,8 +131,6 @@ list(
                read_csv("data/outcomes-2021-09-09/Pain intensity.csv")
              ))),
   
-  # bring in the new stuff
-  # the 2021-07-07 h_ exports have the same number of rows
   tar_target(r_h_outcome_pain_mod,
              suppressWarnings(suppressMessages(
                read_csv("data/outcomes-2021-09-09/Moderate pain relief.csv")
@@ -217,10 +194,12 @@ list(
       rename(arm = intervention) %>%
       # add outcome
       mutate(outcome = w_outcomes) %>%
-      select(outcome,
-             study_h = study_identifier,
-             title_h = comments,
-             everything()),
+      select(
+        outcome,
+        study_obs = study_identifier,
+        title_obs = comments,
+        everything()
+      ),
     pattern = map(w_outcomes),
     iteration = "list"
   ),
@@ -232,7 +211,7 @@ list(
     w_outcome_obs %>%
       mutate(across(everything(), as.character)) %>%
       pivot_longer(
-        cols = -c(outcome, study_h, arm, title_h),
+        cols = -c(outcome, study_obs, arm, title_obs),
         names_to = "covidence_colname",
         values_to = "covidence_value",
         values_drop_na = TRUE
@@ -270,7 +249,7 @@ list(
                              # don't forget to scale!
                              "standardised mean difference")
       ) %>%
-      left_join(w_outcome_labels) %>%
+      left_join(r_outcome_labels) %>%
       rename(outcome_direction = direction_of_improvement)
     
   ),
@@ -281,13 +260,13 @@ list(
   
   tar_target(
     w_study_key,
-    w_covidence_cleaned %>%
-      select(study_covidence, title_covidence) %>%
+    w_cov_cleaned %>%
+      select(study_cov, title_cov) %>%
       distinct() %>%
-      arrange(study_covidence) %>%
+      arrange(study_cov) %>%
       study_id() %>%
       mutate(
-        title = str_replace(title_covidence, "Title: ", ""),
+        title = str_replace(title_cov, "title: ", ""),
         study = as.character(study)
       ) %>%
       mutate(across(everything(), tolower))
@@ -295,18 +274,23 @@ list(
   
   # now we have a study key we can instantiate study_arm info
   tar_target(
-    w_covidence,
-    w_covidence_cleaned %>%
+    w_cov_study,
+    w_cov_cleaned %>%
       mutate(across(everything(), tolower)) %>%
       # apply study labels
-      left_join(w_study_key, by = c("study_covidence", "title_covidence")) %>%
-      select(study, everything(), study_covidence, title_covidence)
+      left_join(w_study_key,
+                by = c("study_cov", "title_cov")) %>%
+      select(study, everything(), study_cov, title_cov)
   ),
   
-  tar_target(w_covidence_assert_study,
+  tar_target(a_cov_study,
              {
+               assert_that(nrow(w_cov_study) == nrow(r_cov),
+                           msg = "Number of rows not equal to initial rows")
+               
+               
                count_unmatched <-
-                 w_covidence %>%
+                 w_cov_study %>%
                  filter(is.na(study) | is.na(title)) %>%
                  nrow()
                
@@ -320,55 +304,58 @@ list(
     w_obs_long %>%
       left_join(
         w_study_key,
-        by = c("study_h" = "study_covidence",
-               "title_h" = "title_covidence")
+        by = c("study_obs" = "study_cov",
+               "title_obs" = "title_cov")
       ) %>%
       select(outcome, study, arm, everything())
   ),
+  
+  
   # study unmatched ---------------------------------------------------------
   
   tar_target(
     w_study_unmatched,
     w_obs_study %>%
       filter(is.na(study)) %>%
-      select(study_h, title_h) %>%
+      select(study_obs, title_obs) %>%
       distinct()
   ),
   
   tar_target(
     w_study_unmatched_studies,
-    w_study_unmatched %>% pull(study_h)
+    w_study_unmatched %>% pull(study_obs)
   ),
   
   tar_target(
     w_study_unmatched_key,
     w_study_key %>%
-      filter(study_covidence %in% w_study_unmatched_studies)
+      filter(study_cov %in% w_study_unmatched_studies)
   ),
   
-  # as the studis that are unmatched have only a single, we can join on study only
+  # as the studis that are unmatched have only a single,
+  # we can join on study only
   tar_target(
     w_obs_study_fix,
     w_obs_study %>%
       mutate(
         study = map2_chr(
           study,
-          study_h,
+          study_obs,
           .f = function(s, h) {
             if (is.na(s)) {
               w_study_unmatched_key %>%
-                filter(study_covidence == h) %>% pull(study)
+                filter(study_cov == h) %>% pull(study)
             } else
               s
           }
         ),
         title = map2_chr(
-          study_h,
+          study_obs,
           title,
           .f = function(h, t) {
             if (is.na(t)) {
               w_study_unmatched_key %>%
-                filter(study_covidence == h) %>% pull(title)
+                filter(study_cov == h) %>% pull(title)
             } else
               t
           }
@@ -377,7 +364,7 @@ list(
     
   ),
   
-  tar_target(w_study_assert, {
+  tar_target(a_study, {
     count_unmatched <-
       w_obs_study_fix %>%
       filter(is.na(study) | is.na(title)) %>%
@@ -393,24 +380,38 @@ list(
   tar_target(w_obs_long_final,
              w_obs_study_fix),
   
+  # output study matches
+  tar_target(
+    w_study_report,
+    w_cov_study %>%
+      select(study, title, study_cov, title_cov) %>%
+      left_join(w_obs_study_fix %>%
+                  select(study, study_obs, title_obs),
+                by = "study") %>%
+      arrange(desc(str_detect(study, ":")),
+              desc(is.na(study_obs))) %>%
+      select(contains("study"), everything()) %>%
+      distinct()
+  ),
+  
   # go wide -----------------------------------------------------------------
   
   tar_target(
     w_obs_wide,
     w_obs_long_final %>%
-      select(-study_h,-title_h) %>%
+      select(-study_obs,-title_obs) %>%
       pivot_wider(names_from = measure_type,
                   values_from = covidence_value)
   ),
   # timepoints --------------------------------------------------------------
   
   tar_target(
-    w_obs_time,
+    w_obs_timepoint,
     w_obs_wide %>%
       dplyr::mutate(
         # specific study changes
         timepoint = dplyr::case_when(
-          # change points have change in covidence 
+          # change points have change in covidence
           str_detect(covidence_desc, "change") ~ "change_score",
           # see issue # 26 hpp
           str_detect(study, "pirbudak 2003") &
@@ -449,6 +450,17 @@ list(
       ) %>%
       select(outcome, study, arm, covidence_desc, timepoint, everything())
   ),
+  
+  
+  # tar_target(a_obs_timepoint, {
+  #   timepoints <-
+  #     w_obs_timepoint %>%
+  #     pull(timepoint) %>% unique()
+  #
+  #   # check that timepoints match the level
+  #   assert_that(all(timepoints != "unmatched"),
+  #               msg = "unmatched timepoints")
+  # }),
   
   # wrangle scales ----------------------------------------------------------
   
@@ -515,7 +527,7 @@ list(
   
   tar_target(
     w_obs_scale_matches,
-    w_obs_time %>%
+    w_obs_timepoint %>%
       mutate(scale_matches = pmap(
         list(outcome,
              covidence_desc,
@@ -562,13 +574,12 @@ list(
     w_obs_scale_fix,
     w_obs_scale_excluded %>%
       left_join(w_obs_scale_fix_dat) %>%
-      filter(!str_detect(hollie_scale, "DELETE")) %>%
       rename(scale = hollie_scale)
   ),
   
   
   tar_target(
-    w_obs_scales_viable_matching,
+    w_obs_scale_viable_matching,
     w_obs_scale_counts %>%
       filter(cat_n == 1) %>%
       mutate(scale = map_chr(
@@ -583,13 +594,13 @@ list(
   ),
   
   tar_target(
-    w_obs_scales_viable,
-    bind_rows(w_obs_scale_fix, w_obs_scales_viable_matching)
+    w_obs_scale_viable,
+    bind_rows(w_obs_scale_fix, w_obs_scale_viable_matching)
   ),
   
   tar_target(
     w_obs_scale_ranked,
-    w_obs_scales_viable %>%
+    w_obs_scale_viable %>%
       group_by(outcome, scale) %>%
       count(outcome, scale) %>%
       arrange(outcome, desc(n)) %>%
@@ -599,8 +610,8 @@ list(
   ),
   
   tar_target(
-    w_obs_scales,
-    w_obs_scales_viable %>%
+    w_obs_scale,
+    w_obs_scale_viable %>%
       select(outcome, study, arm, scale, everything()) %>%
       ungroup() %>%
       left_join(
@@ -616,29 +627,34 @@ list(
       left_join(w_obs_scale_ranked) %>%
       group_by(outcome, study, arm) %>%
       filter(outcome_scale_rank == min(outcome_scale_rank)) %>%
-      ungroup()
+      ungroup() %>%
+      distinct()
   ),
   
-  # # dose --------------------------------------------------------------------
+  # tar_target(a_scales,
+  #            {
+  #              # check number of studies in scale
+  #              n_study_scale <-
+  #                w_obs_scale %>%
+  #                pull(study) %>%
+  #                unique() %>% length()
+  #
+  #              n_study_key <-
+  #                w_study_key %>%
+  #                pull(study) %>%
+  #                unique() %>% length()
   #
   #
-  # tar_target(
-  #   w_par_dose,
-  #   w_par_labels %>%
-  #     mutate(dose_extract = map(arm, str_extract_all, "\\d+\\w*")) %>%
-  #     select(dose_extract, everything())
+  #              assert_that(n_study_scale == n_study_key,
+  #                          message = "Different number of studies in w_obs_scale and w_study_key")
   #
-  # ),
-  #
-  #
-  #
-  #
+  #            }),
   
   # calculations ------------------------------------------------------------
   
   tar_target(
     w_obs_numeric,
-    w_obs_scales %>%
+    w_obs_scale %>%
       mutate(across(any_of(
         c("mean", "sd", "se", "percent", "median")
       ), as.numeric)) %>%
@@ -742,8 +758,8 @@ list(
   
   # initial label changes, etc.
   tar_target(
-    w_cov_label,
-    w_covidence  %>%
+    w_cov_initial,
+    w_cov_study  %>%
       select(-design) %>% # RCT repeated
       select(
         study,
@@ -759,9 +775,11 @@ list(
         condition_study = chronic_pain_condition_s,
         title
       )  %>%
-      left_join(w_condition, by = "condition_study") %>%
       mutate(
-        # classes
+        # fix a typo in placebo
+        type = if_else(type == "placeco",
+                       "placebo",
+                       type),
         
         # fix a spelling mistake in classes
         class = if_else(str_detect(class, "tetra"),
@@ -769,24 +787,49 @@ list(
                         class),
         
         # one of the placebo classes is labelled "n"
-        class = ifelse(class == "n", NA, class)
+        class = ifelse(class == "n", NA, class),
+        # relabel control as placebo
+        intervention = if_else(intervention == "control", "placebo", intervention),
+        intervention = if_else(arm == "placebo" &
+                                 is.na(intervention), "placebo", intervention)
+        
       )
   ),
   
-  # type
-  tar_target(w_cov_typo,
-             w_cov_label %>%
-               mutate(# fix a typo
-                 type = if_else(
-                   type == "placeco",
-                   "placebo",
-                   type
-                 ))),
+  tar_target(a_cov_label, {
+    assert_that(nrow(w_cov_initial) == nrow(r_cov))
+  }),
+  
+  # type --------------------------------------------------------------------
+  
+  tar_target(
+    w_cov_type_grouping,
+    read_csv("data/labels/type-2021-09-09 10:01:24.csv") %>%
+      select(type = intervention_type, intervention_grouping) %>%
+      distinct()
+  ),
+  
+  tar_target(
+    w_cov_type,
+    w_cov_initial %>%
+      left_join(w_cov_type_grouping,
+                by = "type") %>%
+      rename(subtype = type,
+             type = intervention_grouping)
+  ),
+  
+  tar_target(a_cov_type,
+             
+             assert_that(nrow(w_cov_type) == nrow(r_cov))),
+  
+  
+  # interventions -----------------------------------------------------------
+  
   
   # clean all interventions
   tar_target(
-    w_cov_intervention,
-    w_cov_typo %>%
+    w_cov_int,
+    w_cov_type %>%
       mutate(
         # label placebo interventions
         intervention = if_else(is.na(intervention) &
@@ -799,12 +842,14 @@ list(
           intervention == "n" &
             type == "antidepressant" &
             str_detect(arm, "mirtazapine") ~ "mirtazapine",
+          intervention == "n" & arm == "placebo and cbt" ~
+            "placebo + cbt",
           is.na(intervention) &
             type == "antidepressant" &
             str_detect(arm, "venlafaxine") ~ "venlafaxine",
           TRUE ~ intervention
         ),
-        # assumptions to be checked with hollie
+        # assumptions checked with hollie
         # documented in #51
         intervention = case_when(
           intervention == "desipramine hydrochloride" ~ "desipramine",
@@ -817,16 +862,70 @@ list(
       )
   ),
   
-  tar_target(w_cov_int_assert, {
-    df <- w_cov_intervention %>%
+  tar_target(
+    w_cov_int_nonad_labels,
+    read_csv("data/labels/intervention-nonad-2021-09-11 09:01:03.csv")
+  ),
+  
+  tar_target(
+    w_cov_int_nonad_label,
+    w_cov_int %>%
+      left_join(w_cov_int_nonad_labels,
+                by = c('study', 'arm')) %>%
+      mutate(intervention.x = if_else(
+        is.na(intervention.x),
+        intervention.y,
+        intervention.x
+      )) %>%
+      select(intervention = intervention.x,
+             everything()) %>%
+      select(-intervention.y)
+  ),
+  
+  
+  tar_target(a_cov_int, {
+    df <- w_cov_int_nonad_label %>%
       filter(is.na(intervention) |
                intervention == "n") %>%
       select(intervention, arm, type)
     
     assert_that(nrow(df) == 0,
-                msg = "NAs or n in intervention column for placebo|antidepressant type")
+                msg = "NAs or n in intervention column")
+    
+    assert_that(nrow(w_cov_int_nonad_label) == nrow(r_cov),
+                msg = "Different number of rows to raw cov import")
   }),
   
+  
+  # class labels ------------------------------------------------------------
+  tar_target(
+    r_class,
+    read_csv(
+      "data/labels/class-2021-09-10 23:53:50.csv",
+      col_types = cols(.default = "c")
+    ) %>%
+      clean_names() %>%
+      mutate(across(everything(), tolower))
+  ),
+  
+  tar_target(
+    w_cov_class,
+    w_cov_int_nonad_label %>%
+      mutate(class = str_trim(class)) %>%
+      left_join(r_class,
+                by = c("class" = "original")) %>%
+      mutate(class = case_when(
+        !is.na(hollie) ~ hollie,!is.na(charles) ~ charles,
+        TRUE ~ class
+      )) %>%
+      select(-charles,-hollie) %>%
+      rename(subclass = class,
+             class = protocol)
+  ),
+  
+  
+  
+  # condition ---------------------------------------------------------------
   
   tar_target(w_cov_condition_fix, {
     read_csv("data/labels/condition-2021-09-09 04:57:48.csv",
@@ -835,40 +934,42 @@ list(
   }),
   
   
-  # type --------------------------------------------------------------------
+  tar_target(w_cov_condition, {
+    w_cov_type %>%
+      left_join(w_condition %>% distinct(), by = "condition_study")
+    
+  }),
   
   tar_target(
-    w_cov_type_fix,
-    read_csv("data/labels/type-2021-09-09 10:01:24.csv") %>%
-      select(intervention_type, intervention_grouping)
+    a_cov_condition,
+    assert_that(nrow(w_cov_condition) == nrow(r_cov),
+                msg = "not same number of rows as raw import of cov")
   ),
-  
-  tar_target(w_cov_type,
-             w_cov_class),
-  
-  # %>%
-  #   left_join(
-  #     w_cov_type_fix,
-  #     by = c("type" = "intervention_type"))),
   
   # covidence final output --------------------------------------------------
   
   # this target always represents the final cleaned parameters, variables,
   # subgroups, etc. from covidence export
-  tar_target(w_cov,
-             w_cov_type %>%
-               mutate(
-                 condition_general = map2_chr(condition_general, study, function(c, s) {
-                   if (!is.na(c))
-                     c
-                   else
-                     w_cov_condition_fix %>%
-                     filter(study == s) %>%
-                     pull(condition_general)
-                 })
-               )),
+  tar_target(
+    w_cov,
+    w_cov_condition %>%
+      mutate(condition_general =
+               map2_chr(condition_general, study, function(c, s) {
+                 if (!is.na(c))
+                   c
+                 else
+                   w_cov_condition_fix %>%
+                   filter(study == s) %>%
+                   pull(condition_general)
+               }))
+  ),
   
-  tar_target(w_cov_assert, {
+  tar_target(a_cov, {
+    assert_that(nrow(r_cov) == nrow(w_cov),
+                msg = "w_cov does not have same number of rows as
+                r_cov")
+    
+    
     assert_that(nrow(w_cov %>% filter(is.na(
       condition_general
     ))) == 0,
@@ -899,6 +1000,7 @@ list(
         arm,
         covidence,
         condition_general,
+        condition_iasp,
         class,
         type,
         timepoint,
@@ -908,18 +1010,65 @@ list(
         n,
         se,
         sd,
-        scale
+        scale,
+        title = title.x
       ) %>%
+      distinct(),
+    pattern = NULL
+  ),
+  
+  
+  # create protocol labelling dataset ---------------------------------------
+  
+  tar_target(
+    w_obs_protocol,
+    w_obs %>%
+      mutate(
+        # final fixes
+        
+        type_protocol =
+          case_when(
+            str_detect(
+              type,
+              "placebo|antidepressant|non-pharmacological intervention|pharmacological intervention"
+            ) ~ type,
+            TRUE ~ "other"
+          ),
+        type_m = case_when(
+          type == "placebo" ~ type,
+          type == "antidepressant" ~ type,
+          type == "non-pharmacological intervention" ~ "non_pharma",
+          type == "pharmacological intervention" ~ "non_ad_pharma",
+          type == "other" ~ type,
+          str_detect(intervention, "\\+|and") ~ "combined",
+          intervention == "placebo" ~ "placebo",
+          is.na(type) ~ "unclassified"
+        ),
+        intervention = if_else(
+          intervention == "n" & arm == "placebo",
+          "placebo",
+          intervention
+        )
+        
+      ) %>%
+      mutate(type_cov = type,
+             type = type_m)
+  ),
+  
+  
+  # data that goes into the models ------------------------------------------
+  
+  
+  tar_target(
+    w_obs_m,
+    w_obs_protocol %>%
+      # filter these studies because hollie indicated in sheet
+      filter(!str_detect(scale, "DELETE")) %>%
+      filter(!is.na(intervention), !str_detect(covidence, "change")) %>%
       distinct()
   ),
   
-  tar_target(w_obs_m,
-             w_obs %>%
-               filter(!is.na(intervention)),
-             !str_detect(covidence, "change")
-             ),
-  
-  tar_target(w_obs_m_assert, {
+  tar_target(a_obs_m, {
     # check means
     assert_that(all(w_obs_m$mean > 0 |
                       is.na(w_obs_m$mean)),
@@ -944,13 +1093,15 @@ list(
   # models ------------------------------------------------------------------
   
   
-  # outcome, timepoint ------------------------------------------------------
+  
+  # outcome, timepoint, type ------------------------------------------------
   
   
   tar_target(
     m_o_t_group,
     w_obs_m %>%
-      group_by(outcome, timepoint) %>%
+      filter(type != "placebo", !is.na(type)) %>%
+      group_by(outcome, timepoint, type) %>%
       tar_group(),
     iteration = "group"
   ),
@@ -959,14 +1110,26 @@ list(
   tar_target(
     m_o_t_e,
     {
-      dat <-
+      
+      placebo_dat <-      
+        m_o_t_group %>% 
+        select(outcome, study, timepoint) %>% 
+        inner_join(
+          w_obs_m %>% 
+            filter(type == "placebo"),
+          by = c('outcome', "study", "timepoint")
+        )
+        
+        dat <-
         m_o_t_group %>%
+        bind_rows(placebo_dat) %>%
         viable_observations()
       
       m_type <-
         m_key %>%
         pull(model_type)
-      
+
+
       hpp_net(dat, m_type) %>%
         safe_nma(trt_effects = "random")
     },
@@ -974,22 +1137,26 @@ list(
     iteration = "list"
   ),
   
-  tar_target(
-    m_o_t,
-    m_o_t_e %>% 
-      keep(~is.null(.x$error)) 
-  ),
+  tar_target(m_o_t,
+             m_o_t_e %>%
+               keep(~ is.null(.x$error))),
   
   tar_target(m_o_t_key,
-              {
-               m_o_t %>%
+             map_df(m_o_t, function(x) {
+               x %>%
                  pluck("result", "network", "agd_arm") %>%
-                 summarise(outcome = unique(outcome),
-                           timepoint = unique(timepoint)) %>%
-                 mutate(target = "m_o_t")
+                 filter(type != "placebo") %>% 
+                 summarise(
+                   outcome = unique(outcome),
+                   timepoint = unique(timepoint),
+                   type = unique(type),
+                   model_type = unique(model_type)
+                 ) %>%
+                 mutate(target = "m_o_t") %>%
+                 select(target, everything())
                
-             },
-             pattern = map(m_o_t)),
+             })),
+  
   
   # models by condition -----------------------------------------------------
   
@@ -1032,23 +1199,6 @@ list(
              pattern = map(m_con_o_t)),
   
   
-  # bundle models -----------------------------------------------------------
-  
-  # tar_target(
-  #   m_model_key,
-  #   m_model_key_w_fails %>%
-  #     filter(!is.na(outcome)) %>%
-  #     mutate(plot_index = row_number()) %>%
-  #     left_join(m_key, by = "outcome") %>%
-  #     mutate(
-  #       filename = glue("{outcome}-{condition}"),
-  #       netpath = glue("images/net/{filename}.png"),
-  #       forestpath = glue("images/forest/{filename}.png")
-  #     )
-  # ),
-  
-  
-  
   # wrangle model keys ------------------------------------------------------
   
   tar_target(m_keys_df,
@@ -1058,58 +1208,55 @@ list(
              m_keys_df %>%
                map(function(df) {
                  df %>%
-                   unite(filename, -target, sep = "-", remove = FALSE) %>%
+                   unite(filename, everything(), sep = "-", remove = FALSE) %>%
                    mutate(
                      netpath = glue("images/net/{filename}.png"),
                      forestpath = glue("images/forest/{filename}.png"),
                      index = row_number()
-                     
                    ) %>%
-                   select(index, everything(), contains("path"))
+                   left_join(m_key, by = c("outcome", "model_type")) %>%
+                   select(index, outcome, everything(), contains("path"))
                })),
-  
   
   # network plots -----------------------------------------------------------
   
-  # tar_target(),
-  tar_target(plot_net_m_o_t,
-             m_keys %>% 
-             pluck("m_o_t") %>% 
-               select(index, outcome, timepoint, netpath) %>% 
-               pmap(
-                 function(index, outcome, timepoint, netpath) {
-                   plot <- 
-                   m_o_t %>%
-                     pluck(index, "result", "network") %>%
-                     plot() +
-                     labs(
-                       title = glue("Direct evidence for {outcome}"),
-                       subtitle = glue("Subgroups: timepoint {timepoint}")
-                     )
-                   
-                   
-                   glue("--] Writing net plot for m_o_t: 
+  tar_target(
+    plot_net_m_o_t,
+    m_keys %>%
+      pluck("m_o_t") %>%
+      select(index, outcome, timepoint, netpath) %>%
+      pmap(function(index, outcome, timepoint, netpath) {
+        plot <-
+          m_o_t %>%
+          pluck(index, "result", "network") %>%
+          plot() +
+          labs(
+            title = glue("Direct evidence for {outcome}"),
+            subtitle = glue("Subgroups: timepoint {timepoint}")
+          )
+        
+        
+        glue("--] Writing net plot for m_o_t:
                         outcome {outcome}
                         timepoint {timepoint}") %>% print()
-                   
-                   ggsave(here::here("bksite", netpath), plot)
-                   
-                 }
-               )
-             ),
+        
+        ggsave(here::here("bksite", netpath), plot)
+        
+      })
+  ),
   
-
-# forest ------------------------------------------------------------------
-
+  
+  # forest ------------------------------------------------------------------
+  
   
   # this is a check that forest_multinma works
   tar_target(plot_forest_generic, {
     print("--] Select an arbitrary model")
     
     this_mod <-
-      m_o_t %>% 
-      pluck(2, "result")
-
+      m_o_t %>%
+      pluck(1, "result")
+    
     # print(summary(this_mod))
     
     print("--] Identify the dataframe req for conf ints text")
@@ -1117,50 +1264,66 @@ list(
     
     print("--] Plot generic forest")
     
-   # forest_multinma(this_mod)
+    forest_multinma(this_mod)
   }),
   
   tar_target(plot_forest_dev, {
     # select an arbitrary lor model
-    m_model_key_row <-
-      m_model_key %>%
-      filter(model_type == "smd", !is.na(condition)) %>%
-      tail(1)
+    m_o_t_key_row <-
+      m_keys$m_o_t %>%
+      slice(9)
+
+    message("--] Selected row from m_model_key")
+    print(m_o_t_key_row)
     
-    print("--] Selected row from m_model_key")
-    print(m_model_key_row)
+    message("--] Get model")
+    mod <-
+      m_o_t %>%
+      pluck(m_o_t_key_row$index) %>%
+      pluck("result")
     
-    print("--] Create plot")
-    hpp_forest(m_models[[m_model_key_row$model_index]],
-               m_model_key,
-               m_model_key_row$model_index)
+    message("--] Create plot")
+    hpp_forest(mod,
+               m_keys$m_o_t,
+               m_o_t_key_row$index)
     
-  }),
-  
-  tar_target(plot_forest, {
-    # plot_forest <-
-    m_model_key %>%
-      select(model_index) %>%
-      pmap(function(model_index) {
-        hpp_forest(m_models[[model_index]], m_model_key, model_index)
-      })
   }),
   
   tar_target(
-    plot_forest_write,
-    m_model_key %>%
-      select(plot_index, forestpath) %>%
-      pmap(
-        .f = function(plot_index,  forestpath) {
-          ggsave(
-            here::here("bksite", forestpath),
-            plot_forest[[plot_index]],
-            width = 11,
-            height = 11
-          )
-        }
-      )
+    plot_write_forest_dev,
+    ggsave(
+      here::here("bksite", "images", "dev", "forest.png"),
+      plot_forest_dev,
+      width = 11,
+      height = 11
+    )
   ),
+  
+  # tar_target(plot_forest, {
+  #   m_model_key %>%
+  #     select(model_index) %>%
+  #     pmap(function(model_index) {
+  #       hpp_forest(m_models[[model_index]],
+  #                  m_model_key,
+  #                  model_index)
+  #     })
+  # }),
+  
+  # tar_target(
+  #   plot_forest_write,
+  #   m_model_key %>%
+  #     select(plot_index, forestpath) %>%
+  #     pmap(
+  #       .f = function(plot_index,  forestpath) {
+  #         ggsave(
+  #           here::here("bksite", forestpath),
+  #           plot_forest[[plot_index]],
+  #           width = 11,
+  #           height = 11
+  #         )
+  #       }
+  #     )
+  # ),
   
   
   # # nma summary -------------------------------------------------------------
@@ -1223,22 +1386,25 @@ list(
   #
   # pairwise ----------------------------------------------------------------
   
+  
+  # dev lor -----------------------------------------------------------------
+  
   # code single pairwise meta-analyses
   tar_target(pw_single_lor,
              {
                # select an arbitrary lor model
-               m_model_key_row <-
-                 m_model_key %>%
-                 filter(model_type == "lor", !is.na(condition)) %>%
+               m_o_t_key_row <-
+                 m_o_t_key %>%
+                 filter(model_type == "lor") %>%
                  tail(1)
                
                print("--] Selected row from m_model_key")
-               print(m_model_key_row)
+               print(m_o_t_key_row)
                
                # get input data for that model
                mod_dat <-
-                 m_models[[m_model_key_row$model_index]] %>%
-                 pluck("network", "agd_arm") %>%
+                 m_o_t[[m_o_t$model_index]] %>%
+                 pluck("result", "network", "agd_arm") %>%
                  # rename to get back to original labels
                  rename(study = .study,
                         intervention = .trt)
@@ -1311,14 +1477,16 @@ list(
                print("--] Meta-analyse!")
                
                int_escalc %>%
-                 rma(yi, vi, data = ., measure = "OR") %>% 
+                 rma(yi, vi, data = ., measure = "OR") %>%
                  forest()
                
              }),
   
+  # dev smd -----------------------------------------------------------------
+  
+  
   tar_target(pw_single_smd, {
     
- 
   }),
   
   

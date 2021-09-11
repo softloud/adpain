@@ -1,0 +1,15 @@
+
+/*set entire page width */
+.container-fluid{
+  max-width: 100%;
+}
+
+/*set page content max width */
+.container-fluid main{
+  max-width: 90rem;
+}
+
+/* set fontsize for sidebars */
+.sidebar li{
+  font-size: 1.3rem;
+}

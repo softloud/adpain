@@ -9,6 +9,16 @@
 
 
 forest_multinma <- function(mod) {
+  lisa_pal <- c(
+    blue = "dodgerblue",
+    red = "red"
+  )
+  dirty_xmas_pal <- list(
+    red = "#b12a1b",
+    green = "#67852e"
+  )
+  
+  active_pal <- dirty_xmas_pal
   
   input_dat <-
     mod %>% 
@@ -84,7 +94,7 @@ forest_multinma <- function(mod) {
     ), alpha = 0.7, size = 1
     ) +
     geom_point(aes(x = mean, y = intervention, colour = 
-                     I(if_else(mean < 0, "dodgerblue", "red")),
+                     I(if_else(mean < 0, active_pal[[1]], active_pal[[2]])),
                    size = int_sample
     ),
     alpha = 0.85,
@@ -94,9 +104,13 @@ forest_multinma <- function(mod) {
     geom_text(
       aes(x = max(ci_ub) + abs(max(ci_ub) - min(ci_lb))/8,
           y = intervention,
-          label =  glue("{round(mean, 2)} [{round(ci_lb, 2)}, {round(ci_ub, 2)}]")
+          label =  glue::glue("{round(mean, 2)} [{round(ci_lb, 2)}, {round(ci_ub, 2)}]")
           ),
       hjust = 1
-    ) 
+    ) +
+    theme(
+      legend.position = "bottom",
+      legend.direction = "horizontal"
+    )
      
 }

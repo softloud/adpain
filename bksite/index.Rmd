@@ -30,7 +30,43 @@ source("preamble.R")
 # Overview
 
 ```{r}
-knitr::include_graphics("bksite/images/net/adverse-all.png")
+
+tar_load(w_obs_m)
+
+```
+
+## Outcomes included
+
+```{r}
+w_obs_m %>%
+  group_by(outcome) %>% 
+  summarise(
+    studies = n_distinct(study),
+    conditions = unique(condition_general) %>% paste(collapse = ", "),
+    timepoint = unique(timepoint) %>% paste(collapse = ", ")
+  )
+
+```
+
+## Studies currently included
+
+There are `r w_obs$study %>% unique() %>% length()` currently included.
+
+```{r}
+w_obs_m %>% 
+  group_by(study) %>% 
+  summarise(
+    outcome = unique(outcome) %>% paste(collapse = ", "),
+    conditions = unique(condition_general) %>% paste(collapse = ", ")
+  )
+
+```
+
+## Number of arms per timepoint
+
+```{r}
+w_obs_m %>% 
+  count(outcome, timepoint)
 
 ```
 

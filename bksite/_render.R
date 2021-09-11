@@ -5,3 +5,8 @@
 browseURL(
   xfun::in_dir("bksite", bookdown::render_book("index.Rmd"))
 )
+
+
+browseURL(
+  xfun::in_dir("bksite", bookdown::preview_chapter("9-pipeline.Rmd"))
+)

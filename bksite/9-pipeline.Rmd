@@ -1,16 +1,93 @@
 # Pipeline
 
+## Check figure sizing
+
+```{r results="asis"}
+ glue("<img src=\"images/dev/forest.png\" style = 'width:200%;' />") %>%
+    cat()
+```
+
+
+## Joining together Covidence export with Hollie's extractions
+
+
+```{r}
+tar_read(w_study_report)
+
+
+```
+
+    
+    
+## Labelling protocol for Covidence
+
+```{r load w_obs}
+tar_load(w_obs) 
+
+  
+```
+
+### Labels not specific to outcome
+
+#### Condition
+
+```{r output levels of w_obs}
+w_obs %>% 
+  summarise(
+    condition_general = unique(condition_general) 
+  ) 
+
+```
+
+
+#### Timepoint or change score
+
+```{r}
+w_obs %>% 
+  count(timepoint)
+
+```
+
+##### Unmatched timepoints
+
+```{r}
+tar_read(w_obs_timepoint) %>% 
+  filter(timepoint == "unmatched") %>% 
+  select(study, arm, covidence_desc)
+```
+
+
+
+### Labels specific to outcome
+
+#### Scales
+
+```{r outcome levels}
+w_obs %>% 
+  group_by(outcome) %>% 
+  count(scale) %>% 
+  gt(
+    groupname_col = "outcome"
+  )
+
+```
+
+## Checks
+
 Check that key points in pipeline have the expected number of joins and meets.
 
 ```{r}
 tar_load(w_covidence)
 tar_load(w_obs_long_final)
+tar_load(w_cov)
+tar_load(w_obs)
 ```
 
 ```{r}
 targets <- 
 list(
   w_covidence = w_covidence,
+  w_cov = w_cov,
   w_obs_long_final = w_obs_long_final
 ) 
 
@@ -31,3 +108,20 @@ targets %>%
 
 ```
 
+## subgroups
+
+### condition
+
+```{r}
+
+```
+
+
+## Number of arms per study per timepoint
+
+```{r}
+w_obs %>% 
+  group_by(outcome, timepoint) %>% 
+  count(study)
+
+```
