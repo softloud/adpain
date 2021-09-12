@@ -8,5 +8,5 @@
 #' @examples
 
 msg_mine <- function(msg) {
-  message(crayon::blue(msg))
+  message(crayon::blue(glue::glue("--] {msg}")))
 }
