@@ -5,12 +5,13 @@
 #' @return
 
 pw_wide <- function(pw_dat) {
-  m_type <- pw_dat$model_type %>% unique()
+  dat <-
+    pw_dat %>%
+    mutate(across(c("study", "intervention"), as.character)) %>% 
+    select(study, intervention, covidence, mean, sd, r, n)
 
-  pw_dat %>%
-    pivot_wider(
-      names_from = intervention,
-      names_glue = "{.value}_{intervention}",
-      values_from = ifelse(model_type == "lor", c(r, n), c(mean, sd, n)) 
-    )
+  # set group2 to placebo if placebo
+  # else set comparison to be arbitrary
+  # label data with which group is group1 and group2
+    
 }

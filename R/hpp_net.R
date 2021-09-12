@@ -1,23 +1,23 @@
 hpp_net <- function(dat, type) {
 
-  n_placebo <-
-    dat %>%
-    filter(intervention == "placebo") %>%
-    nrow()
-
-  ref <- 
-    ifelse(
-      nrow(n_placebo) > 0,
-      "placebo",
-      NULL
-    )
+  # n_placebo <-
+  #   dat %>%
+  #   filter(intervention == "placebo") %>%
+  #   nrow()
+  # 
+  # ref <- 
+  #   ifelse(
+  #     nrow(n_placebo) > 0,
+  #     "placebo",
+  #     NULL
+  #   )
 
   if (type == "smd") {
     set_agd_arm(
       data = dat,
       study = study,
       trt = intervention,
-      trt_ref = "placebo",
+      # trt_ref = ref,
       y = mean,
       se = se,
       sample_size = n
@@ -27,7 +27,7 @@ hpp_net <- function(dat, type) {
       data = dat,
       study = study,
       trt = intervention,
-      trt_ref = "placebo",
+      # trt_ref = ref,
       r = r,
       n = n,
       sample_size = n

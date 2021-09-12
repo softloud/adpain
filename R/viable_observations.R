@@ -12,9 +12,9 @@ viable_observations <- function(hpp_df) {
     group_by(study) %>% 
     mutate(
       study_obs_count = length(study)
-    ) %>% 
-    arrange(study) %>% 
+    ) %>%
     select(study_obs_count, everything()) %>% 
+    arrange(study_obs_count, study) %>% 
     filter(study_obs_count > 1)  %>% 
     ungroup() 
 }
