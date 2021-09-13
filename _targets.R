@@ -1073,6 +1073,11 @@ list(
         !str_detect(covidence, "change"),
         type != "unclassified"
       ) %>%
+      # filters for computational efficiency
+      filter(
+        timepoint == "post_int",
+        type %in% c("antidepressant", "placebo")
+      ) %>%
       # there are arms in same study labeled by same scale
       # for now will choose the first
       group_by(outcome, study, arm, scale, timepoint) %>%
@@ -1098,9 +1103,10 @@ list(
         scale,
         model_type
       ) %>%
-      distinct() %>%
-      # this is for testing
-      filter(outcome %in% c("pain_int", "adverse"))
+      distinct() 
+    # %>%
+    #   # this is for testing
+    #   filter(outcome %in% c("pain_int", "adverse"))
     
   ),
   
