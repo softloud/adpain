@@ -1,30 +1,29 @@
 withr::with_dir(here::here(), {
-  tar_load(m_model_key)
-  tar_load(plot_write_key)
-  
+  tar_load(m_keys_df)
 })
 
 # make plots function
 
-mod_plots <- function(plot_index) {
-  # network
-  # m_net_plot[[plot_index]] %>% print()
+mod_plots <- function(target, index) {
   net_plot_path <-
-    plot_write_key %>%
-    filter(.data$plot_index == .env$plot_index) %>%
+    m_keys_df %>%
+    filter(.data$index == .env$index,
+           .data$target == .env$target) %>%
     pull(netpath)
   
   glue("<img src=\"{net_plot_path}\" style = 'width:100%;' />") %>%
     cat()
   
-  # forest plot
-  forest_plot_path <-
-    plot_write_key %>%
-    filter(.data$plot_index == .env$plot_index) %>%
-    pull(forestpath)
-  
-  glue("<img src=\"{forest_plot_path}\" style = 'width:100%;' />") %>%
-    cat()
+  # # forest plot
+  # forest_plot_path <-
+  #   m_keys_df %>%
+  #   filter(.data$index == .env$index,
+  #          .data$target == .env$target
+  #   ) %>%
+  #   pull(forestpath)
+  #
+  # glue("<img src=\"{forest_plot_path}\" style = 'width:100%;' />") %>%
+  #   cat()
   
   # pairwise
 }
@@ -32,31 +31,46 @@ mod_plots <- function(plot_index) {
 
 # make chapter function
 
-makechapter <- function(params = list(outcome = "pain_int")) {
-  cat("## NMA: all in for", params$outcome, "\n\n")
+makechapter <- function(outcome) {
+  cat("## NMA: ",
+      #outcome,
+      "\n\n")
   
   cat("Network meta-analysis results across all conditions, classes, and doses.\n")
   
-  # output analysis for all in
-  m_model_key %>%
-    filter(outcome == params$outcome,
-           condition == "all") %>%
-    pull(plot_index) %>%
-    mod_plots()
+  # output analyses for all condition subgroups
+  m_keys_df %>%
+    filter(outcome == outcome,
+           target == "m_o_tt") %>%
+    select(index, target, type, timepoint) %>%
+    pmap(
+      .f = function(index, target, type, timepoint) {
+        cat("\n\n### ", type, "at", timepoint, "\n\n")
+        
+        mod_plots(target, index)
+        
+        cat("\n\n")
+        
+      }
+    )
   
   
   cat("\n\n## Conditions\n\n")
   
   # output analyses for all condition subgroups
-  m_model_key %>%
-    filter(outcome == params$outcome,
-           condition != "all") %>%
-    select(condition, plot_index) %>%
+  m_keys_df %>%
+    filter(outcome == outcome,
+           target == "m_con_o_tt") %>%
+    select(index, target, type, timepoint, condition) %>%
     pmap(
-      .f = function(condition, plot_index) {
-        cat("\n\n### ", condition, "\n\n")
+      .f = function(index,
+                    target,
+                    type,
+                    timepoint,
+                    condition) {
+        cat("\n\n### ", type, "at", timepoint, "for", condition, "\n\n")
         
-        mod_plots(plot_index)
+        mod_plots(target, index)
         
         cat("\n\n")
         

@@ -1,6 +1,5 @@
 # Sleep results
 
 ```{r,results='asis', warning=FALSE}
-params <- list(outcome = "sleep")
-makechapter(params) -> sink
+makechapter("sleep") -> sink
 ```

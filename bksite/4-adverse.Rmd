@@ -1,6 +1,5 @@
 # Adverse results
 
 ```{r,results='asis', warning=FALSE}
-params <- list(outcome = "adverse")
-makechapter(params) -> sink
+makechapter("adverse") -> sink
 ```

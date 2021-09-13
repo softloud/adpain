@@ -1037,6 +1037,11 @@ list(
           is.na(type) ~ "unclassified"
         ),
         intervention = if_else(
+          intervention == "n" & arm == "mirtazapine 30mg",
+          "mirtazapine",
+          intervention
+        ),
+        intervention = if_else(
           str_detect(intervention, "^dulox"),
           "duloxetine",
           intervention
@@ -1058,8 +1063,12 @@ list(
   tar_target(
     w_obs_m,
     w_obs_protocol %>%
+      mutate(
+        timepoint = fct_rev(timepoint)
+      ) %>% 
       # filter these studies because hollie indicated in sheet
       filter(
+        timepoint != "baseline",
         !str_detect(scale, "DELETE"),!is.na(intervention),
         !str_detect(covidence, "change"),
         type != "unclassified"
@@ -1198,30 +1207,40 @@ list(
   tar_target(
     m_con_o_tt_group,
     w_obs_m %>%
-      filter(type != "placebo", !is.na(type)) %>%
+      filter(type != "placebo") %>%
       group_by(outcome, timepoint, type, condition_general) %>%
       tar_group(),
     iteration = "group"
   ),
   
+  tar_target(
+    m_con_o_tt_dat,
+    m_con_o_tt_group,
+    pattern = map(m_con_o_tt_group),
+    iteration = "list"
+  ),
+  
   
   tar_target(
-    m_con_o_tt_e,
+    m_con_o_tt,
+    
     {
       placebo_dat <-
-        m_con_o_tt_group %>%
-        select(outcome, study, timepoint) %>%
+        m_con_o_tt_dat %>%
+        select(outcome, study, timepoint, condition_general) %>%
+        distinct() %>%
         inner_join(w_obs_m %>%
                      filter(type == "placebo"),
                    by = c('outcome', "study", "timepoint"))
       
       dat <-
-        m_con_o_tt_group %>%
+        m_con_o_tt_dat %>%
         bind_rows(placebo_dat) %>%
-        viable_observations()
+        viable_observations() %>%
+        distinct()
       
       m_type <-
-        m_con_o_tt_group %>%
+        m_con_o_tt_dat %>%
         pull(model_type) %>%
         unique()
       
@@ -1229,51 +1248,39 @@ list(
       hpp_net(dat, m_type) %>%
         safe_nma(trt_effects = "random")
     },
-    pattern = map(m_con_o_tt_group),
+    pattern = map(m_con_o_tt_dat),
     iteration = "list"
   ),
-  
-  tar_target(
-    m_con_o_tt_huh,
-    if (is.null(m_con_o_tt_e$error))
-      m_con_o_tt_e
-    else
-      NULL,
-    pattern = map(m_con_o_tt_e),
-    iteration = "list"
-  ),
-  
-  tar_target(m_con_o_tt,
-             m_con_o_tt_huh %>%
-               keep( ~ is.null(.x$error))),
   
   tar_target(m_con_o_tt_key,
-             map_df(m_con_o_tt, function(x) {
-               if (is.null(x)) {
-                 tibble(outcome = NA)
-               } else
-                 (x %>%
-                    pluck("result", "network", "agd_arm") %>%
-                    filter(type != "placebo") %>%
-                    summarise(
-                      outcome = unique(outcome),
-                      timepoint = unique(timepoint),
-                      type = unique(type),
-                      condition = x %>% filter(!is.na(condition_general)) %>%
-                        pull(condition) %>%
-                        unique(),
-                      model_type = unique(model_type),
-                      trt_ref = x$result$network$treatments[[1]]
-                    ) %>%
-                    mutate(target = "m_con_o_tt") %>%
-                    select(target, everything()))
-             })),
+             if (!is.null(m_con_o_tt$error)) {
+               tibble(outcome = "nma not produced", )
+             } else {
+               m_con_o_tt %>%
+                 pluck("result", "network", "agd_arm") %>%
+                 filter(type != "placebo") %>%
+                 summarise(
+                   outcome = unique(outcome),
+                   timepoint = unique(timepoint),
+                   type = unique(type),
+                   condition = unique(condition_general),
+                   model_type = unique(model_type),
+                   trt_ref = m_con_o_tt$result$network$treatments[[1]]
+                 ) %>%
+                 mutate(target = "m_con_o_tt") %>%
+                 select(target, everything())
+             }
+             ,
+             pattern = map(m_con_o_tt)),
   
   
   # wrangle model keys ------------------------------------------------------
   
-  tar_target(m_keys_list,
-             list(m_o_tt = m_o_tt_key)),
+  tar_target(
+    m_keys_list,
+    list(m_o_tt = m_o_tt_key,
+         m_con_o_tt = m_con_o_tt_key)
+  ),
   
   tar_target(m_keys,
              m_keys_list %>%
@@ -1293,36 +1300,70 @@ list(
   tar_target(m_keys_df,
              bind_rows(m_keys)),
   
-  # network plots -----------------------------------------------------------
+  tar_target(m_keys_df_m_o_tt,
+             m_keys_df %>% 
+               filter(target == "m_o_tt")
+             ),
   
-  tar_target(
-    plot_net_m_o_tt,
-    m_keys %>%
-      pluck("m_o_tt") %>%
-      select(index, outcome, timepoint, netpath) %>%
-      pmap(function(index, outcome, timepoint, netpath) {
-        plot <-
-          m_o_tt %>%
-          pluck(index, "result", "network") %>%
-          plot() +
-          labs(
-            title = glue("Direct evidence for {outcome}"),
-            subtitle = glue("Subgroups: timepoint {timepoint}")
-          )
-        
-        
-        glue(" Writing net plot for m_o_tt:
-                        outcome {outcome}
-                        timepoint {timepoint}") %>% print()
-        
-        ggsave(here::here("bksite", netpath), plot)
-        
-      })
-  ),
+  # network plots -----------------------------------------------------------
+  tar_target(plot_net, {
+    msg_mine("Set up outcome, type, timepoint")
+    this_title <-
+      glue("Direct evidence for {m_keys_df$outcome}")
+    
+    this_title %>% print()
+    
+    msg_mine("Target:")
+    m_keys_df$target %>% print()
+    
+    msg_mine("Index:")
+    m_keys_df$index %>% print()
+    
+    msg_mine("Set up target-dependent titles")
+    this_subtitle <- case_when(
+      m_keys_df$target == "m_o_tt" ~
+        glue(
+          "Subgroups: timepoint {m_keys_df$timepoint} and type {m_keys_df$type}"
+        ),
+      m_keys_df$target == "m_con_o_tt" ~
+        glue(
+          "Subgroups: timepoint {m_keys_df$timepoint}, type {m_keys_df$type}, condition {m_keys_df$condition}"
+        )
+    )
+    
+    this_subtitle %>% print()
+    
+    mod <-
+      if (m_keys_df$target == "m_o_tt")
+        m_o_tt[[m_keys_df$index]]
+    else if (m_keys_df$target == "m_con_o_tt")
+      m_con_o_tt[[m_keys_df$index]]
+    
+    msg_mine("Create plot")
+    plot <-
+      mod %>%
+      pluck(index, "result", "network") %>%
+      plot() %>%
+      labs(# subtitle = this_subtitle,
+        title = this_title)
+    
+    glue(
+      " Writing net plot for m_o_tt:
+                        outcome {m_keys_df$outcome}
+                        timepoint {m_keys_df$timepoint}
+                        type {m_keys_df$type}
+                        condition {m_keys_df$condition}"
+    ) %>% msg_mine()
+    
+    ggsave(here::here("bksite", m_keys_df$netpath), plot)
+  },
+  pattern = map(m_keys_df)),
   
   
   # forest ------------------------------------------------------------------
   
+  
+  # forest: generic ---------------------------------------------------------
   
   # this is a check that forest_multinma works
   tar_target(plot_forest_generic, {
@@ -1342,11 +1383,17 @@ list(
     forest_multinma(this_mod)
   }),
   
+  
+  # forest: dev -------------------------------------------------------------
+  
+  
   tar_target(plot_forest_dev, {
     # select an arbitrary lor model
     m_o_tt_key_row <-
       m_keys$m_o_tt %>%
       slice(9)
+    
+    st <- glue("")
     
     msg_mine(" Selected row from m_model_key")
     print(m_o_tt_key_row)
@@ -1359,8 +1406,7 @@ list(
     
     msg_mine(" Create plot")
     hpp_forest(mod,
-               m_keys$m_o_tt,
-               m_o_tt_key_row$index)
+               m_keys_df)
     
   }),
   
@@ -1374,31 +1420,33 @@ list(
     )
   ),
   
-  # tar_target(plot_forest, {
-  #   m_model_key %>%
-  #     select(model_index) %>%
-  #     pmap(function(model_index) {
-  #       hpp_forest(m_models[[model_index]],
-  #                  m_model_key,
-  #                  model_index)
-  #     })
-  # }),
   
-  # tar_target(
-  #   plot_forest_write,
-  #   m_model_key %>%
-  #     select(plot_index, forestpath) %>%
-  #     pmap(
-  #       .f = function(plot_index,  forestpath) {
-  #         ggsave(
-  #           here::here("bksite", forestpath),
-  #           plot_forest[[plot_index]],
-  #           width = 11,
-  #           height = 11
-  #         )
-  #       }
-  #     )
-  # ),
+  # forest: all plots --------------------------------------------------------
+  
+  
+  tar_target(plot_forest, {
+    hpp_forest(m_models[[model_index]],
+               m_keys_df,
+               model_index)
+    
+  },
+  pattern = map(m_keys_df)),
+  
+  tar_target(
+    plot_forest_write,
+    m_keys_df %>%
+      select(plot_index, forestpath) %>%
+      pmap(
+        .f = function(plot_index,  forestpath) {
+          ggsave(
+            here::here("bksite", forestpath),
+            plot_forest[[plot_index]],
+            width = 11,
+            height = 11
+          )
+        }
+      )
+  ),
   
   
   # # nma summary -------------------------------------------------------------
@@ -1462,215 +1510,60 @@ list(
   # pairwise ----------------------------------------------------------------
   
   
-  # dev lor -----------------------------------------------------------------
-  
-  # code single pairwise meta-analyses
-  tar_target(pw_dev_lor,
-             {
-               # select an arbitrary lor model
-               m_o_tt_key_row <-
-                 m_keys$m_o_tt %>%
-                 filter(model_type == "lor") %>%
-                 head(1)
-               
-               msg_mine("Selected row from m_model_key")
-               print(m_o_tt_key_row)
-               
-               # get input data for that model
-               mod_dat <-
-                 m_o_tt[[m_o_tt_key_row$index]] %>%
-                 pluck("result", "network", "agd_arm") %>%
-                 # rename to get back to original labels
-                 rename(study = .study,
-                        intervention = .trt)
-               
-               msg_mine("Check outcome and condition match.")
-               
-               mod_dat %>%
-                 select(outcome, condition_general) %>%
-                 distinct() %>%
-                 print()
-               
-               msg_mine("Count interventions")
-               
-               mod_dat %>%
-                 count(intervention) %>%
-                 arrange(desc(n)) %>%
-                 print()
-               
-               msg_mine("Yay! There is only one intervention :)")
-               
-               # intervention-level dataset
-               
-               msg_mine("Set intervention-level dataset")
-               
-               int_dat <-
-                 mod_dat %>%
-                 filter(intervention %in% c("placebo", "duloxetine")) %>%
-                 # select just the cols needed for pw
-                 select(study, intervention, model_type, r, n, covidence)
-               
-               msg_mine("Columns in intervention-level dataset:")
-               
-               int_dat %>%
-                 names() %>%
-                 print()
-               
-               msg_mine("Look at intervention-level dataset")
-               
-               int_dat %>%
-                 print()
-               
-               msg_mine("Go wide for metafor")
-               msg_mine("NB can't use pivot! There may be more than one
-                     interven arm in study")
-               
-               int_dat_wide <-
-                 int_dat %>%
-                 filter(intervention == "placebo") %>%
-                 rename(r_ref = r,
-                        n_ref = n) %>%
-                 select(-intervention, -model_type) %>%
-                 inner_join(int_dat %>% filter(intervention != "placebo"))
-               
-               
-               int_dat_wide %>%
-                 names() %>%
-                 print()
-               
-               msg_mine(" Get this intervention")
-               
-               int_dat %>%
-                 filter(intervention != "placebo") %>%
-                 pull(intervention) %>% unique() %>%  print()
-               
-               msg_mine("escalc")
-               
-               int_escalc <-
-                 int_dat_wide %>%
-                 escalc(
-                   data = .,
-                   ai = r,
-                   ci = r_ref,
-                   n1i = n,
-                   n2i = n_ref,
-                   measure = "OR",
-                   slab = study
-                 )
-               
-               int_escalc %>% print()
-               
-               msg_mine("Meta-analyse!")
-               
-               int_escalc %>%
-                 rma(yi, vi, data = ., measure = "OR")
-               # %>%
-               #   forest(transf = "exp")
-               
-             }),
-  
-  # dev smd -----------------------------------------------------------------
-  
-  tar_target(pw_smd_dev_dat, {
-    # select an arbitrary lor model
-    m_o_tt_key_row <-
-      m_keys$m_o_tt %>%
-      filter(model_type == "smd",
-             outcome == "pain_int",
-             type == "antidepressant") %>%
-      head(1)
-    
-    msg_mine(" Selected row from m_model_key")
-    print(m_o_tt_key_row)
-    
-    # get input data for that model
-    mod_dat <-
-      m_o_tt[[m_o_tt_key_row$index]] %>%
-      pluck("result", "network", "agd_arm") %>%
-      # rename to get back to original labels
-      rename(study = .study,
-             intervention = .trt)
-    
-    
-    msg_mine(" Check outcome and condition match.")
-    
-    mod_dat %>%
-      select(outcome, condition_general) %>%
-      distinct() %>%
-      print()
-    
-    msg_mine(" Count interventions")
-    
-    mod_dat %>%
-      count(intervention) %>%
-      print()
-    
-    msg_mine(" Output dataset")
-    mod_dat %>%
-      # filter to group 1, group 2
-      filter(intervention %in% c("placebo", "duloxetine"))
-    
-  }),
-  
-  tar_target(pw_smd_dev_wide, {
-    pw_smd_dev_dat %>%
-      filter(intervention == "placebo") %>%
-      rename(mean_ref = mean,
-             sd_ref = sd,
-             n_ref = n) %>%
-      select(-intervention, -model_type, -arm) %>%
-      inner_join(pw_smd_dev_dat %>% filter(intervention != "placebo"))
-    
-  }),
-  
-  tar_target(pw_single_smd, {
-    msg_mine(" Now filter to one pairing")
-    mod_dat %>%
-      filter(intervention == "placebo" |
-               intervention == "anitriptyline") %>%
-      pw_wide(m_type = "smd")
-    
-  }),
-  
-  
-  
-  
   # pw set groups -----------------------------------------------------------
   
   
   tar_target(
-    pw_dat,
+    pw_dat_get,
     {
-      # checks
-      assert_that(m_keys_df$target %in% c("m_o_tt"),
-                  msg = "If else for mod objects
+      function(key) {
+        # checks
+        assert_that(key$target %in% c("m_o_tt", "m_con_o_tt"),
+                    msg = "If else for mod objects
                            not working as should.")
-      
-      assert_that(length(m_keys_df$target) == 1,
-                  msg = "target identifier not a single string")
-      
-      assert_that(is.character(m_keys_df$target),
-                  msg = "what I think is target string not a string")
-      msg_mine(" Get model input data for")
-      m_keys_df %>%
-        select(target, index, outcome, timepoint, type) %>%
-        print()
-      
-      msg_mine(" Show target selected, damnit!")
-      pull(m_keys_df, "target")
-      
-      mods <-
-        if (m_keys_df$target == "m_o_tt")
-          m_o_tt
-      
-      mods %>%
-        pluck(m_keys_df$index, "result", "network", "agd_arm") %>%
-        rename(study = .study, intervention = .trt) %>%
-        mutate(across(c(study, intervention), as.character))
-      
+        
+        assert_that(length(key$target) == 1,
+                    msg = "target identifier not a single string")
+        
+        assert_that(is.character(key$target),
+                    msg = "what I think is target string not a string")
+        msg_mine(" Get model input data for")
+        key %>%
+          select(target, index, outcome, timepoint, type) %>%
+          print()
+        
+        msg_mine(" Show target selected, damnit!")
+        pull(key, "target") %>% print()
+        
+        mod <-
+          if (key$target == "m_o_tt") m_o_tt[[key$index]]
+        else if (key$target == "m_con_o_tt") m_con_o_tt[[key$index]]
+        
+        mod %>%
+          pluck("result", "network", "agd_arm") %>%
+          rename(study = .study, intervention = .trt) %>%
+          mutate(across(c(study, intervention), as.character))
+      }
+    }
+  ),
+  
+  tar_target(
+    pw_dat_m_o_tt,{
+    msg_mine("Dat key")
+    m_keys_df_m_o_tt %>% print()
+    
+    msg_mine("Get dat")
+    pw_dat_get(m_keys_df_m_o_tt)
     }
     ,
-    pattern = map(m_keys_df),
+    pattern = map(m_keys_df_m_o_tt),
+    iteration = "list"
+  ),
+  
+  tar_target(
+    pw_dat_m_con_o_tt,
+    pw_dat_get(m_keys$m_con_o_tt),
+    pattern = map(m_keys$m_con_o_tt),
     iteration = "list"
   ),
   
@@ -1700,58 +1593,104 @@ list(
     iteration = "list"
   ),
   
-  tar_target(pw_ma, {
-    # this_nma <- pw_nma_comp %>% pluck(1)
-    
-    msg_mine("combinations selected")
-    
-    pw_nma_comp$int_comb %>% print()
-    
-    if (nrow(pw_nma_comp$int_comb) == 0) {
-      msg_mine("only one study in this nma pw comparison")
-      "no studies with both interventions"
-    } else {
-      msg_mine("get studies")
-      ma_dat <-
-        pw_nma_comp$int_comb %>%
-        select(-n_studies) %>%
-        pmap(function(g1, g2, studies) {
-          this_ma_dat <-
-            pw_nma_comp$dat %>%
-            filter(intervention %in% c(g1, g2),
-                   study %in% studies)
-          
-          # print(this_ma_dat)
-          
-          m_type <- this_ma_dat %>% pull(model_type) %>% unique()
-          
-          mod_dat <- 
-          this_ma_dat %>%
-            filter(intervention == g1) %>%
-            select(study, intervention, mean, r, sd, n, arm) %>%
-            rename_with( ~ glue("{.x}_{g1}"),
-                         any_of(c(
-                           "intervention", "arm", "mean", "r", "sd", "n"
-                         ))) %>%
-            full_join(this_ma_dat %>%
-                        filter(intervention == g2) %>%
-                        rename_with( ~ glue("{.x}_{g2}"),
-                                     any_of(
-                                       c("intervention",
-                                         "arm",
-                                         "mean", "r", "sd", "n")
-                                     )),
-                      by = "study")
-          
-
-        }) -> ma
+  # pw meta-analyse ---------------------------------------------------------
+  
+  
+  tar_target(
+    pw_ma,
+    {
+      msg_mine("combinations selected")
       
+      pw_nma_comp$int_comb %>% print()
+      
+      if (nrow(pw_nma_comp$int_comb) == 0) {
+        msg_mine("only one study in this nma pw comparison")
+        "no studies with both interventions"
+      } else {
+        msg_mine("get studies")
+        ma_dat <-
+          pw_nma_comp$int_comb %>%
+          select(-n_studies) %>%
+          pmap(function(g1, g2, studies) {
+            this_ma_dat <-
+              pw_nma_comp$dat %>%
+              filter(intervention %in% c(g1, g2),
+                     study %in% studies)
+            
+            m_type <- this_ma_dat %>% pull(model_type) %>% unique()
+            
+            msg_mine("Create ma dataset")
+            
+            mod_dat <-
+              this_ma_dat %>%
+              filter(intervention == g1) %>%
+              select(study, intervention, mean, r, sd, n, arm) %>%
+              rename_with( ~ glue("{.x}_g1"),
+                           any_of(c(
+                             "intervention", "arm", "mean", "r", "sd", "n"
+                           ))) %>%
+              full_join(this_ma_dat %>%
+                          filter(intervention == g2) %>%
+                          rename_with( ~ glue("{.x}_g2"),
+                                       any_of(
+                                         c("intervention",
+                                           "arm",
+                                           "mean", "r", "sd", "n")
+                                       )),
+                        by = "study")
+            
+            msg_mine(glue("Meta-analyse: {m_type}"))
+            
+            this_escalc <-
+              if (m_type == "lor") {
+                escalc(
+                  data = mod_dat,
+                  ai = r_g1,
+                  ci = r_g2,
+                  n1i = n_g1,
+                  n2i = n_g2,
+                  measure = "OR",
+                  slab = study
+                )
+              } else if (m_type == "smd") {
+                escalc(
+                  data = mod_dat,
+                  m1i = mean_g1,
+                  m2i = mean_g2,
+                  sd1i = sd_g1,
+                  sd2i = sd_g2,
+                  n1i = n_g1,
+                  n2i = n_g2,
+                  measure = "SMD",
+                  slab = study
+                )
+              } else {
+                msg_mine("escalc didn't run")
+              }
+            
+            rma(
+              yi = yi,
+              vi = vi,
+              data = this_escalc,
+              slab = study,
+              measure = if_else(m_type == "lor", "OR", "SMD")
+            )
+            
+          }) -> ma
+        
         
         c(pw_nma_comp, ma = list(ma))
-    }
-  },
-  pattern = map(pw_nma_comp),
-  iteration = "list"
+      }
+    },
+    pattern = map(pw_nma_comp),
+    iteration = "list"
+  ),
+  
+  tar_target(
+    pw_plot, {
+      pw_ma
+    },
+    pattern = map(pw_ma)
   ),
   
   # null --------------------------------------------------------------------

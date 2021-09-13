@@ -1,6 +1,5 @@
 # Physical function results
 
 ```{r,results='asis', warning=FALSE}
-params <- list(outcome = "physical")
-makechapter(params) -> sink
+makechapter("physical") -> sink
 ```

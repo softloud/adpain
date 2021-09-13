@@ -11,7 +11,7 @@
 ## Joining together Covidence export with Hollie's extractions
 
 
-```{r}
+```{r, eval=FALSE}
 tar_read(w_study_report)
 
 
@@ -21,7 +21,7 @@ tar_read(w_study_report)
     
 ## Labelling protocol for Covidence
 
-```{r load w_obs}
+```{r load w_obs, eval=FALSE}
 tar_load(w_obs) 
 
   
@@ -31,7 +31,7 @@ tar_load(w_obs)
 
 #### Condition
 
-```{r output levels of w_obs}
+```{r output levels of w_obs, eval=FALSE}
 w_obs %>% 
   summarise(
     condition_general = unique(condition_general) 
@@ -42,7 +42,7 @@ w_obs %>%
 
 #### Timepoint or change score
 
-```{r}
+```{r, eval=FALSE}
 w_obs %>% 
   count(timepoint)
 
@@ -50,7 +50,7 @@ w_obs %>%
 
 ##### Unmatched timepoints
 
-```{r}
+```{r, eval=FALSE}
 tar_read(w_obs_timepoint) %>% 
   filter(timepoint == "unmatched") %>% 
   select(study, arm, covidence_desc)
@@ -62,7 +62,7 @@ tar_read(w_obs_timepoint) %>%
 
 #### Scales
 
-```{r outcome levels}
+```{r outcome levels, eval=FALSE}
 w_obs %>% 
   group_by(outcome) %>% 
   count(scale) %>% 
@@ -76,14 +76,14 @@ w_obs %>%
 
 Check that key points in pipeline have the expected number of joins and meets.
 
-```{r}
+```{r, eval=FALSE}
 tar_load(w_covidence)
 tar_load(w_obs_long_final)
 tar_load(w_cov)
 tar_load(w_obs)
 ```
 
-```{r}
+```{r, eval=FALSE}
 targets <- 
 list(
   w_covidence = w_covidence,
@@ -112,14 +112,14 @@ targets %>%
 
 ### condition
 
-```{r}
+```{r, eval=FALSE}
 
 ```
 
 
 ## Number of arms per study per timepoint
 
-```{r}
+```{r, eval=FALSE}
 w_obs %>% 
   group_by(outcome, timepoint) %>% 
   count(study)

@@ -1,6 +1,5 @@
 # Substantial pain results
 
 ```{r,results='asis', warning=FALSE}
-params <- list(outcome = "pain_sub")
-makechapter(params) -> sink
+makechapter("pain_sub") -> sink
 ```

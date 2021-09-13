@@ -50,7 +50,7 @@ w_obs_m %>%
 
 ## Studies currently included
 
-There are `r w_obs$study %>% unique() %>% length()` currently included.
+There are `r w_obs_m$study %>% unique() %>% length()` currently included.
 
 ```{r}
 w_obs_m %>% 
