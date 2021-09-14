@@ -1,5 +1,5 @@
 # Adverse results
 
 ```{r,results='asis', warning=FALSE}
-makechapter("adverse") -> sink
+#makechapter("adverse") -> sink
 ```

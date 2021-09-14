@@ -8,7 +8,10 @@
 #' @examples
 
 
-forest_multinma <- function(mod) {
+forest_multinma <- function(mod, key) {
+  
+  msg_mine("Set palette according to direction of improvement")
+  
   lisa_pal <- c(
     blue = "dodgerblue",
     red = "red"
@@ -20,39 +23,26 @@ forest_multinma <- function(mod) {
   
   active_pal <- dirty_xmas_pal
   
-  input_dat <-
-    mod %>% 
+  active_pal <- if (key$direction_of_improvement == "lower") c(active_pal[2], active_pal[1]) else active_pal
+  
+
+  mod_dat <- 
+    mod %>%
+    # needs to work on model object, not on results
     pluck("network", "agd_arm") %>% 
-    select(study = .study, trt = .trt, n = .sample_size, arm, type) 
+    rename(study = .study, intervention = .trt)
   
-  placebo_arms <-
-    input_dat %>% 
-    filter(type == "placebo") %>% 
-    group_by(study) %>% 
+  int_n <- 
+    mod_dat %>% 
+    mutate(across(c(study, intervention), as.character)) %>% 
+    group_by(intervention, class) %>% 
     summarise(
-      placebo_n = sum(n, na.rm = TRUE)
-    )
-  
-  ad_arms <-
-    input_dat %>% 
-    filter(type == "antidepressant") %>% 
-    left_join(placebo_arms, by = "study")
-  
-  
-  sample_sizes <- 
-    ad_arms %>% 
-    group_by(trt) %>% 
-    summarise(
-      int_sample = sum(n, na.rm = TRUE) + sum(placebo_n, na.rm = TRUE)
+      int_n = sum(n)
     ) %>% 
-    rename(
-      intervention = trt
-    )
-  
-  
+    arrange(desc(int_n))
   
   stan_dat <- 
-    mod %>% 
+    mod %>%
     summary() %>% 
     as.data.frame() %>% 
     filter(str_detect(parameter, "^d\\[|^tau")) %>% 
@@ -69,17 +59,19 @@ forest_multinma <- function(mod) {
   tau <- stan_dat %>% 
     filter(intervention == "tau") %>% pull(mean)
   
+  dir_lgl <- key$direction_of_improvement == "lower"
+
+  
   plot_dat <-
     stan_dat %>% 
-    filter(intervention != "tau")
+    filter(intervention != "tau") %>% 
+    left_join(int_n, by = "intervention") %>% 
+    mutate(
+      intervention = fct_reorder(intervention, mean, .desc = dir_lgl)
+    )
+  
   
   plot_dat %>% 
-    mutate(
-      intervention = fct_reorder(intervention, mean, desc) 
-    ) %>% 
-    left_join(
-      sample_sizes, by = "intervention"
-    ) %>% 
     ggplot() +
     geom_vline(
       xintercept = 0,
@@ -87,15 +79,18 @@ forest_multinma <- function(mod) {
       linetype = "dotted"
     ) +
     geom_segment(aes(x = ci_lb, xend = ci_ub,
+                     linetype = class,
                      y = intervention, yend = intervention,
                      colour = I(
                        if_else(ci_lb < 0 & ci_ub > 0, "grey", "black")
                      ),
-    ), alpha = 0.7, size = 1
+    ), alpha = 0.95, size = 0.8
     ) +
-    geom_point(aes(x = mean, y = intervention, colour = 
-                     I(if_else(mean < 0, active_pal[[1]], active_pal[[2]])),
-                   size = int_sample
+    geom_point(aes(x = mean, 
+                   y = intervention, 
+                   colour = I(if_else(mean < 0, active_pal[[1]], active_pal[[2]])),
+                   size = int_n,
+                   NULL
     ),
     alpha = 0.85,
     # set to square

@@ -1,7 +1,7 @@
 ---
 title: "Antidepressants for pain management in adults with chronic pain"
 description: |
-  A network meta-analysis
+  Network meta-analysis results
 site: bookdown::bookdown_site
 bibliography: references.bib
 ---
@@ -31,9 +31,20 @@ source("preamble.R")
 
 ```{r}
 
-tar_load(w_obs_m)
+tar_load(w_obs_m)  
 
 ```
+
+## Types of antidepressant
+
+What we said we'd do:
+
+Currently included:
+
+```{r}
+
+```
+
 
 ## Outcomes included
 

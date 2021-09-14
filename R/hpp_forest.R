@@ -2,7 +2,6 @@
 #' 
 #' @param mod A [multinma] model
 #' @param mod_key Model key from target
-#' @param mod_index Specific index of model for key
 #'
 #' @export
 
@@ -29,7 +28,7 @@ this_subtitle <-
 
 msg_mine("Create plot")
 
-forest_multinma(mod) +
+forest_multinma(mod, mod_key) +
   ggthemes::theme_tufte(base_size = 22) +
   labs(
     title = this_title,
