@@ -17,31 +17,31 @@ suppressMessages({
   
 })
 
-installed_pkg <- installed.packages()[, 1]
-
-if ("dontpanic" %in% installed_pkg) {
-  require(dontpanic)
-}
-
 
 # functions ---------------------------------------------------------------
 list.files("R", full.names = TRUE)  %>%
   map(source)
-
+{
 tar_load(m_keys_df)
 tar_load(m_o_tt)
 tar_load(m_con_o_tt)
+tar_load(pw_ma)
+}
 
-# select result -----------------------------------------------------------
+# display models ----------------------------------------------------------
 
 m_keys_df %>%
   select(outcome, condition, type, timepoint, model_type) %>% 
   gt()
 
+# select result -----------------------------------------------------------
+
 this_model <- m_keys_df %>% 
+  mutate(ma_index = row_number()) %>% 
   filter(
-    outcome == "adverse",
-    condition == "neuropathic"
+    outcome == "sleep",
+    is.na(condition)
+    # str_detect(condition, "fibro")
   )
 
 mod <-
@@ -53,8 +53,31 @@ mod <-
   }
 
 
+# net plot ----------------------------------------------------------------
+
+mod$network %>% plot()
+
+# forest plot -------------------------------------------------------------
+
 
   hpp_forest(mod,
-             this_model)
+             this_model, or = TRUE)
 
 
+# pairwise ----------------------------------------------------------------
+{
+pw <- pw_ma[[this_model$ma_index]]
+
+ma <- pw$ma
+
+
+length(pw)
+
+or <- if (this_model$model_type == "lor") exp else NULL
+
+ma %>% 
+  map(forest, transf = or, title = "test")
+
+pw$int_comb
+
+}

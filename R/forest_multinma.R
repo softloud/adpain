@@ -8,7 +8,7 @@
 #' @examples
 
 
-forest_multinma <- function(mod, key) {
+forest_multinma <- function(mod, key, or = FALSE) {
   
   msg_mine("Set palette according to direction of improvement")
   
@@ -40,7 +40,9 @@ forest_multinma <- function(mod, key) {
       int_n = sum(n)
     ) %>% 
     arrange(desc(int_n))
-  
+
+  is_lor <- key$model_type == "lor"
+    
   stan_dat <- 
     mod %>%
     summary() %>% 
@@ -54,7 +56,16 @@ forest_multinma <- function(mod, key) {
            ci_lb = "2.5%",
            ci_ub = "97.5%"
     ) %>% 
-    select(intervention, mean, ci_lb, ci_ub)
+    select(intervention, mean, ci_lb, ci_ub) 
+
+  stan_dat <- if(isTRUE(or))
+    stan_dat %>%
+    mutate(
+      model_type = key$model_type,
+      mean = if_else(model_type == "lor", exp(mean), mean),
+      ci_lb = if_else(model_type == "lor", exp(ci_lb), ci_lb),
+      ci_ub = if_else(model_type == "lor", exp(ci_ub), ci_ub)
+    ) else stan_dat
   
   tau <- stan_dat %>% 
     filter(intervention == "tau") %>% pull(mean)

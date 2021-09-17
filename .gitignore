@@ -3,6 +3,8 @@
 .RData
 .Ruserdata
 .Rprofile
-/data
+/data/*.csv
+/data/*.rds
+/data/labels/*.csv
 /_targets
 /exports

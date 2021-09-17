@@ -6,7 +6,8 @@
 #' @export
 
 hpp_forest <- function(mod, 
-                       mod_key
+                       mod_key, 
+                       or = FALSE
                        ){
 
 msg_mine("Model parameters")
@@ -28,7 +29,7 @@ this_subtitle <-
 
 msg_mine("Create plot")
 
-forest_multinma(mod, mod_key) +
+forest_multinma(mod, mod_key, or) +
   ggthemes::theme_tufte(base_size = 22) +
   labs(
     title = this_title,

@@ -75,7 +75,6 @@ list(
       filter(
         timepoint != "baseline",
         !str_detect(scale, "DELETE"),!is.na(intervention),
-        !str_detect(covidence, "change"),
         type != "unclassified",
         outcome %in% c("pain_sub", "pain_mod", "mood", "sleep", "adverse")
       )
@@ -113,8 +112,6 @@ list(
   
   
   # models ------------------------------------------------------------------
-  
-  
   # outcome, timepoint, type ------------------------------------------------
   
   
