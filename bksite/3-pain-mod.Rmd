@@ -1,5 +1,0 @@
-# Moderate pain intensity results
-
-```{r,results='asis', warning=FALSE}
-makechapter("pain_mod") -> sink
-```

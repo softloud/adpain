@@ -1,5 +1,0 @@
-# Quality of life results
-
-```{r,results='asis', warning=FALSE}
-# makechapter("sleep") -> sink
-```

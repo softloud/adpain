@@ -31,7 +31,7 @@ source("preamble.R")
 
 ```{r}
 
-tar_load(w_obs_m)  
+tar_load(nma_dat)  
 
 ```
 
@@ -49,7 +49,7 @@ Currently included:
 ## Outcomes included
 
 ```{r}
-w_obs_m %>%
+nma_dat %>%
   group_by(outcome) %>% 
   summarise(
     studies = n_distinct(study),
@@ -61,10 +61,10 @@ w_obs_m %>%
 
 ## Studies currently included
 
-There are `r w_obs_m$study %>% unique() %>% length()` currently included.
+There are `r nma_dat$study %>% unique() %>% length()` currently included.
 
 ```{r}
-w_obs_m %>% 
+nma_dat %>% 
   group_by(study) %>% 
   summarise(
     outcome = unique(outcome) %>% paste(collapse = ", "),
@@ -76,7 +76,7 @@ w_obs_m %>%
 ## Number of arms per timepoint
 
 ```{r}
-w_obs_m %>% 
+nma_dat %>% 
   count(outcome, timepoint)
 
 ```
