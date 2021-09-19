@@ -128,21 +128,13 @@ list(
 
 
   tar_target(
-    m_o_tt_group,
+    m_o_tt_dat,
     nma_dat %>%
       filter(type != "placebo") %>%
       group_by(outcome, timepoint, type) %>%
       tar_group(),
     iteration = "group"
   ),
-
-  tar_target(
-    m_o_tt_dat,
-    m_o_tt_group,
-    pattern = map(m_o_tt_group),
-    iteration = "list"
-  ),
-
 
   tar_target(
     m_o_tt,
@@ -153,7 +145,7 @@ list(
 
   tar_target(m_o_tt_key,
              if (!is.null(m_o_tt$error)) {
-               tibble(outcome = "nma not produced", )
+               tibble(target = "m_o_tt", )
              } else {
                m_key_fn(m_o_tt, "m_o_tt")
              }
@@ -169,7 +161,7 @@ list(
 
 
   tar_target(
-    m_con_pain_sub_group,
+    m_con_pain_sub_dat,
     nma_dat %>%
       filter(type != "placebo",
              outcome == "pain_sub"
@@ -180,14 +172,6 @@ list(
   ),
 
   tar_target(
-    m_con_pain_sub_dat,
-    m_con_pain_sub_group,
-    pattern = map(m_con_pain_sub_group),
-    iteration = "list"
-  ),
-
-
-  tar_target(
     m_con_pain_sub,
     hpp_nma(m_con_pain_sub_dat, nma_dat),
     pattern = map(m_con_pain_sub_dat),
@@ -196,7 +180,7 @@ list(
 
   tar_target(m_con_pain_sub_key,
              if (!is.null(m_con_pain_sub$error)) {
-               tibble(outcome = "nma not produced", )
+               tibble(target = "m_con_pain_sub", )
              } else {
                 m_key_fn(m_con_pain_sub, "m_con_pain_sub") %>%
                  mutate(
@@ -215,22 +199,17 @@ list(
 
 
 
-  tar_target(
-    m_con_mood_group,
-    nma_dat %>%
-      filter(type != "placebo") %>%
-      group_by(outcome, timepoint, type) %>%
-      tar_group(),
-    iteration = "group"
-  ),
 
   tar_target(
     m_con_mood_dat,
-    m_con_mood_group,
-    pattern = map(m_con_mood_group),
-    iteration = "list"
+    nma_dat %>%
+      filter(type != "placebo",
+             outcome == "mood"
+      ) %>%
+      group_by(outcome, timepoint, type, condition_general) %>%
+      tar_group(),
+    iteration = "group"
   ),
-
 
   tar_target(
     m_con_mood,
@@ -241,44 +220,41 @@ list(
 
   tar_target(m_con_mood_key,
              if (!is.null(m_con_mood$error)) {
-               tibble(outcome = "nma not produced", )
+               tibble(target = "m_con_mood", )
              } else {
-               m_con_mood %>%
-                 pluck("result", "network", "agd_arm") %>%
-                 filter(type != "placebo") %>%
-                 summarise(
-                   outcome = unique(outcome),
-                   timepoint = unique(timepoint),
-                   type = unique(type),
-                   model_type = unique(model_type),
-                   trt_ref = m_con_mood$result$network$treatments[[1]]
-                 ) %>%
-                 mutate(target = "m_con_mood") %>%
-                 select(target, everything())
+               m_key_fn(m_con_mood, "m_con_mood") %>%
+                 mutate(
+                   condition =
+                     m_con_mood %>%
+                     pluck("result", "network", "agd_arm") %>%
+                     filter(!is.na(condition_general)) %>%
+                     pull(condition_general) %>% unique()
+                 )
              }
              ,
              pattern = map(m_con_mood)),
 
 
 
-
   # wrangle model keys ------------------------------------------------------
 
   tar_target(
-    m_keys_list,
-    list(m_o_tt = m_o_tt_key,
-         m_con_o_tt = m_con_o_tt_key)
+    m_key,
+    list(
+      m_o_tt_key,
+      m_con_pain_sub_key,
+      m_con_mood_key
+    ) %>%
+      map_df(bind_rows) %>%
+      group_by(target) %>%
+      mutate(
+        index = 1:n()
+      ) %>%
+      select(
+        target, index, everything()
+      ) %>%
+      filter(!is.na(outcome))
   ),
-
-
-
-  tar_target(m_keys_df,
-             bind_rows(m_keys) %>%
-               left_join(r_outcome_labels)),
-
-  tar_target(m_keys_df_m_o_tt,
-             m_keys_df %>%
-               filter(target == "m_o_tt")),
 
   # pairwise ----------------------------------------------------------------
 
