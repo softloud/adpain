@@ -96,10 +96,34 @@ list(
 
   tar_target(
     r_outcome_key,
-    read_csv("data/outcome-2021-09-19 16:55:19.csv")
+    read_csv("data/outcome-2021-09-19 16:55:19.csv") %>%
+      clean_names()
   ),
 
   # models ------------------------------------------------------------------
+  tar_target(m_key_fn,
+             function(mod, mod_tar) {
+                  mod %>%
+                 pluck("result", "network", "agd_arm") %>%
+                 filter(type != "placebo") %>%
+                 summarise(
+                   outcome = unique(outcome),
+                   timepoint = unique(timepoint),
+                   type = unique(type),
+                   model_type = unique(model_type),
+                   trt_ref = mod$result$network$treatments[[1]]
+                 ) %>%
+                 mutate(target = mod_tar) %>%
+                 select(target, everything()) %>%
+                   unite(filename, everything(), sep = "-", remove = FALSE) %>%
+                   mutate(
+                     netpath = glue("images/net/{filename}.png"),
+                     forestpath = glue("images/forest/{filename}.png")
+                   ) %>%
+                   left_join(r_outcome_key, by = c("outcome", "model_type")) %>%
+                   select(outcome, everything(), contains("path"))
+               }),
+
   # outcome, timepoint, type ------------------------------------------------
 
 
@@ -131,18 +155,7 @@ list(
              if (!is.null(m_o_tt$error)) {
                tibble(outcome = "nma not produced", )
              } else {
-               m_o_tt %>%
-                 pluck("result", "network", "agd_arm") %>%
-                 filter(type != "placebo") %>%
-                 summarise(
-                   outcome = unique(outcome),
-                   timepoint = unique(timepoint),
-                   type = unique(type),
-                   model_type = unique(model_type),
-                   trt_ref = m_o_tt$result$network$treatments[[1]]
-                 ) %>%
-                 mutate(target = "m_o_tt") %>%
-                 select(target, everything())
+               m_key_fn(m_o_tt, "m_o_tt")
              }
              ,
              pattern = map(m_o_tt)),
@@ -151,53 +164,51 @@ list(
   # models by condition -----------------------------------------------------
 
 
-  # condition: pain_int -----------------------------------------------------
+  # condition: pain_sub -----------------------------------------------------
 
 
 
   tar_target(
-    m_con_pain_int_group,
+    m_con_pain_sub_group,
     nma_dat %>%
-      filter(type != "placebo") %>%
-      group_by(outcome, timepoint, type) %>%
+      filter(type != "placebo",
+             outcome == "pain_sub"
+             ) %>%
+      group_by(outcome, timepoint, type, condition_general) %>%
       tar_group(),
     iteration = "group"
   ),
 
   tar_target(
-    m_con_pain_int_dat,
-    m_con_pain_int_group,
-    pattern = map(m_con_pain_int_group),
+    m_con_pain_sub_dat,
+    m_con_pain_sub_group,
+    pattern = map(m_con_pain_sub_group),
     iteration = "list"
   ),
 
 
   tar_target(
-    m_con_pain_int,
-    hpp_nma(m_con_pain_int_dat, nma_dat),
-    pattern = map(m_con_pain_int_dat),
+    m_con_pain_sub,
+    hpp_nma(m_con_pain_sub_dat, nma_dat),
+    pattern = map(m_con_pain_sub_dat),
     iteration = "list"
   ),
 
-  tar_target(m_con_pain_int_key,
-             if (!is.null(m_con_pain_int$error)) {
+  tar_target(m_con_pain_sub_key,
+             if (!is.null(m_con_pain_sub$error)) {
                tibble(outcome = "nma not produced", )
              } else {
-               m_con_pain_int %>%
-                 pluck("result", "network", "agd_arm") %>%
-                 filter(type != "placebo") %>%
-                 summarise(
-                   outcome = unique(outcome),
-                   timepoint = unique(timepoint),
-                   type = unique(type),
-                   model_type = unique(model_type),
-                   trt_ref = m_con_pain_int$result$network$treatments[[1]]
-                 ) %>%
-                 mutate(target = "m_con_pain_int") %>%
-                 select(target, everything())
+                m_key_fn(m_con_pain_sub, "m_con_pain_sub") %>%
+                 mutate(
+                   condition =
+                     m_con_pain_sub %>%
+                     pluck("result", "network", "agd_arm") %>%
+                     filter(!is.na(condition_general)) %>%
+                     pull(condition_general) %>% unique()
+                 )
              }
              ,
-             pattern = map(m_con_pain_int)),
+             pattern = map(m_con_pain_sub)),
 
 
   # condition: mood ---------------------------------------------------------
@@ -259,20 +270,7 @@ list(
          m_con_o_tt = m_con_o_tt_key)
   ),
 
-  tar_target(m_keys,
-             m_keys_list %>%
-               map(function(df) {
-                 df %>%
-                   mutate(index = row_number()) %>%
-                   filter(outcome != "nma not produced") %>%
-                   unite(filename, everything(), sep = "-", remove = FALSE) %>%
-                   mutate(
-                     netpath = glue("images/net/{filename}.png"),
-                     forestpath = glue("images/forest/{filename}.png")
-                   ) %>%
-                   left_join(r_outcome_key, by = c("outcome", "model_type")) %>%
-                   select(index, outcome, everything(), contains("path"))
-               })),
+
 
   tar_target(m_keys_df,
              bind_rows(m_keys) %>%
