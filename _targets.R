@@ -89,7 +89,7 @@ list(
       filter(
         timepoint != "baseline",!str_detect(scale, "DELETE"),!is.na(intervention),
         type != "unclassified",
-        outcome %in% c("pain_sub", "mood")
+        outcome %in% c("pain_sub", "mood", "adverse", "pain_int", "pain_mod")
       )
 
   ),
@@ -253,7 +253,12 @@ list(
       select(
         target, index, everything()
       ) %>%
-      filter(!is.na(outcome))
+      filter(!is.na(outcome)) %>%
+      ungroup() %>%
+      mutate(
+        plot_index = row_number()
+      )
+
   ),
 
   # pairwise ----------------------------------------------------------------
@@ -266,7 +271,10 @@ list(
              {
                function(key) {
                  # checks
-                 assert_that(key$target %in% c("m_o_tt", "m_con_o_tt"),
+                 assert_that(key$target %in%
+                               c("m_o_tt",
+                                 "m_con_pain_sub",
+                                 "m_con_mood"),
                              msg = "If else for mod objects
                            not working as should.")
 
@@ -286,8 +294,10 @@ list(
                  mod <-
                    if (key$target == "m_o_tt")
                      m_o_tt[[key$index]]
-                 else if (key$target == "m_con_o_tt")
-                   m_con_o_tt[[key$index]]
+                 else if (key$target == "m_con_pain_sub")
+                   m_con_pain_sub[[key$index]]
+                 else if (key$target == "m_con_mood")
+                   m_con_mood[[key$index]]
 
                  mod %>%
                    pluck("result", "network", "agd_arm") %>%
@@ -297,8 +307,9 @@ list(
              }),
 
   tar_target(pw_dat,
-             pw_dat_get(m_keys_df),
-             pattern = map(m_keys_df)),
+             pw_dat_get(m_key),
+             pattern = map(m_key),
+             iteration = "list"),
 
   tar_target(
     pw_nma_comp,
@@ -318,11 +329,11 @@ list(
         ) %>%
         filter(n_studies > 1)
 
-      list(m_key = m_keys_df,
+      list(m_key = m_key,
            int_comb = int_comb,
            dat = pw_dat)
     },
-    pattern = map(pw_dat, m_keys_df),
+    pattern = map(pw_dat, m_key),
     iteration = "list"
   ),
 
@@ -419,97 +430,120 @@ list(
     iteration = "list"
   ),
 
-  # plot ma key
+  tar_target(
+    pw_results, {
+      if (length(pw_ma) == 1) {
+        pw_nma_comp$m_key %>%
+          select(outcome, timepoint, type, condition, index)
+      } else {
+    pw_ma$int_comb %>%
+      mutate(
+        i_sq = map_dbl(pw_ma$ma, "I2"),
+        tau_sq = map_dbl(pw_ma$ma, "tau2"),
+        ci_lb = map_dbl(pw_ma$ma, "ci.lb"),
+        ci_ub = map_dbl(pw_ma$ma, "ci.ub"),
+        eff_est = map_dbl(pw_ma$ma, "beta")
+      ) %>%
+      cbind(
+        pw_ma$m_key %>% select(outcome, timepoint, type, condition, index, target)
+      )}
+      },
+    pattern = map(pw_ma, pw_nma_comp)
+  ),
+
 
   # plot ma -----------------------------------------------------------------
-  tar_target(pw_plot, {
-    msg_mine("Plot target for")
-    pw_ma$m_key %>% print()
-
-    fname <- pw_ma %>% pluck("m_key", "filename")
-    msg_mine("Filename for these ma")
-    fname %>% print()
-
-    msg_mine("Make plots")
-    paths <-
-      map_chr(1:length(pw_ma$ma), function(ma_index) {
-        glue("images/ma/{fname}-{ma_index}")
-      })
-
-    map2(pw_ma$ma, paths, function(ma, path) {
-      path
-
-    })
-  },
-  pattern = map(pw_ma)),
-
+  # tar_target(pw_plot, {
+  #   msg_mine("Plot target for")
+  #   pw_ma$m_key %>% print()
+  #
+  #   fname <- pw_ma %>% pluck("m_key", "filename")
+  #   msg_mine("Filename for these ma")
+  #   fname %>% print()
+  #
+  #   msg_mine("Make plots")
+  #   paths <-
+  #     map_chr(1:length(pw_ma$ma), function(ma_index) {
+  #       glue("images/ma/{fname}-{ma_index}")
+  #     })
+  #
+  #   map2(pw_ma$ma, paths, function(ma, path) {
+  #     path
+  #
+  #   })
+  # },
+  # pattern = map(pw_ma)),
+  #
 
   # network plots -----------------------------------------------------------
   tar_target(plot_net, {
-    msg_mine("Set up outcome, type, timepoint")
+    msg_mine("Set up title by outcome, type, timepoint")
     this_title <-
-      glue("Direct evidence for {m_keys_df$outcome}")
+      glue("Direct evidence for {m_key$outcome}")
 
     this_title %>% print()
 
     msg_mine("Target:")
-    m_keys_df$target %>% print()
+    m_key$target %>% print()
 
     msg_mine("Index:")
-    m_keys_df$index %>% print()
+    m_key$index %>% print()
 
-    msg_mine("Set up target-dependent titles")
+    msg_mine("Subtitle:")
     this_subtitle <- case_when(
-      m_keys_df$target == "m_o_tt" ~
+      m_key$target == "m_o_tt" ~
         glue(
-          "Subgroups: timepoint {m_keys_df$timepoint} and type {m_keys_df$type}"
+          "Subgroups: timepoint [{m_key$timepoint}] and type [{m_key$type}]"
         ),
-      m_keys_df$target == "m_con_o_tt" ~
+      str_detect(m_key$target, "^m_con") ~
         glue(
-          "Subgroups: timepoint {m_keys_df$timepoint}, type {m_keys_df$type}, condition {m_keys_df$condition}"
+          "Subgroups: timepoint [{m_key$timepoint}], type [{m_key$type}], condition [{m_key$condition}]"
         )
     )
 
     this_subtitle %>% print()
 
     mod <-
-      if (m_keys_df$target == "m_o_tt") {
-        m_o_tt %>% pluck(m_keys_df$index)
-      } else if (m_keys_df$target == "m_con_o_tt") {
-        m_con_o_tt %>%
-          pluck(m_keys_df$index)
+      if (m_key$target == "m_o_tt") {
+        m_o_tt %>% pluck(m_key$index)
+      } else if (m_key$target == "m_con_pain_sub") {
+        m_con_pain_sub %>%
+          pluck(m_key$index)
+      } else if (m_key$target == "m_con_mood") {
+        m_con_mood %>%
+          pluck(m_key$index)
       }
 
     msg_mine("Create plot")
     mod %>%
       pluck("result", "network") %>%
-      plot() %>%
+      plot() +
       labs(subtitle = this_subtitle,
            title = this_title)
 
   },
-  pattern = map(m_keys_df)),
+  pattern = map(m_key)),
 
   tar_target(plot_net_write,
              {
                glue(
                  " Writing net plot for m_o_tt:
-                        outcome {m_keys_df$outcome}
-                        timepoint {m_keys_df$timepoint}
-                        type {m_keys_df$type}
-                        condition {m_keys_df$condition}"
+                        outcome {m_key$outcome}
+                        timepoint {m_key$timepoint}
+                        type {m_key$type}
+                        condition {m_key$condition}"
                ) %>% msg_mine()
 
-               msg_mine(m_keys_df$netpath)
+               msg_mine(m_key$netpath)
                ggsave(
                  here::here("bksite",
-                            m_keys_df$netpath),
+                            m_key$netpath),
                  plot_net,
                  width = 11,
                  height = 6
                )
              },
-             pattern = map(m_keys_df, plot_net)),
+             pattern = map(m_key, plot_net)),
 
 
   # forest ------------------------------------------------------------------
@@ -525,6 +559,9 @@ list(
       m_o_tt %>%
       pluck(1, "result")
 
+    key <- m_key %>%
+      filter(target == "m_o_tt", index == 1)
+
     # print(summary(this_mod))
 
     msg_mine("Identify the dataframe req for conf ints text")
@@ -532,7 +569,7 @@ list(
 
     msg_mine("Plot generic forest")
 
-    forest_multinma(this_mod)
+    forest_multinma(this_mod, key)
   }),
 
 
@@ -540,11 +577,9 @@ list(
   tar_target(plot_forest_dev, {
     # select an arbitrary lor model
     m_o_tt_key_row <-
-      m_keys_df %>%
-      filter(outcome == "pain_sub") %>%
-      slice(1)
-
-    st <- glue("")
+      m_key %>%
+      filter(outcome == "mood", target == "m_o_tt") %>%
+      head(1)
 
     msg_mine(" Selected row from m_model_key")
     print(m_o_tt_key_row)
@@ -577,40 +612,45 @@ list(
 
   tar_target(plot_forest, {
     mod <-
-      if (m_keys_df$target == "m_o_tt") {
-        m_o_tt %>% pluck(m_keys_df$index, "result")
-      } else if (m_keys_df$target == "m_con_o_tt") {
-        m_con_o_tt %>%
-          pluck(m_keys_df$index, "result")
+      if (m_key$target == "m_o_tt") {
+        m_o_tt %>% pluck(m_key$index)
+      } else if (m_key$target == "m_con_pain_sub") {
+        m_con_pain_sub %>%
+          pluck(m_key$index)
+      } else if (m_key$target == "m_con_mood") {
+        m_con_mood %>%
+          pluck(m_key$index)
       }
 
-    plot <-
-      hpp_forest(mod,
-                 m_keys_df)
 
-    ggsave(m_keys_df$forestpath,
-           plot,
-           height = 11,
-           width = 11)
+      hpp_forest(mod$result,
+                 m_key)
+
 
   },
-  pattern = map(m_keys_df)),
+  pattern = map(m_key)),
 
-  tar_target(
-    plot_forest_write,
-    m_keys_df %>%
-      select(plot_index, forestpath) %>%
-      pmap(
-        .f = function(plot_index,  forestpath) {
-          ggsave(
-            here::here("bksite", forestpath),
-            plot_forest[[plot_index]],
-            width = 11,
-            height = 11
-          )
-        }
-      )
-  ),
+  tar_target(plot_forest_write,
+             {
+               glue(
+                 " Writing forest plot for {m_key$target}:
+                        outcome {m_key$outcome}
+                        timepoint {m_key$timepoint}
+                        type {m_key$type}
+                        condition {m_key$condition}"
+               ) %>% msg_mine()
+
+               msg_mine(m_key$forestpath)
+               ggsave(
+                 here::here("bksite",
+                            m_key$forestpath),
+                 plot_forest,
+                 width = 11,
+                 height = 11
+               )
+             },
+             pattern = map(m_key, plot_forest)),
+
 
 
   # # nma summary -------------------------------------------------------------

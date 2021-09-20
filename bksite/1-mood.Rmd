@@ -4,3 +4,4 @@
 params <- list(outcome = "mood")
 makechapter(params) -> sink
 ```
+

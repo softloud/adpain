@@ -1,14 +1,19 @@
 withr::with_dir(here::here(), {
   tar_load(m_key)
+  tar_load(pw_results)
 })
 
 # make plots function
 
 mod_plots <- function(target, index) {
-  net_plot_path <-
+
+  this_key <-
     m_key %>%
     filter(.data$index == .env$index,
-           .data$target == .env$target) %>%
+           .data$target == .env$target)
+
+  net_plot_path <-
+  this_key %>%
     pull(netpath)
 
   glue("<img src=\"{net_plot_path}\" style = 'width:100%;' />") %>%
@@ -16,20 +21,31 @@ mod_plots <- function(target, index) {
 
   # forest plot
   forest_plot_path <-
-    m_key %>%
-    filter(.data$index == .env$index,
-           .data$target == .env$target
-    ) %>%
+    this_key %>%
     pull(forestpath)
 
   glue("<img src=\"{forest_plot_path}\" style = 'width:100%;' />") %>%
     cat()
 
-  # pairwise
+  pw_results %>%
+    filter(.data$index == .env$index,
+           .data$target == .env$target)
 }
 
 
+pw_tab <- function(target, index) {
 
+  this_key <-
+    m_key %>%
+    filter(.data$index == .env$index,
+           .data$target == .env$target)
+
+  # pairwise
+  this_key %>%
+    select(outcome, timepoint, type, condition) %>%
+    left_join(pw_results)
+
+  }
 
 
 # make timepoints
@@ -71,6 +87,36 @@ makechapter <- function(this_outcome) {
       cat("### Type: ", this_type, "\n\n")
 
       maketimepoints(this_type, nma_key)
+
+    })
+
+
+# conditions --------------------------------------------------------------
+
+conditions <-
+    outcome_key %>%
+    filter(!is.na(condition)) %>%
+    pull(condition) %>% unique()
+
+  conditions %>%
+    map(function(this_condition) {
+      cat("## Condition: ", this_condition, "\n\n")
+
+      condition_key <-
+        outcome_key %>%
+        filter(condition == this_condition)
+
+
+      condition_types <-
+        condition_key %>%
+        pull(type) %>% unique()
+
+      condition_types %>%
+        map(function(this_condition_type) {
+          cat("### Type: ", this_condition_type, "\n\n")
+          maketimepoints(this_condition_type, condition_key)
+
+        })
 
     })
 
