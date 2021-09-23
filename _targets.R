@@ -64,8 +64,7 @@ list(
 
   tar_target(
     raw_nma_dat,
-    read_csv("data/w_obs-2021-09-17.csv") %>%
-      filter(timepoint != "baseline")
+    read_csv("data/w_obs-2021-09-17.csv")
   ),
 
 
@@ -87,8 +86,13 @@ list(
     # apply filters
     nma_dat_wrangle %>%
       filter(
-        timepoint != "baseline",!str_detect(scale, "DELETE"),!is.na(intervention),
+        timepoint != "baseline",
+        !str_detect(scale, "DELETE"),
+        !is.na(intervention),
         type != "unclassified",
+        type != "pharmacological intervention",
+        type != "non-pharmacological intervention",
+        timepoint %in% c("change_score", "post_int"),
         outcome %in% c("pain_sub", "mood", "adverse", "pain_int", "pain_mod")
       )
 
@@ -103,7 +107,7 @@ list(
   # models ------------------------------------------------------------------
   tar_target(m_key_fn,
              function(mod, mod_tar) {
-                  mod %>%
+               mod %>%
                  pluck("result", "network", "agd_arm") %>%
                  filter(type != "placebo") %>%
                  summarise(
@@ -115,14 +119,15 @@ list(
                  ) %>%
                  mutate(target = mod_tar) %>%
                  select(target, everything()) %>%
-                   unite(filename, everything(), sep = "-", remove = FALSE) %>%
-                   mutate(
-                     netpath = glue("images/net/{filename}.png"),
-                     forestpath = glue("images/forest/{filename}.png")
-                   ) %>%
-                   left_join(r_outcome_key, by = c("outcome", "model_type")) %>%
-                   select(outcome, everything(), contains("path"))
-               }),
+                 unite(filename, everything(), sep = "-", remove = FALSE) %>%
+                 mutate(
+                   netpath = glue("images/net/{filename}.png"),
+                   forestpath = glue("images/forest/{filename}.png"),
+                   pwpath = glue("images/pw/{filename}.png")
+                 ) %>%
+                 left_join(r_outcome_key, by = c("outcome", "model_type")) %>%
+                 select(outcome, everything(), contains("path"))
+             }),
 
   # outcome, timepoint, type ------------------------------------------------
 
@@ -145,7 +150,7 @@ list(
 
   tar_target(m_o_tt_key,
              if (!is.null(m_o_tt$error)) {
-               tibble(target = "m_o_tt", )
+               tibble(target = "m_o_tt",)
              } else {
                m_key_fn(m_o_tt, "m_o_tt")
              }
@@ -164,8 +169,7 @@ list(
     m_con_pain_sub_dat,
     nma_dat %>%
       filter(type != "placebo",
-             outcome == "pain_sub"
-             ) %>%
+             outcome == "pain_sub") %>%
       group_by(outcome, timepoint, type, condition_general) %>%
       tar_group(),
     iteration = "group"
@@ -180,9 +184,9 @@ list(
 
   tar_target(m_con_pain_sub_key,
              if (!is.null(m_con_pain_sub$error)) {
-               tibble(target = "m_con_pain_sub", )
+               tibble(target = "m_con_pain_sub",)
              } else {
-                m_key_fn(m_con_pain_sub, "m_con_pain_sub") %>%
+               m_key_fn(m_con_pain_sub, "m_con_pain_sub") %>%
                  mutate(
                    condition =
                      m_con_pain_sub %>%
@@ -204,8 +208,7 @@ list(
     m_con_mood_dat,
     nma_dat %>%
       filter(type != "placebo",
-             outcome == "mood"
-      ) %>%
+             outcome == "mood") %>%
       group_by(outcome, timepoint, type, condition_general) %>%
       tar_group(),
     iteration = "group"
@@ -220,7 +223,7 @@ list(
 
   tar_target(m_con_mood_key,
              if (!is.null(m_con_mood$error)) {
-               tibble(target = "m_con_mood", )
+               tibble(target = "m_con_mood",)
              } else {
                m_key_fn(m_con_mood, "m_con_mood") %>%
                  mutate(
@@ -236,6 +239,41 @@ list(
 
 
 
+  # condition: adverse ------------------------------------------------------
+
+  tar_target(
+    m_con_adverse_dat,
+    nma_dat %>%
+      filter(type != "placebo",
+             outcome == "adverse") %>%
+      group_by(outcome, timepoint, type, condition_general) %>%
+      tar_group(),
+    iteration = "group"
+  ),
+
+  tar_target(
+    m_con_adverse,
+    hpp_nma(m_con_adverse_dat, nma_dat),
+    pattern = map(m_con_adverse_dat),
+    iteration = "list"
+  ),
+
+  tar_target(m_con_adverse_key,
+             if (!is.null(m_con_adverse$error)) {
+               tibble(target = "m_con_adverse",)
+             } else {
+               m_key_fn(m_con_adverse, "m_con_adverse") %>%
+                 mutate(
+                   condition =
+                     m_con_adverse %>%
+                     pluck("result", "network", "agd_arm") %>%
+                     filter(!is.na(condition_general)) %>%
+                     pull(condition_general) %>% unique()
+                 )
+             }
+             ,
+             pattern = map(m_con_adverse)),
+
   # wrangle model keys ------------------------------------------------------
 
   tar_target(
@@ -243,40 +281,58 @@ list(
     list(
       m_o_tt_key,
       m_con_pain_sub_key,
-      m_con_mood_key
+      m_con_mood_key,
+      m_con_adverse_key
     ) %>%
       map_df(bind_rows) %>%
       group_by(target) %>%
-      mutate(
-        index = 1:n()
-      ) %>%
-      select(
-        target, index, everything()
-      ) %>%
+      mutate(index = 1:n()) %>%
+      select(target, index, everything()) %>%
       filter(!is.na(outcome)) %>%
       ungroup() %>%
-      mutate(
-        plot_index = row_number()
-      )
+      mutate(plot_index = row_number())
 
   ),
 
   # pairwise ----------------------------------------------------------------
 
+  # list of which interventions are in which studies
+  tar_target(pw_study_int,
+             nma_dat %>%
+               select(type, study, intervention, arm) %>%
+               pivot_wider(
+                 names_from = intervention,
+                 values_from = arm,
+                 values_fn = length
+               ) %>% group_split(type)
+             ),
 
-  # pw set groups -----------------------------------------------------------
+  # alternate idea
+  tar_target(pw_int_summarise,
+             nma_dat %>%
+               group_by(study) %>%
+               summarise(
+                 interventions = unique(intervention) %>% paste(collapse = ";")
+               )
+             ),
+
+  # pw set groups
+  tar_target(pw_combn,
+
+             )
+
+  -----------------------------------------------------------
 
 
   tar_target(pw_dat_get,
              {
                function(key) {
                  # checks
-                 assert_that(key$target %in%
-                               c("m_o_tt",
-                                 "m_con_pain_sub",
-                                 "m_con_mood"),
-                             msg = "If else for mod objects
-                           not working as should.")
+                 assert_that(
+                   key$target == "m_o_tt" | str_detect(key$target, "^m_con"),
+                   msg = "If else for mod objects
+                           not working as should."
+                 )
 
                  assert_that(length(key$target) == 1,
                              msg = "target identifier not a single string")
@@ -298,6 +354,8 @@ list(
                    m_con_pain_sub[[key$index]]
                  else if (key$target == "m_con_mood")
                    m_con_mood[[key$index]]
+                 else if (key$target == "m_con_adverse")
+                   m_con_adverse[[key$index]]
 
                  mod %>%
                    pluck("result", "network", "agd_arm") %>%
@@ -306,10 +364,12 @@ list(
                }
              }),
 
-  tar_target(pw_dat,
-             pw_dat_get(m_key),
-             pattern = map(m_key),
-             iteration = "list"),
+  tar_target(
+    pw_dat,
+    pw_dat_get(m_key),
+    pattern = map(m_key),
+    iteration = "list"
+  ),
 
   tar_target(
     pw_nma_comp,
@@ -321,8 +381,8 @@ list(
         combn(2)
 
       int_comb <-
-        tibble(g1 = combn_fct[1,] %>% as.character(),
-               g2 = combn_fct[2,] %>% as.character()) %>%
+        tibble(g1 = combn_fct[1, ] %>% as.character(),
+               g2 = combn_fct[2, ] %>% as.character()) %>%
         mutate(
           studies = map2(g1, g2, find_pw_studies, pw_dat),
           n_studies = map_int(studies, length)
@@ -369,18 +429,18 @@ list(
               this_ma_dat %>%
               filter(intervention == g1) %>%
               select(study, intervention, mean, r, sd, n, arm) %>%
-              rename_with( ~ glue("{.x}_g1"),
-                           any_of(c(
-                             "intervention", "arm", "mean", "r", "sd", "n"
-                           ))) %>%
+              rename_with(~ glue("{.x}_g1"),
+                          any_of(c(
+                            "intervention", "arm", "mean", "r", "sd", "n"
+                          ))) %>%
               full_join(this_ma_dat %>%
                           filter(intervention == g2) %>%
-                          rename_with( ~ glue("{.x}_g2"),
-                                       any_of(
-                                         c("intervention",
-                                           "arm",
-                                           "mean", "r", "sd", "n")
-                                       )),
+                          rename_with(~ glue("{.x}_g2"),
+                                      any_of(
+                                        c("intervention",
+                                          "arm",
+                                          "mean", "r", "sd", "n")
+                                      )),
                         by = "study")
 
             msg_mine(glue("Meta-analyse: {m_type}"))
@@ -430,27 +490,37 @@ list(
     iteration = "list"
   ),
 
-  tar_target(
-    pw_results, {
-      if (length(pw_ma) == 1) {
-        pw_nma_comp$m_key %>%
-          select(outcome, timepoint, type, condition, index)
-      } else {
-    pw_ma$int_comb %>%
-      mutate(
-        i_sq = map_dbl(pw_ma$ma, "I2"),
-        tau_sq = map_dbl(pw_ma$ma, "tau2"),
-        ci_lb = map_dbl(pw_ma$ma, "ci.lb"),
-        ci_ub = map_dbl(pw_ma$ma, "ci.ub"),
-        eff_est = map_dbl(pw_ma$ma, "beta")
-      ) %>%
-      cbind(
-        pw_ma$m_key %>% select(outcome, timepoint, type, condition, index, target)
-      )}
-      },
-    pattern = map(pw_ma, pw_nma_comp)
-  ),
+  tar_target(pw_results, {
+    if (length(pw_ma) == 1) {
+      pw_nma_comp$m_key %>%
+        select(outcome, timepoint, type, condition, index)
+    } else {
+      pw_ma$int_comb %>%
+        mutate(
+          i_sq = map_dbl(pw_ma$ma, "I2"),
+          tau_sq = map_dbl(pw_ma$ma, "tau2"),
+          ci_lb = map_dbl(pw_ma$ma, "ci.lb"),
+          ci_ub = map_dbl(pw_ma$ma, "ci.ub"),
+          eff_est = map_dbl(pw_ma$ma, "beta")
+        ) %>%
+        cbind(pw_ma$m_key %>% select(outcome, timepoint, type, condition, index, target))
+    }
+  },
+  pattern = map(pw_ma, pw_nma_comp)),
 
+
+
+  # pw tab ------------------------------------------------------------------
+  tar_target(pw_tab, {
+    # this pw
+    m_key %>%
+      select(outcome, type, timepoint, condition, target) %>%
+      inner_join(pw_results,
+                 by = c("outcome", "type", "timepoint", "condition", "target"))
+
+  },
+  pattern = map(m_key),
+  iteration = "list"),
 
   # plot ma -----------------------------------------------------------------
   # tar_target(pw_plot, {
@@ -505,18 +575,17 @@ list(
 
     mod <-
       if (m_key$target == "m_o_tt") {
-        m_o_tt %>% pluck(m_key$index)
+        m_o_tt[[m_key$index]]
       } else if (m_key$target == "m_con_pain_sub") {
-        m_con_pain_sub %>%
-          pluck(m_key$index)
+        m_con_pain_sub[[m_key$index]]
       } else if (m_key$target == "m_con_mood") {
-        m_con_mood %>%
-          pluck(m_key$index)
+        m_con_mood[[m_key$index]]
+      } else if (m_key$target == "m_con_adverse") {
+        m_con_adverse[[m_key$index]]
       }
 
     msg_mine("Create plot")
-    mod %>%
-      pluck("result", "network") %>%
+    mod$result$network %>%
       plot() +
       labs(subtitle = this_subtitle,
            title = this_title)
@@ -620,11 +689,15 @@ list(
       } else if (m_key$target == "m_con_mood") {
         m_con_mood %>%
           pluck(m_key$index)
+      } else if (m_key$target == "m_con_adverse") {
+        m_con_adverse %>%
+          pluck(m_key$index)
       }
 
 
-      hpp_forest(mod$result,
-                 m_key)
+
+    hpp_forest(mod$result,
+               m_key)
 
 
   },
