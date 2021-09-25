@@ -41,7 +41,7 @@ maketimepoints <- function(type) {
 # make chapter function
 
 makechapter <- function(outcome) {
-  cat("## NMA: ", )
+  cat("## NMA: ")
 
 }
 

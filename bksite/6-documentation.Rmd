@@ -1,2 +1,28 @@
 # Documentation
 
+## Calculations for missing observations
+
+Where possible required statistics calculated from reported statistics.
+
+Confidence intervals assumed to have $\alpha = 0.05$; i.e., 95% confidence intervals assumed.  
+
+Symbol | Statistic
+-|-
+$n$ | Sample size
+$r$ | Rate
+$s$ | Standard deviation
+$\text{se}$ | Standard error
+$U$ | Upper confidence interval
+$L$ | Lower confidence interval
+$\alpha$ | Confidence level (0.05 assumed)
+$\overline x$ | Mean
+$\Phi$ | Standard normal cumulative density function
+
+Missing | Reported | Calculation | Code
+-|-|-----------|---------------------------
+$n$ | $\%, r$ | $n = \% / r$ | `n = r_percent / r`
+$r$ | $\%, n$ | $r = \% \times n$ | `\r = r_percent * n` 
+$s$, $\text{se}$ | $\overline x, n, U$ | $s = \sqrt{n}(U - \overline x)/\Phi^{-1}(1 - \alpha/2)$ | `sd = sqrt(n) * (ci_upper - mean) / qnorm(1 - 0.05/2)`
+$s$, $\text{se}$ | $\overline x, n, L$ | $s = \sqrt{n}(\overline x - L)/\Phi^{-1}(1 - \alpha/2)$ | `sd = sqrt(n) * (mean - ci_lower) / qnorm(1 - 0.05/2)`
+$s$ | $\text{se}, n$ | $s = \text{se} \times \sqrt{n}$ | `sd = se * sqrt(n)`
+$\text{se}$ | $s, n$ | $\text{se} = s / \sqrt{n}$ | `se = sd / sqrt(n)`
