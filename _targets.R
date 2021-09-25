@@ -47,62 +47,44 @@ Sys.setenv("VROOM_CONNECTION_SIZE" = 2 * 131072)
 # begin targets -----------------------------------------------------------
 
 list(
-  # asserts that are currently failing
-  tar_target(a_skip,
-             c("a_obs_timepoint", "a_cov_type")),
-
-
-  # get nma dat -------------------------------------------------------------
-
-  # tar_target(
-  #   raw_nma_dat,
-  #   read_csv("data/nma_dat-2021-09-14 10:24:06.csv")
-  # ),
-
-
-  # temporary dataset -------------------------------------------------------
+  # raw data ----------------------------------------------------------------
 
   tar_target(
-    raw_nma_dat,
-    read_csv("data/w_obs-2021-09-17.csv")
-  ),
-
-
-  # wrangle nma dat ---------------------------------------------------------
-
-
-  tar_target(
-    nma_dat_wrangle,
-    raw_nma_dat %>%
-      mutate(across(any_of(
-        c("r", "mean", "sd", "se")
-      ), as.numeric)) %>%
-      mutate(n = as.integer(n))
-  ),
-
-  tar_target(
-    nma_dat,
-    # change back to nma_dat later
-    # apply filters
-    nma_dat_wrangle %>%
-      filter(
-        timepoint != "baseline",
-        !str_detect(scale, "DELETE"),
-        !is.na(intervention),
-        type != "unclassified",
-        type != "pharmacological intervention",
-        type != "non-pharmacological intervention",
-        timepoint %in% c("change_score", "post_int"),
-        outcome %in% c("pain_sub", "mood", "adverse", "pain_int", "pain_mod")
-      )
-
+    r_obs_dat,
+    read_csv("data/obs_dat-2021-09-25 09:12:28.csv") %>%
+      clean_names()
   ),
 
   tar_target(
     r_outcome_key,
-    read_csv("data/outcome-2021-09-19 16:55:19.csv") %>%
+    read_csv("data/outcome-2021-09-25 08:56:22.csv") %>%
       clean_names()
   ),
+
+
+  # temporary dataset -------------------------------------------------------
+
+  # tar_target(r_obs_dat,
+  #            read_csv("data/w_obs-2021-09-17.csv")),
+
+
+  # wrangle obs dat ---------------------------------------------------------
+
+  tar_target(w_obs_dat,
+             r_obs_dat %>%
+               mutate(across(
+                 where(is.character), tolower
+               ))),
+
+
+  # all data wrangled -------------------------------------------------------
+
+  tar_target(obs_dat,
+             w_obs_dat),
+
+  # model data filtered -----------------------------------------------------
+
+
 
   # models ------------------------------------------------------------------
   tar_target(m_key_fn,
@@ -134,7 +116,7 @@ list(
 
   tar_target(
     m_o_tt_dat,
-    nma_dat %>%
+    obs_dat %>%
       filter(type != "placebo") %>%
       group_by(outcome, timepoint, type) %>%
       tar_group(),
@@ -143,14 +125,14 @@ list(
 
   tar_target(
     m_o_tt,
-    hpp_nma(m_o_tt_dat, nma_dat),
+    hpp_nma(m_o_tt_dat, obs_dat),
     pattern = map(m_o_tt_dat),
     iteration = "list"
   ),
 
   tar_target(m_o_tt_key,
              if (!is.null(m_o_tt$error)) {
-               tibble(target = "m_o_tt",)
+               tibble(target = "m_o_tt", )
              } else {
                m_key_fn(m_o_tt, "m_o_tt")
              }
@@ -167,7 +149,7 @@ list(
 
   tar_target(
     m_con_pain_sub_dat,
-    nma_dat %>%
+    obs_dat %>%
       filter(type != "placebo",
              outcome == "pain_sub") %>%
       group_by(outcome, timepoint, type, condition_general) %>%
@@ -177,14 +159,14 @@ list(
 
   tar_target(
     m_con_pain_sub,
-    hpp_nma(m_con_pain_sub_dat, nma_dat),
+    hpp_nma(m_con_pain_sub_dat, obs_dat),
     pattern = map(m_con_pain_sub_dat),
     iteration = "list"
   ),
 
   tar_target(m_con_pain_sub_key,
              if (!is.null(m_con_pain_sub$error)) {
-               tibble(target = "m_con_pain_sub",)
+               tibble(target = "m_con_pain_sub", )
              } else {
                m_key_fn(m_con_pain_sub, "m_con_pain_sub") %>%
                  mutate(
@@ -206,7 +188,7 @@ list(
 
   tar_target(
     m_con_mood_dat,
-    nma_dat %>%
+    obs_dat %>%
       filter(type != "placebo",
              outcome == "mood") %>%
       group_by(outcome, timepoint, type, condition_general) %>%
@@ -216,14 +198,14 @@ list(
 
   tar_target(
     m_con_mood,
-    hpp_nma(m_con_mood_dat, nma_dat),
+    hpp_nma(m_con_mood_dat, obs_dat),
     pattern = map(m_con_mood_dat),
     iteration = "list"
   ),
 
   tar_target(m_con_mood_key,
              if (!is.null(m_con_mood$error)) {
-               tibble(target = "m_con_mood",)
+               tibble(target = "m_con_mood", )
              } else {
                m_key_fn(m_con_mood, "m_con_mood") %>%
                  mutate(
@@ -243,7 +225,7 @@ list(
 
   tar_target(
     m_con_adverse_dat,
-    nma_dat %>%
+    obs_dat %>%
       filter(type != "placebo",
              outcome == "adverse") %>%
       group_by(outcome, timepoint, type, condition_general) %>%
@@ -253,14 +235,14 @@ list(
 
   tar_target(
     m_con_adverse,
-    hpp_nma(m_con_adverse_dat, nma_dat),
+    hpp_nma(m_con_adverse_dat, obs_dat),
     pattern = map(m_con_adverse_dat),
     iteration = "list"
   ),
 
   tar_target(m_con_adverse_key,
              if (!is.null(m_con_adverse$error)) {
-               tibble(target = "m_con_adverse",)
+               tibble(target = "m_con_adverse", )
              } else {
                m_key_fn(m_con_adverse, "m_con_adverse") %>%
                  mutate(
@@ -296,254 +278,19 @@ list(
 
   # pairwise ----------------------------------------------------------------
 
-  # list of which interventions are in which studies
-  tar_target(pw_study_int,
-             nma_dat %>%
-               select(type, study, intervention, arm) %>%
-               pivot_wider(
-                 names_from = intervention,
-                 values_from = arm,
-                 values_fn = length
-               ) %>% group_split(type)
-             ),
-
-  # alternate idea
-  tar_target(pw_int_summarise,
-             nma_dat %>%
-               group_by(study) %>%
-               summarise(
-                 interventions = unique(intervention) %>% paste(collapse = ";")
-               )
-             ),
-
-  # pw set groups
-  tar_target(pw_combn,
-
-             )
-
-  -----------------------------------------------------------
-
-
-  tar_target(pw_dat_get,
-             {
-               function(key) {
-                 # checks
-                 assert_that(
-                   key$target == "m_o_tt" | str_detect(key$target, "^m_con"),
-                   msg = "If else for mod objects
-                           not working as should."
-                 )
-
-                 assert_that(length(key$target) == 1,
-                             msg = "target identifier not a single string")
-
-                 assert_that(is.character(key$target),
-                             msg = "what I think is target string not a string")
-                 msg_mine(" Get model input data for")
-                 key %>%
-                   select(target, index, outcome, timepoint, type) %>%
-                   print()
-
-                 msg_mine(" Show target selected, damnit!")
-                 pull(key, "target") %>% print()
-
-                 mod <-
-                   if (key$target == "m_o_tt")
-                     m_o_tt[[key$index]]
-                 else if (key$target == "m_con_pain_sub")
-                   m_con_pain_sub[[key$index]]
-                 else if (key$target == "m_con_mood")
-                   m_con_mood[[key$index]]
-                 else if (key$target == "m_con_adverse")
-                   m_con_adverse[[key$index]]
-
-                 mod %>%
-                   pluck("result", "network", "agd_arm") %>%
-                   rename(study = .study, intervention = .trt) %>%
-                   mutate(across(c(study, intervention), as.character))
-               }
-             }),
-
+  # get interventions per study
   tar_target(
-    pw_dat,
-    pw_dat_get(m_key),
-    pattern = map(m_key),
-    iteration = "list"
+    pw_study_int,
+    obs_dat %>%
+      group_by(outcome, type, study) %>%
+      summarise(interventions = unique(intervention)
+                %>% paste(collapse = ";")) %>%
+      mutate(int_list = str_split(interventions, ";")) %>%
+      arrange(study)
+
   ),
 
-  tar_target(
-    pw_nma_comp,
-    {
-      combn_fct <-
-        pw_dat %>%
-        pull(intervention) %>%
-        unique() %>%
-        combn(2)
 
-      int_comb <-
-        tibble(g1 = combn_fct[1, ] %>% as.character(),
-               g2 = combn_fct[2, ] %>% as.character()) %>%
-        mutate(
-          studies = map2(g1, g2, find_pw_studies, pw_dat),
-          n_studies = map_int(studies, length)
-        ) %>%
-        filter(n_studies > 1)
-
-      list(m_key = m_key,
-           int_comb = int_comb,
-           dat = pw_dat)
-    },
-    pattern = map(pw_dat, m_key),
-    iteration = "list"
-  ),
-
-  # pw meta-analyse ---------------------------------------------------------
-
-
-  tar_target(
-    pw_ma,
-    {
-      msg_mine("combinations selected")
-
-      pw_nma_comp$int_comb %>% print()
-
-      if (nrow(pw_nma_comp$int_comb) == 0) {
-        msg_mine("only one study in this nma pw comparison")
-        "no studies with both interventions"
-      } else {
-        msg_mine("get studies")
-        ma_dat <-
-          pw_nma_comp$int_comb %>%
-          select(-n_studies) %>%
-          pmap(function(g1, g2, studies) {
-            this_ma_dat <-
-              pw_nma_comp$dat %>%
-              filter(intervention %in% c(g1, g2),
-                     study %in% studies)
-
-            m_type <- this_ma_dat %>% pull(model_type) %>% unique()
-
-            msg_mine("Create ma dataset")
-
-            mod_dat <-
-              this_ma_dat %>%
-              filter(intervention == g1) %>%
-              select(study, intervention, mean, r, sd, n, arm) %>%
-              rename_with(~ glue("{.x}_g1"),
-                          any_of(c(
-                            "intervention", "arm", "mean", "r", "sd", "n"
-                          ))) %>%
-              full_join(this_ma_dat %>%
-                          filter(intervention == g2) %>%
-                          rename_with(~ glue("{.x}_g2"),
-                                      any_of(
-                                        c("intervention",
-                                          "arm",
-                                          "mean", "r", "sd", "n")
-                                      )),
-                        by = "study")
-
-            msg_mine(glue("Meta-analyse: {m_type}"))
-
-            this_escalc <-
-              if (m_type == "lor") {
-                escalc(
-                  data = mod_dat,
-                  ai = r_g1,
-                  ci = r_g2,
-                  n1i = n_g1,
-                  n2i = n_g2,
-                  measure = "OR",
-                  slab = study
-                )
-              } else if (m_type == "smd") {
-                escalc(
-                  data = mod_dat,
-                  m1i = mean_g1,
-                  m2i = mean_g2,
-                  sd1i = sd_g1,
-                  sd2i = sd_g2,
-                  n1i = n_g1,
-                  n2i = n_g2,
-                  measure = "SMD",
-                  slab = study
-                )
-              } else {
-                msg_mine("escalc didn't run")
-              }
-
-            rma(
-              yi = yi,
-              vi = vi,
-              data = this_escalc,
-              slab = study,
-              measure = if_else(m_type == "lor", "OR", "SMD")
-            )
-
-          }) -> ma
-
-
-        c(pw_nma_comp, ma = list(ma))
-      }
-    },
-    pattern = map(pw_nma_comp),
-    iteration = "list"
-  ),
-
-  tar_target(pw_results, {
-    if (length(pw_ma) == 1) {
-      pw_nma_comp$m_key %>%
-        select(outcome, timepoint, type, condition, index)
-    } else {
-      pw_ma$int_comb %>%
-        mutate(
-          i_sq = map_dbl(pw_ma$ma, "I2"),
-          tau_sq = map_dbl(pw_ma$ma, "tau2"),
-          ci_lb = map_dbl(pw_ma$ma, "ci.lb"),
-          ci_ub = map_dbl(pw_ma$ma, "ci.ub"),
-          eff_est = map_dbl(pw_ma$ma, "beta")
-        ) %>%
-        cbind(pw_ma$m_key %>% select(outcome, timepoint, type, condition, index, target))
-    }
-  },
-  pattern = map(pw_ma, pw_nma_comp)),
-
-
-
-  # pw tab ------------------------------------------------------------------
-  tar_target(pw_tab, {
-    # this pw
-    m_key %>%
-      select(outcome, type, timepoint, condition, target) %>%
-      inner_join(pw_results,
-                 by = c("outcome", "type", "timepoint", "condition", "target"))
-
-  },
-  pattern = map(m_key),
-  iteration = "list"),
-
-  # plot ma -----------------------------------------------------------------
-  # tar_target(pw_plot, {
-  #   msg_mine("Plot target for")
-  #   pw_ma$m_key %>% print()
-  #
-  #   fname <- pw_ma %>% pluck("m_key", "filename")
-  #   msg_mine("Filename for these ma")
-  #   fname %>% print()
-  #
-  #   msg_mine("Make plots")
-  #   paths <-
-  #     map_chr(1:length(pw_ma$ma), function(ma_index) {
-  #       glue("images/ma/{fname}-{ma_index}")
-  #     })
-  #
-  #   map2(pw_ma$ma, paths, function(ma, path) {
-  #     path
-  #
-  #   })
-  # },
-  # pattern = map(pw_ma)),
-  #
 
   # network plots -----------------------------------------------------------
   tar_target(plot_net, {

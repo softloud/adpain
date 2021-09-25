@@ -6,18 +6,19 @@
 
 }
 
-  nma_dat_gs <- "https://docs.google.com/spreadsheets/d/1CMsqvOC3SteW1FsSomyfSAYSXRspuU17PWNJbrKRZKk/edit#gid=0"
-  nma_file <- glue("nma_dat-{lubridate::now()}.csv")
+obs_dat_gs <- "https://docs.google.com/spreadsheets/d/1CMsqvOC3SteW1FsSomyfSAYSXRspuU17PWNJbrKRZKk/edit#gid=0"
 
-  dat <- read_sheet(nma_dat_gs, "dat", col_types = "c")
+obs_file <- glue("obs_dat-{lubridate::now()}.csv")
 
-  outcome_key <- read_sheet(nma_dat_gs, "outcome", col_types = "c")
+dat <- read_sheet(obs_dat_gs, "data", col_types = "c")
 
-  outcome_file <- glue("outcome-{lubridate::now()}.csv")
+outcome_key <- read_sheet(obs_dat_gs, "outcome", col_types = "c")
+
+outcome_file <- glue("outcome-{lubridate::now()}.csv")
 
 
 
-here("data", nma_file) %>%
+here("data", obs_file) %>%
   write_csv(dat, .)
 
 
