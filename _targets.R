@@ -57,7 +57,7 @@ list(
 
   tar_target(
     r_outcome_key,
-    read_csv("data/outcome-2021-09-25 08:56:22.csv") %>%
+    read_csv("data/outcome-2021-09-25 12:30:45.csv") %>%
       clean_names()
   ),
 
@@ -74,13 +74,68 @@ list(
              r_obs_dat %>%
                mutate(across(
                  where(is.character), tolower
-               ))),
+               )) %>%
+               mutate(
+                 # get n from r and r percent
+                 n = if_else(
+                   is.na(n) & r > 0 & r_percent > 0,
+                   r_percent / r,
+                   n
+                 ),
 
+                 # get r from n and r percent
+                 r = if_else(
+                   is.na(r) & r_percent > 0 & n > 0,
+                   r_percent * n,
+                   r
+                 ),
+
+                 # calculate sd & se
+                 sd = if_else(
+                   is.na(se) & is.na(sd) & !is.na(mean) & !is.na(n) & !is.na(ci_upper),
+                   sqrt(n) * (ci_upper - mean) / qnorm(1 - 0.05/2) ,
+                   sd
+                 ),
+                 sd = if_else(
+                   is.na(se) & is.na(sd) & !is.na(mean) & !is.na(n) & !is.na(ci_lower),
+                   sqrt(n) * (mean - ci_lower) / qnorm(1 - 0.05/2),
+                   sd
+                 ),
+                 sd = if_else(
+                   se > 0 & n > 0 & is.na(sd),
+                   se * sqrt(n),
+                   sd
+                 ),
+                 se = if_else(
+                   sd > 0 & n > 0 & is.na(se),
+                   sd / sqrt(n),
+                   se
+                 ))
+             ),
 
   # all data wrangled -------------------------------------------------------
 
   tar_target(obs_dat,
-             w_obs_dat),
+             w_obs_dat %>%
+               left_join(
+                 r_outcome_key %>% select(outcome, model_type),
+                 by = "outcome"
+               )),
+
+  tar_target(obs_excluded,
+             obs_dat %>%
+               mutate(
+                 exclusion_reason = case_when(
+                   sd < 0 ~ "negative sd",
+                   se < 0 ~ "negative se",
+                   model_type == "smd" & (is.na(sd) | is.na(mean) | is.na(n)) ~
+                     "smd_missing",
+                   model_type == "lor" & (is.na(r) | is.na(n)) ~ "lor_missing"
+                 )
+               ) %>%
+               filter(!is.na(exclusion_reason)) %>%
+               select(exclusion_reason, everything())
+             ),
 
   # model data filtered -----------------------------------------------------
 

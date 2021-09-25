@@ -8,3 +8,6 @@
 /data/labels/*.csv
 /_targets
 /exports
+/data/outcomes*
+/data/archive-labels/*.csv
+/data/archive-labels/labels/*.csv

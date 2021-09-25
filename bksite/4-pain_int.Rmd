@@ -1,0 +1,6 @@
+# Pain intensity results
+
+```{r,results='asis', warning=FALSE}
+makechapter("pain_int") -> sink
+```
+

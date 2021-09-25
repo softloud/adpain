@@ -1,0 +1,69 @@
+---
+title: "Antidepressants for pain management in adults with chronic pain"
+description: |
+  Network meta-analysis results
+site: bookdown::bookdown_site
+bibliography: references.bib
+---
+
+# Overview
+
+Placeholder
+
+
+## Types of antidepressant
+## Outcomes included
+## Studies currently included
+## Number of arms per timepoint
+
+<!--chapter:end:index.Rmd-->
+
+# Mood results
+
+```{r,results='asis', warning=FALSE}
+makechapter("mood") -> sink
+```
+
+
+<!--chapter:end:1-mood.Rmd-->
+
+# Substantial pain results
+
+```{r,results='asis', warning=FALSE}
+makechapter("pain_sub") -> sink
+```
+
+<!--chapter:end:2-pain-sub.Rmd-->
+
+# Adverse results
+
+```{r,results='asis', warning=FALSE}
+makechapter("adverse") -> sink
+```
+
+
+<!--chapter:end:3-adverse.Rmd-->
+
+# Pain intensity results
+
+```{r,results='asis', warning=FALSE}
+makechapter("pain_int") -> sink
+```
+
+
+<!--chapter:end:4-pain_int.Rmd-->
+
+# Moderate pain results
+
+```{r,results='asis', warning=FALSE}
+makechapter("pain_mod") -> sink
+```
+
+
+<!--chapter:end:5-pain_mod.Rmd-->
+
+# Documentation
+
+
+<!--chapter:end:6-documentation.Rmd-->
+
