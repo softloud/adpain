@@ -82,7 +82,7 @@ obs_excluded %>%
 
 ```{r}
 obs_excluded %>% 
-  select(exclusion_reason, gs_row, outcome, study_id, title, intervention, timepoint, intervention_grouping, mean:change_score) %>% 
+  select(exclusion_reason, gs_row, outcome, study_id, intervention, timepoint, mean:change_score) %>% 
   gt(rowname_col = "study_id") %>% 
   tab_header("Observations currently excluded")
 
