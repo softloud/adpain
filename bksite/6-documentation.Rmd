@@ -70,7 +70,8 @@ $\text{se}$ | $s, n$ | $\text{se} = s / \sqrt{n}$ | `se = sd / sqrt(n)`
 
 ## Excluded observations
 
-For odds-ratio the rate and sample size are required for NMA, and for standardised mean difference, the mean, standard deviation, and sample size are required. Where there are missing reported statistics, the observations are excluded from the models.
+For odds-ratio the rate and sample size are required for NMA, and for standardised mean difference, the mean, standard deviation, and sample size are required. Where there are missing reported statistics, and required statistics cannot be calculated from what is reported, the observations are excluded from the models.
+
 
 ```{r}
 obs_excluded %>% 
@@ -84,7 +85,10 @@ obs_excluded %>%
 obs_excluded %>% 
   select(exclusion_reason, gs_row, outcome, study_id, intervention, timepoint, mean:change_score) %>% 
   gt(rowname_col = "study_id") %>% 
-  tab_header("Observations currently excluded")
+  tab_header("Observations currently excluded") %>% 
+  tab_options(
+    table.font.size = 12
+  )
 
 ```
 
