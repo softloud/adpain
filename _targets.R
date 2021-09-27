@@ -12,6 +12,7 @@ suppressMessages({
   library(multinma)
   # library(hppapp) # should be calling from this app
   library(metafor)
+  library(varameta)
 
   conflicted::conflict_prefer("filter", "dplyr")
 
@@ -51,91 +52,181 @@ list(
 
   tar_target(
     r_obs_dat,
-    read_csv("data/obs_dat-2021-09-25 09:12:28.csv") %>%
-      clean_names()
+    read_csv("data/obs_dat-2021-09-27 15:46:52.csv") %>%
+      clean_names() %>%
+      mutate(gs_row = row_number()) %>%
+      select(gs_row, everything())
   ),
 
   tar_target(
     r_outcome_key,
-    read_csv("data/outcome-2021-09-25 12:30:45.csv") %>%
+    read_csv("data/outcome-2021-09-27 15:01:07.csv") %>%
       clean_names()
   ),
 
-
-  # temporary dataset -------------------------------------------------------
-
-  # tar_target(r_obs_dat,
-  #            read_csv("data/w_obs-2021-09-17.csv")),
-
-
   # wrangle obs dat ---------------------------------------------------------
 
-  tar_target(w_obs_dat,
-             r_obs_dat %>%
-               mutate(across(
-                 where(is.character), tolower
-               )) %>%
-               mutate(
-                 # get n from r and r percent
-                 n = if_else(
-                   is.na(n) & r > 0 & r_percent > 0,
-                   r_percent / r,
-                   n
-                 ),
+  tar_target(
+    w_obs_calc,
+    r_obs_dat %>%
+      mutate(across(where(is.character), tolower)) %>%
+      mutate(
+        # convert r percent to proportion
+        r_percent = r_percent / 100,
+        # get n from r and r percent
+        n = if_else(is.na(n) & r > 0 & r_percent > 0,
+                    r / r_percent,
+                    n),
 
-                 # get r from n and r percent
-                 r = if_else(
-                   is.na(r) & r_percent > 0 & n > 0,
-                   r_percent * n,
-                   r
-                 ),
+        # get r from n and r percent
+        r = if_else(is.na(r) & r_percent > 0 & n > 0,
+                    r_percent * n,
+                    r),
 
-                 # calculate sd & se
-                 sd = if_else(
-                   is.na(se) & is.na(sd) & !is.na(mean) & !is.na(n) & !is.na(ci_upper),
-                   sqrt(n) * (ci_upper - mean) / qnorm(1 - 0.05/2) ,
-                   sd
-                 ),
-                 sd = if_else(
-                   is.na(se) & is.na(sd) & !is.na(mean) & !is.na(n) & !is.na(ci_lower),
-                   sqrt(n) * (mean - ci_lower) / qnorm(1 - 0.05/2),
-                   sd
-                 ),
-                 sd = if_else(
-                   se > 0 & n > 0 & is.na(sd),
-                   se * sqrt(n),
-                   sd
-                 ),
-                 se = if_else(
-                   sd > 0 & n > 0 & is.na(se),
-                   sd / sqrt(n),
-                   se
-                 ))
-             ),
+        # estimate mean & se from median and iqr
+        mean = if_else(
+          is.na(mean) &
+            !is.na(median) & !is.na(iqr_lower) & !is.na(iqr_higher),
+          varameta::wan_mean_C3(
+            q_1 = iqr_lower,
+            m = median,
+            q_3 = iqr_higher),
+          mean
+        ),
+
+        se = if_else(
+            is.na(se) & is.na(sd) &
+            !is.na(median) &
+            !is.na(iqr_lower) & !is.na(iqr_higher) & !is.na(n),
+          varameta::wan_se_C3(
+            q_1 = iqr_lower,
+            m = median,
+            q_3 = iqr_higher,
+            n = n
+          ),
+          se
+        ),
+
+        # calculate sd & se
+        sd = if_else(
+          is.na(se) & is.na(sd) & !is.na(mean) & !is.na(n) & !is.na(ci_upper),
+          sqrt(n) * (ci_upper - mean) / qnorm(1 - 0.05 / 2) ,
+          sd
+        ),
+        sd = if_else(
+          is.na(se) & is.na(sd) & !is.na(mean) & !is.na(n) & !is.na(ci_lower),
+          sqrt(n) * (mean - ci_lower) / qnorm(1 - 0.05 / 2),
+          sd
+        ),
+        sd = if_else(se > 0 & n > 0 & is.na(sd),
+                     se * sqrt(n),
+                     sd),
+        se = if_else(sd > 0 & n > 0 & is.na(se),
+                     sd / sqrt(n),
+                     se)
+      )
+  ),
+
+  tar_target(
+    w_obs_type,
+    w_obs_calc %>%
+      mutate(
+        intervention_category =
+          if_else(
+            intervention_type %in% c("placebo", "antidepressant"),
+            intervention_type,
+            "other"
+          )
+      )
+  ),
+
+  tar_target(
+    w_obs_outcome,
+    w_obs_type %>%
+      left_join(r_outcome_key %>% select(outcome, model_type),
+                by = "outcome") %>%
+      mutate(outcome_nma = if_else(
+        str_detect(outcome, "mood"),
+        "mood",
+        outcome
+      ))
+  ),
 
   # all data wrangled -------------------------------------------------------
 
-  tar_target(obs_dat,
-             w_obs_dat %>%
-               left_join(
-                 r_outcome_key %>% select(outcome, model_type),
-                 by = "outcome"
-               )),
+  tar_target(
+    obs_excluded,
+    w_obs_outcome %>%
+      mutate(
+        exclusion_reason = case_when(
+          sd < 0 ~ "negative sd",
+          se < 0 ~ "negative se",
+          model_type == "smd" &
+            (is.na(sd) | is.na(mean) | is.na(n)) ~
+            "smd_missing",
+          model_type == "lor" &
+            (is.na(r) | is.na(n)) ~ "lor_missing",
+          n < 1 ~ "Sample size less than 1"
+        )
+      ) %>%
+      filter(!is.na(exclusion_reason)) %>%
+      select(exclusion_reason, everything())
+  ),
 
-  tar_target(obs_excluded,
-             obs_dat %>%
-               mutate(
-                 exclusion_reason = case_when(
-                   sd < 0 ~ "negative sd",
-                   se < 0 ~ "negative se",
-                   model_type == "smd" & (is.na(sd) | is.na(mean) | is.na(n)) ~
-                     "smd_missing",
-                   model_type == "lor" & (is.na(r) | is.na(n)) ~ "lor_missing"
-                 )
-               ) %>%
-               filter(!is.na(exclusion_reason)) %>%
-               select(exclusion_reason, everything())
-             ),
+
+  tar_target(obs_dat,
+             w_obs_outcome %>%
+               anti_join(obs_excluded)),
+
+
+# subgroups ---------------------------------------------------------------
+
+  tar_target(
+    subgroups,
+    obs_dat %>%
+      filter(
+        intervention != "placebo",
+        ad_class != "n/a",!is.na(ad_class),
+        outcome != "adverse_dropout",
+        outcome != "adverse_number",
+        outcome != "serious_adverse"
+      ) %>%
+      count(
+        outcome_nma,
+        intervention_category,
+        general_pain_grouping,
+        ad_class
+      ) %>%
+      rename(subgroup_n_obs = n)
+  ),
+
+  tar_target(
+    subgroup_type,
+    subgroups %>%
+      select(outcome_nma, intervention_category) %>%
+      group_by(outcome_nma, intervention_category) %>%
+      tar_group(),
+    iteration = "group"
+  ),
+
+tar_target(
+  subgroup_condition,
+  subgroups %>%
+    select(outcome_nma, intervention_category, general_pain_grouping) %>%
+    group_by(outcome_nma, intervention_category, general_pain_grouping) %>%
+    tar_group(),
+  iteration = "group"
+),
+
+tar_target(
+  subgroup_condition_class,
+  subgroups %>%
+    select(outcome_nma, intervention_category, general_pain_grouping, ad_class) %>%
+    group_by(outcome_nma, intervention_category, general_pain_grouping, ad_class) %>%
+    tar_group(),
+  iteration = "group"
+),
+
 
   # model data filtered -----------------------------------------------------
 
@@ -187,7 +278,7 @@ list(
 
   tar_target(m_o_tt_key,
              if (!is.null(m_o_tt$error)) {
-               tibble(target = "m_o_tt", )
+               tibble(target = "m_o_tt",)
              } else {
                m_key_fn(m_o_tt, "m_o_tt")
              }
@@ -221,7 +312,7 @@ list(
 
   tar_target(m_con_pain_sub_key,
              if (!is.null(m_con_pain_sub$error)) {
-               tibble(target = "m_con_pain_sub", )
+               tibble(target = "m_con_pain_sub",)
              } else {
                m_key_fn(m_con_pain_sub, "m_con_pain_sub") %>%
                  mutate(
@@ -260,7 +351,7 @@ list(
 
   tar_target(m_con_mood_key,
              if (!is.null(m_con_mood$error)) {
-               tibble(target = "m_con_mood", )
+               tibble(target = "m_con_mood",)
              } else {
                m_key_fn(m_con_mood, "m_con_mood") %>%
                  mutate(
@@ -297,7 +388,7 @@ list(
 
   tar_target(m_con_adverse_key,
              if (!is.null(m_con_adverse$error)) {
-               tibble(target = "m_con_adverse", )
+               tibble(target = "m_con_adverse",)
              } else {
                m_key_fn(m_con_adverse, "m_con_adverse") %>%
                  mutate(
@@ -337,14 +428,30 @@ list(
   tar_target(
     pw_study_int,
     obs_dat %>%
-      group_by(outcome, type, study) %>%
+      group_by(outcome, intervention_category, ad_class, study_id) %>%
       summarise(interventions = unique(intervention)
                 %>% paste(collapse = ";")) %>%
       mutate(int_list = str_split(interventions, ";")) %>%
-      arrange(study)
+      arrange(study_id)
 
   ),
 
+  # get combinations
+  tar_target(
+    pw_combn,
+    obs_dat %>%
+      filter(outcome == outcomes,
+             intervention_category = int_categories) %>%
+      pull(intervention) %>%
+      unique() %>%
+      combn(2) %>% {
+        tibble(int_1 = .[1,],
+               int_2 = .[2,])
+      } %>%
+      mutate(outcome = outcomes, intervention_category = int_categories) %>%
+      select(outcome, intervention_category, everything()),
+    pattern = map(outcomes, int_categories)
+  ),
 
 
   # network plots -----------------------------------------------------------

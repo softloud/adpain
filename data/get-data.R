@@ -16,7 +16,8 @@ outcome_key <- read_sheet(obs_dat_gs, "outcome", col_types = "c")
 
 outcome_file <- glue("outcome-{lubridate::now()}.csv")
 
-
+system("rm data/obs_dat*.csv")
+system("rm data/outcome*.csv")
 
 here("data", obs_file) %>%
   write_csv(dat, .)

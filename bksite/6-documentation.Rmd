@@ -1,5 +1,39 @@
 # Documentation
 
+```{r}
+library(gt)
+```
+
+## Random sample checked
+
+```{r}
+tar_load(w_obs_outcome)
+tar_load(obs_excluded)
+
+checked_obs <- list(
+  checked = sum(!is.na(w_obs_outcome$date_checked)),
+  total_obs = nrow(w_obs_outcome)
+)
+
+checked_obs$prop <- checked_obs$checked/checked_obs$total_obs
+
+checked_obs %>% 
+  as_tibble() %>% 
+  gt() %>% 
+  cols_label(
+    checked = "Observations checked (statistics reported for one arm of one study)",
+    total_obs = "Total observations extracted",
+    prop = "Proportion of observations checked"
+  ) %>% 
+  tab_header(
+    title = "Charles' progress checking Covidence records against dataset"
+  )
+
+```
+
+## Comparisons
+
+
 ## Calculations for missing observations
 
 Where possible required statistics calculated from reported statistics.
@@ -17,12 +51,41 @@ $L$ | Lower confidence interval
 $\alpha$ | Confidence level (0.05 assumed)
 $\overline x$ | Mean
 $\Phi$ | Standard normal cumulative density function
+$M$ | Median
+
 
 Missing | Reported | Calculation | Code
 -|-|-----------|---------------------------
-$n$ | $\%, r$ | $n = \% / r$ | `n = r_percent / r`
+$n$ | $\%, r$ | $n = r / \%$ | `n = r / r_percent`
 $r$ | $\%, n$ | $r = \% \times n$ | `\r = r_percent * n` 
 $s$, $\text{se}$ | $\overline x, n, U$ | $s = \sqrt{n}(U - \overline x)/\Phi^{-1}(1 - \alpha/2)$ | `sd = sqrt(n) * (ci_upper - mean) / qnorm(1 - 0.05/2)`
 $s$, $\text{se}$ | $\overline x, n, L$ | $s = \sqrt{n}(\overline x - L)/\Phi^{-1}(1 - \alpha/2)$ | `sd = sqrt(n) * (mean - ci_lower) / qnorm(1 - 0.05/2)`
+$\overline x$ | $M, U, L$ | $\overline x \approx (L + M + U)/3$ | `mean = varameta::wan_mean_C3(q_1 = iqr_lower, m = median, q_3 = iqr_higher)`
+$\text{se}$ | $M, U, L, n$ | $\text{se} = (U - L)/(2\sqrt{n}\Phi^{-1}((0.75n-0.125)/(n+0.25)))$ | `se = varameta::wan_se_C3(q_1 = iqr_lower, m = median, q_3 = iqr_higher, n = n)`
 $s$ | $\text{se}, n$ | $s = \text{se} \times \sqrt{n}$ | `sd = se * sqrt(n)`
 $\text{se}$ | $s, n$ | $\text{se} = s / \sqrt{n}$ | `se = sd / sqrt(n)`
+
+
+## Types of intervention comparisons
+
+## Excluded observations
+
+For odds-ratio the rate and sample size are required for NMA, and for standardised mean difference, the mean, standard deviation, and sample size are required. Where there are missing reported statistics, the observations are excluded from the models.
+
+```{r}
+obs_excluded %>% 
+  count(study_id) %>% 
+  gt() %>% 
+  tab_header("Number of observations (study/arm statistics) excluded by study")
+```
+
+
+```{r}
+obs_excluded %>% 
+  select(exclusion_reason, gs_row, outcome, study_id, title, intervention, timepoint, intervention_grouping, mean:change_score) %>% 
+  gt(rowname_col = "study_id") %>% 
+  tab_header("Observations currently excluded")
+
+```
+
+
