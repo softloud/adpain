@@ -37,9 +37,14 @@ checked_obs %>%
 
 ## Comparisons
 
-```{r}
-tar_read(subgroups) %>% 
-  gt() %>% 
+```{r message=FALSE}
+tar_read(pw_type_group) %>%
+  group_by(outcome, comp_grouping, timepoint) %>% 
+  summarise(
+    studies = n_distinct(study_id)
+  ) %>% 
+  ungroup() %>% 
+  gt(rowname_col = "outcome") %>% 
   tab_header("Comparison groups used in pairwise models")
 
 ```
@@ -77,10 +82,7 @@ $\text{se}$ | $M, U, L, n$ | $\text{se} = (U - L)/(2\sqrt{n}\Phi^{-1}((0.75n-0.1
 $s$ | $\text{se}, n$ | $s = \text{se} \times \sqrt{n}$ | `sd = se * sqrt(n)`
 $\text{se}$ | $s, n$ | $\text{se} = s / \sqrt{n}$ | `se = sd / sqrt(n)`
 
-
-## Types of intervention comparisons
-
-## Excluded observations: `r nrow(obs_excluded)`
+## Excluded observations: `r nrow(obs_excluded)` from `r obs_excluded %>% pull(study_id) %>% unique() %>% length()` studies
 
 For odds-ratio the rate and sample size are required for NMA, and for standardised mean difference, the mean, standard deviation, and sample size are required. Where there are missing reported statistics, and required statistics cannot be calculated from what is reported, the observations are excluded from the models. 
 

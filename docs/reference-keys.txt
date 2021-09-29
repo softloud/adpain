@@ -18,5 +18,4 @@ number-of-studies-extracted-126
 random-sample-checked
 comparisons
 calculations-for-missing-observations
-types-of-intervention-comparisons
-excluded-observations-72
+excluded-observations-72-from-12-studies
