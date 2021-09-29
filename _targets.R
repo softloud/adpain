@@ -52,7 +52,7 @@ list(
 
   tar_target(
     r_obs_dat,
-    read_csv("data/obs_dat-2021-09-29 11:22:40.csv") %>%
+    read_csv("data/obs_dat-2021-09-29 12:26:13.csv") %>%
       clean_names() %>%
       mutate(gs_row = row_number() + 1) %>%
       select(gs_row, everything())
@@ -152,6 +152,40 @@ list(
       ))
   ),
 
+
+# mood hierarchy ----------------------------------------------------------
+
+tar_target(
+  w_mood_hierarchy,
+  w_obs_outcome %>%
+    filter(str_detect(outcome, "mood")) %>%
+    group_by(study_id, arm, timepoint) %>%
+    summarise(
+      outcome = unique(outcome) %>% paste(collapse = ";")
+    ) %>%
+    mutate(
+      outcome = str_split(outcome, pattern = ";"),
+      n_outcomes = map_int(outcome, length)
+    ) %>%
+    filter(n_outcomes > 1) %>%
+    unnest(outcome) %>%
+    ungroup() %>%
+    mutate(
+      outcome = fct_relevel(outcome, "mood_overall", "mood_depression", "mood_anxiety")
+    ) %>%
+    arrange(desc(n_outcomes), study_id, arm, timepoint, outcome)
+),
+
+tar_target(
+  w_mood,
+  w_mood_hierarchy %>%
+    group_by(study_id, arm, timepoint) %>%
+    filter(outcome == first(outcome)) %>%
+    ungroup() %>%
+    select(-n_outcomes)
+),
+
+
   # all data wrangled -------------------------------------------------------
 
   tar_target(
@@ -174,11 +208,21 @@ list(
   ),
 
 
+
+
   tar_target(obs_dat,
              w_obs_outcome %>%
                anti_join(obs_excluded) %>%
+               anti_join(w_mood,
+                         by =
+                           c("outcome",
+                             "study_id",
+                             "arm",
+                             "timepoint")) %>%
                ungroup()  %>%
                mutate(
+                 outcome_all = outcome,
+                 outcome = outcome_nma,
                  time_no_change = timepoint,
                  timepoint = if_else(
                    change_score == TRUE, # isTRUE(change_score) bad

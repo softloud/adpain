@@ -30,7 +30,6 @@ source("preamble.R")
 # Overview
 
 ```{r}
-
 tar_load(obs_dat)
 
 ```
@@ -56,7 +55,11 @@ obs_dat %>%
   tab_header(
     "Outcome summary of interventions, studies, and conditions"
   ) %>% 
-  tab_source_note("General pain grouping is currently being used, but this can be switched or duplicated for IASP.")
+  tab_source_note("General pain grouping is currently being used, but this can be switched or duplicated for IASP.") %>% 
+  tab_options(
+    table.font.size = 12,
+    row_group.background.color = hpp_pal(1)
+  )
 
 ```
 
@@ -69,9 +72,12 @@ tar_read(pw_type_group) %>%
     studies = n_distinct(study_id)
   ) %>% 
   arrange(outcome, desc(studies)) %>% 
-  ungroup() %>% 
-  gt(rowname_col = "outcome") %>% 
-  tab_header("Comparison groups used in pairwise models")
+  ungroup() %>%
+  gt(groupname_col ="outcome") %>% 
+  tab_header("Comparison groups used in pairwise models") %>% 
+  tab_options(
+    row_group.background.color = hpp_pal(1)
+  )
 
 ```
 

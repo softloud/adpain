@@ -48,7 +48,7 @@ For odds-ratio the rate and sample size are required for NMA, and for standardis
 
 ```{r}
 obs_excluded %>% 
-  count(study_id) %>% 
+  count(study_id, timepoint, change_score) %>% 
   gt() %>% 
   tab_header("Number of observations (study/arm statistics) excluded by study")
 ```
