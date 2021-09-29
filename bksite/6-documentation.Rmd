@@ -10,47 +10,6 @@ tar_load(obs_excluded)
 
 ## Number of studies extracted: `r w_obs_outcome %>% pull(study_id) %>% unique() %>% length()`
 
-## Random sample checked
-
-```{r}
-
-checked_obs <- list(
-  checked = sum(!is.na(w_obs_outcome$date_checked)),
-  total_obs = nrow(w_obs_outcome)
-)
-
-checked_obs$prop <- checked_obs$checked/checked_obs$total_obs
-
-checked_obs %>% 
-  as_tibble() %>% 
-  gt() %>% 
-  cols_label(
-    checked = "Observations checked (statistics reported for one arm of one study)",
-    total_obs = "Total observations extracted",
-    prop = "Proportion of observations checked"
-  ) %>% 
-  tab_header(
-    title = "Charles' progress checking Covidence records against dataset"
-  )
-
-```
-
-## Comparisons
-
-```{r message=FALSE}
-tar_read(pw_type_group) %>%
-  group_by(outcome, comp_grouping, timepoint) %>% 
-  summarise(
-    studies = n_distinct(study_id)
-  ) %>% 
-  ungroup() %>% 
-  gt(rowname_col = "outcome") %>% 
-  tab_header("Comparison groups used in pairwise models")
-
-```
-
-
-
 ## Calculations for missing observations
 
 Where possible required statistics calculated from reported statistics.
@@ -73,7 +32,7 @@ $M$ | Median
 
 Missing | Reported | Calculation | Code
 -|-|-----------|---------------------------
-$n$ | $\%, r$ | $n = r / \%$ | `n = r / r_percent`
+$n$ | $\%, r$ | $n = r / \%$ | `n = round(r / r_percent)`
 $r$ | $\%, n$ | $r = \% \times n$ | `\r = r_percent * n` 
 $s$, $\text{se}$ | $\overline x, n, U$ | $s = \sqrt{n}(U - \overline x)/\Phi^{-1}(1 - \alpha/2)$ | `sd = sqrt(n) * (ci_upper - mean) / qnorm(1 - 0.05/2)`
 $s$, $\text{se}$ | $\overline x, n, L$ | $s = \sqrt{n}(\overline x - L)/\Phi^{-1}(1 - \alpha/2)$ | `sd = sqrt(n) * (mean - ci_lower) / qnorm(1 - 0.05/2)`
@@ -102,6 +61,32 @@ obs_excluded %>%
   tab_header("Observations currently excluded") %>% 
   tab_options(
     table.font.size = 12
+  )
+
+```
+
+
+## Random sample checked
+
+```{r}
+
+checked_obs <- list(
+  checked = sum(!is.na(w_obs_outcome$date_checked)),
+  total_obs = nrow(w_obs_outcome)
+)
+
+checked_obs$prop <- checked_obs$checked/checked_obs$total_obs
+
+checked_obs %>% 
+  as_tibble() %>% 
+  gt() %>% 
+  cols_label(
+    checked = "Observations checked (statistics reported for one arm of one study)",
+    total_obs = "Total observations extracted",
+    prop = "Proportion of observations checked"
+  ) %>% 
+  tab_header(
+    title = "Charles' progress checking Covidence records against dataset"
   )
 
 ```

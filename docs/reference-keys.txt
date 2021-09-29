@@ -1,8 +1,6 @@
 overview
-types-of-antidepressant
-outcomes-included
-studies-currently-included
-number-of-arms-per-timepoint
+observations-included
+comparisons
 mood-results
 nma
 substantial-pain-results
@@ -14,8 +12,7 @@ nma-3
 moderate-pain-results
 nma-4
 documentation
-number-of-studies-extracted-126
-random-sample-checked
-comparisons
+number-of-studies-extracted-141
 calculations-for-missing-observations
-excluded-observations-72-from-12-studies
+excluded-observations-23-from-5-studies
+random-sample-checked

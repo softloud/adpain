@@ -52,7 +52,7 @@ list(
 
   tar_target(
     r_obs_dat,
-    read_csv("data/obs_dat-2021-09-29 08:59:06.csv") %>%
+    read_csv("data/obs_dat-2021-09-29 11:22:40.csv") %>%
       clean_names() %>%
       mutate(gs_row = row_number() + 1) %>%
       select(gs_row, everything())
@@ -75,8 +75,8 @@ list(
         r_percent = r_percent / 100,
         # get n from r and r percent
         n = if_else(is.na(n) & r > 0 & r_percent > 0,
-                    r / r_percent,
-                    n),
+                    round(r / r_percent),
+                    n) %>% as.integer(),
 
         # get r from n and r percent
         r = if_else(is.na(r) & r_percent > 0 & n > 0,
@@ -176,7 +176,17 @@ list(
 
   tar_target(obs_dat,
              w_obs_outcome %>%
-               anti_join(obs_excluded)),
+               anti_join(obs_excluded) %>%
+               ungroup()  %>%
+               mutate(
+                 time_no_change = timepoint,
+                 timepoint = if_else(
+                   change_score == TRUE, # isTRUE(change_score) bad
+                   "change_score",
+                   timepoint
+                 )
+             )
+               ),
 
 
   # subgroups ---------------------------------------------------------------

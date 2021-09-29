@@ -9,7 +9,7 @@ bibliography: references.bib
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 
-knitr::opts_chunk$set(echo = FALSE, warnings = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warnings = FALSE, message = FALSE)
 
 knitr::opts_knit$set(root.dir = "../")
 
@@ -31,53 +31,48 @@ source("preamble.R")
 
 ```{r}
 
-tar_load(nma_dat)  
-
-```
-
-## Types of antidepressant
-
-What we said we'd do:
-
-Currently included:
-
-```{r}
+tar_load(obs_dat)
 
 ```
 
 
-## Outcomes included
+
+## Observations included
 
 ```{r}
-nma_dat %>%
-  group_by(outcome) %>% 
+obs_dat %>%
+  group_by(outcome, intervention_grouping) %>% 
   summarise(
-    studies = n_distinct(study),
-    conditions = unique(condition_general) %>% paste(collapse = ", "),
-    timepoint = unique(timepoint) %>% paste(collapse = ", ")
-  )
+    studies = n_distinct(study_id),
+    n_interventions = n_distinct(intervention),
+    interventions = unique(intervention) %>% paste(collapse = ", "),
+    n_conditions = n_distinct(general_pain_grouping),
+    conditions = unique(general_pain_grouping) %>% paste(collapse = ", "),
+    timepoint = unique(timepoint) %>% paste(collapse = ", "),
+    change_score = sum(change_score, na.rm = TRUE),
+    participants = sum(n, na.rm = TRUE)
+  ) %>% 
+  gt() %>% 
+  tab_header(
+    "Outcome summary of interventions, studies, and conditions"
+  ) %>% 
+  tab_source_note("General pain grouping is currently being used, but this can be switched or duplicated for IASP.")
 
 ```
 
-## Studies currently included
+## Comparisons
 
-There are `r nma_dat$study %>% unique() %>% length()` currently included.
-
-```{r}
-nma_dat %>% 
-  group_by(study) %>% 
+```{r message=FALSE}
+tar_read(pw_type_group) %>%
+  group_by(outcome, comp_grouping, interventions, timepoint) %>% 
   summarise(
-    outcome = unique(outcome) %>% paste(collapse = ", "),
-    conditions = unique(condition_general) %>% paste(collapse = ", ")
-  )
+    studies = n_distinct(study_id)
+  ) %>% 
+  arrange(outcome, desc(studies)) %>% 
+  ungroup() %>% 
+  gt(rowname_col = "outcome") %>% 
+  tab_header("Comparison groups used in pairwise models")
 
 ```
 
-## Number of arms per timepoint
-
-```{r}
-nma_dat %>% 
-  count(outcome, timepoint)
-
-```
 
