@@ -52,7 +52,7 @@ list(
 
   tar_target(
     r_obs_dat,
-    read_csv("data/obs_dat-2021-09-29 12:26:13.csv") %>%
+    read_csv("data/obs_dat-2021-09-29 12:48:03.csv") %>%
       clean_names() %>%
       mutate(gs_row = row_number() + 1) %>%
       select(gs_row, everything())
@@ -180,7 +180,7 @@ tar_target(
   w_mood,
   w_mood_hierarchy %>%
     group_by(study_id, arm, timepoint) %>%
-    filter(outcome == first(outcome)) %>%
+    filter(outcome != first(outcome)) %>%
     ungroup() %>%
     select(-n_outcomes)
 ),
@@ -228,7 +228,21 @@ tar_target(
                    change_score == TRUE, # isTRUE(change_score) bad
                    "change_score",
                    timepoint
-                 )
+                 ),
+                 outcome = fct_relevel(outcome,
+                                       "pain_int",
+                                       "pain_sub",
+                                       "pain_mod",
+                                       "mood",
+                                       "physical",
+                                       "sleep",
+                                       "qol",
+                                       "adverse",
+                                       "serious_adverse",
+                                       "adverse_dropout",
+                                       "withdrawal",
+                                       "adverse_number")
+
              )
                ),
 

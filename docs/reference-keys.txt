@@ -1,5 +1,8 @@
 overview
 observations-included
+summary-by-condition
+summary-by-class
+summmary-by-intervention
 comparisons
 mood-results
 nma
@@ -12,7 +15,7 @@ nma-3
 moderate-pain-results
 nma-4
 documentation
-number-of-studies-extracted-147
 calculations-for-missing-observations
+number-of-studies-extracted-147
 excluded-observations-23-from-5-studies
 random-sample-checked

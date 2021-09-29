@@ -32,6 +32,9 @@ source("preamble.R")
 ```{r}
 tar_load(obs_dat)
 
+summary_dat <- obs_dat %>% 
+  filter(timepoint != "baseline")
+
 ```
 
 
@@ -39,7 +42,8 @@ tar_load(obs_dat)
 ## Observations included
 
 ```{r}
-obs_dat %>%
+summary_dat %>%
+  filter(timepoint != "baseline") %>% 
   group_by(outcome, intervention_grouping) %>% 
   summarise(
     studies = n_distinct(study_id),
@@ -62,6 +66,86 @@ obs_dat %>%
   )
 
 ```
+
+## Summary by condition
+
+```{r}
+
+summary_dat %>% 
+  group_by(
+    outcome, general_pain_grouping, timepoint
+  ) %>% 
+  summarise(
+    studies = n_distinct(study_id),
+    participants = sum(n, na.rm = TRUE),
+    interventions = unique(intervention) %>% paste(collapse = ";")
+  ) %>% 
+  ungroup() %>% 
+  group_by(outcome) %>% 
+  gt() %>% 
+  tab_options(
+    table.font.size = 12,
+    row_group.background.color = hpp_pal(1)
+  )
+  
+
+
+```
+
+## Summary by class
+
+
+```{r}
+
+summary_dat %>% 
+  group_by(
+    outcome, timepoint, ad_class
+  ) %>% 
+  filter(
+    !is.na(ad_class),
+    ad_class != "n/a"
+  ) %>% 
+  summarise(
+    studies = n_distinct(study_id),
+    participants = sum(n, na.rm = TRUE),
+    interventions = unique(intervention) %>% paste(collapse = ";")
+  ) %>% 
+  ungroup() %>% 
+  group_by(outcome) %>% 
+  gt() %>% 
+  tab_options(
+    table.font.size = 12,
+    row_group.background.color = hpp_pal(1)
+  )
+  
+
+
+```
+
+## Summmary by intervention
+
+```{r}
+summary_dat %>% 
+  filter(
+    intervention_grouping == "antidepressant"
+  ) %>% 
+  group_by(outcome, intervention) %>% 
+  summarise(
+    studies = n_distinct(study_id),
+    participants = sum(n, na.rm = TRUE)
+  ) %>% 
+  arrange(outcome, desc(participants)) %>%
+  gt()  %>% 
+  tab_options(
+    table.font.size = 12,
+    row_group.background.color = hpp_pal(1)
+  )
+  
+
+
+```
+
+
 
 ## Comparisons
 

@@ -8,8 +8,6 @@ tar_load(obs_excluded)
 
 ```
 
-## Number of studies extracted: `r w_obs_outcome %>% pull(study_id) %>% unique() %>% length()`
-
 ## Calculations for missing observations
 
 Where possible required statistics calculated from reported statistics.
@@ -40,6 +38,8 @@ $\overline x$ | $M, U, L$ | $\overline x \approx (L + M + U)/3$ [@wan_2014] | `m
 $\text{se}$ | $M, U, L, n$ | $\text{se} = (U - L)/(2\sqrt{n}\Phi^{-1}((0.75n-0.125)/(n+0.25)))$ [@wan_2014] | `se = varameta::wan_se_C3(q_1 = iqr_lower, m = median, q_3 = iqr_higher, n = n)` [@gray_2021]
 $s$ | $\text{se}, n$ | $s = \text{se} \times \sqrt{n}$ | `sd = se * sqrt(n)`
 $\text{se}$ | $s, n$ | $\text{se} = s / \sqrt{n}$ | `se = sd / sqrt(n)`
+
+## Number of studies extracted: `r w_obs_outcome %>% pull(study_id) %>% unique() %>% length()`
 
 ## Excluded observations: `r nrow(obs_excluded)` from `r obs_excluded %>% pull(study_id) %>% unique() %>% length()` studies
 
