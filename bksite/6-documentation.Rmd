@@ -2,13 +2,17 @@
 
 ```{r}
 library(gt)
+tar_load(w_obs_outcome)
+tar_load(obs_excluded)
+
+
 ```
+
+## Number of studies extracted: `r w_obs_outcome %>% pull(study_id) %>% unique() %>% length()`
 
 ## Random sample checked
 
 ```{r}
-tar_load(w_obs_outcome)
-tar_load(obs_excluded)
 
 checked_obs <- list(
   checked = sum(!is.na(w_obs_outcome$date_checked)),
@@ -32,6 +36,14 @@ checked_obs %>%
 ```
 
 ## Comparisons
+
+```{r}
+tar_read(subgroups) %>% 
+  gt() %>% 
+  tab_header("Comparison groups used in pairwise models")
+
+```
+
 
 
 ## Calculations for missing observations

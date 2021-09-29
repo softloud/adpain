@@ -52,7 +52,7 @@ list(
 
   tar_target(
     r_obs_dat,
-    read_csv("data/obs_dat-2021-09-28 15:54:34.csv") %>%
+    read_csv("data/obs_dat-2021-09-29 08:59:06.csv") %>%
       clean_names() %>%
       mutate(gs_row = row_number() + 1) %>%
       select(gs_row, everything())
@@ -188,17 +188,18 @@ list(
         outcome != "adverse_dropout",
         outcome != "adverse_number",
         outcome != "serious_adverse",
-        intervention_grouping != "placebo"
+        intervention_grouping != "placebo",
+        timepoint != "baseline"
       ) %>%
-      select(outcome, intervention_grouping, general_pain_grouping, ad_class) %>%
+      select(outcome, intervention_grouping, timepoint, general_pain_grouping, ad_class) %>%
       distinct()
   ),
 
   tar_target(
     subgroup_type,
     subgroups %>%
-      select(outcome, intervention_grouping) %>%
-      group_by(outcome, intervention_grouping) %>%
+      select(outcome, intervention_grouping, timepoint) %>%
+      group_by(outcome, intervention_grouping, timepoint) %>%
       distinct() %>%
       tar_group(),
     iteration = "group"
@@ -452,9 +453,9 @@ list(
       filter(outcome == subgroup_type$outcome,
              intervention_grouping %in% c(subgroup_type$intervention_grouping, "placebo")
              ) %>%
-      select(outcome, intervention_grouping, study_id, intervention) %>%
+      select(outcome, intervention_grouping, study_id, intervention, timepoint) %>%
       mutate(subgroup = subgroup_type$tar_group) %>%
-      group_by(outcome, study_id, subgroup) %>%
+      group_by(outcome, study_id, subgroup, timepoint) %>%
       summarise(
         interventions = unique(intervention) %>% paste(collapse = ";")
       ) %>%
@@ -488,7 +489,7 @@ list(
   tar_target(
     pw_type_group,
     pw_type_match %>%
-      group_by(outcome, comp_grouping, interventions) %>%
+      group_by(outcome, comp_grouping, interventions, timepoint) %>%
       summarise(
         n_studies = n_distinct(study_id),
         studies = unique(study_id) %>% paste(collapse = ";")
@@ -497,11 +498,51 @@ list(
       arrange(desc(n_studies)) %>%
       mutate(study_id = str_split(studies, ";")) %>%
       unnest(study_id) %>%
-      group_by(outcome, comp_grouping, interventions) %>%
+      group_by(outcome, comp_grouping, interventions, timepoint) %>%
+      select(outcome, comp_grouping, interventions, study_id, everything()) %>%
       tar_group(),
     iteration = "group"
   ),
 
+  tar_target(
+    pw_type_wide, {
+      int_dat <-
+      pw_type_group %>%
+        mutate(intervention = str_split(interventions, ";")) %>%
+        unnest(intervention) %>%
+        left_join(
+          obs_dat,
+          by = c("outcome", "study_id", "intervention", "timepoint")
+        ) %>%
+        group_split(intervention)
+
+      int_dat %>%
+        pluck(2) %>%
+        select(outcome, comp_grouping, study_id, intervention, arm,
+               mean, sd, n, r, timepoint) %>%
+      rename_with(~ glue("{.x}_comp"),
+                  any_of(c("arm","mean", "sd", "n", "r", "intervention"))) %>%
+        full_join(int_dat[[1]],
+                  by = c("outcome", "comp_grouping", "study_id", "timepoint")) %>%
+        select(model_type, outcome, timepoint, comp_grouping, study_id,
+               starts_with("arm"),
+               starts_with("mean"),
+               starts_with("sd"),
+               starts_with('n'),
+               starts_with("r"),
+               starts_with("intervention")
+               ) %>%
+        select(-r_percent)
+    },
+    pattern = map(pw_type_group),
+    iteration = "list"
+  ),
+
+  tar_target(
+    pw_type_ma,
+    pw_type_wide
+
+  ),
 
 
   # network plots -----------------------------------------------------------
