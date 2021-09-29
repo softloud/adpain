@@ -73,7 +73,7 @@ summary_dat %>%
 
 summary_dat %>% 
   group_by(
-    outcome, general_pain_grouping, timepoint
+    outcome, general_pain_grouping, time_no_change
   ) %>% 
   summarise(
     studies = n_distinct(study_id),
@@ -99,7 +99,7 @@ summary_dat %>%
 
 summary_dat %>% 
   group_by(
-    outcome, timepoint, ad_class
+    outcome, time_no_change, ad_class
   ) %>% 
   filter(
     !is.na(ad_class),
