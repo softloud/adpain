@@ -29,7 +29,7 @@ source("preamble.R")
 
 # Overview
 
-```{r}
+```{r load summary data}
 tar_load(obs_dat)
 
 summary_dat <- obs_dat %>% 
@@ -41,10 +41,10 @@ summary_dat <- obs_dat %>%
 
 ## Observations included
 
-```{r}
+```{r observations tab}
 summary_dat %>%
   filter(timepoint != "baseline") %>% 
-  group_by(outcome, intervention_grouping) %>% 
+  group_by(outcome_label, intervention_grouping) %>% 
   summarise(
     studies = n_distinct(study_id),
     n_interventions = n_distinct(intervention),
@@ -55,6 +55,7 @@ summary_dat %>%
     change_score = sum(change_score, na.rm = TRUE),
     participants = sum(n, na.rm = TRUE)
   ) %>% 
+  arrange(desc(participants), desc(studies)) %>% 
   gt() %>% 
   tab_header(
     "Outcome summary of interventions, studies, and conditions"
@@ -69,11 +70,11 @@ summary_dat %>%
 
 ## Summary by condition
 
-```{r}
+```{r condition tab}
 
 summary_dat %>% 
   group_by(
-    outcome, general_pain_grouping, time_no_change
+    outcome_label, general_pain_grouping, time_no_change
   ) %>% 
   summarise(
     studies = n_distinct(study_id),
@@ -81,7 +82,8 @@ summary_dat %>%
     interventions = unique(intervention) %>% paste(collapse = ";")
   ) %>% 
   ungroup() %>% 
-  group_by(outcome) %>% 
+  group_by(outcome_label) %>% 
+  arrange(desc(participants), desc(studies)) %>% 
   gt() %>% 
   tab_options(
     table.font.size = 12,
@@ -95,11 +97,11 @@ summary_dat %>%
 ## Summary by class
 
 
-```{r}
+```{r class tab}
 
 summary_dat %>% 
   group_by(
-    outcome, time_no_change, ad_class
+    outcome_label, time_no_change, ad_class
   ) %>% 
   filter(
     !is.na(ad_class),
@@ -111,7 +113,8 @@ summary_dat %>%
     interventions = unique(intervention) %>% paste(collapse = ";")
   ) %>% 
   ungroup() %>% 
-  group_by(outcome) %>% 
+  group_by(outcome_label) %>% 
+  arrange(desc(participants), desc(studies)) %>% 
   gt() %>% 
   tab_options(
     table.font.size = 12,
@@ -124,17 +127,17 @@ summary_dat %>%
 
 ## Summmary by intervention
 
-```{r}
+```{r intervention tab}
 summary_dat %>% 
   filter(
     intervention_grouping == "antidepressant"
   ) %>% 
-  group_by(outcome, intervention) %>% 
+  group_by(outcome_label, intervention) %>% 
   summarise(
     studies = n_distinct(study_id),
     participants = sum(n, na.rm = TRUE)
   ) %>% 
-  arrange(outcome, desc(participants)) %>%
+  arrange(outcome_label, desc(participants)) %>%
   gt()  %>% 
   tab_options(
     table.font.size = 12,
@@ -149,13 +152,14 @@ summary_dat %>%
 
 ## Comparisons
 
-```{r message=FALSE}
+```{r pw comp tab, message=FALSE}
 tar_read(pw_type_group) %>%
-  group_by(outcome, comp_grouping, interventions, timepoint) %>% 
+  left_join(tar_read(r_outcome_key)) %>% 
+  group_by(outcome_label, comp_grouping, interventions, timepoint) %>% 
   summarise(
     studies = n_distinct(study_id)
   ) %>% 
-  arrange(outcome, desc(studies)) %>% 
+  arrange(outcome_label, desc(studies)) %>% 
   ungroup() %>%
   gt(groupname_col ="outcome") %>% 
   tab_header("Comparison groups used in pairwise models") %>% 

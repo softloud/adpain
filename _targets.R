@@ -52,7 +52,7 @@ list(
 
   tar_target(
     r_obs_dat,
-    read_csv("data/obs_dat-2021-09-29 12:48:03.csv") %>%
+    read_csv("data/obs_dat-2021-10-02 15:18:30.csv") %>%
       clean_names() %>%
       mutate(gs_row = row_number() + 1) %>%
       select(gs_row, everything())
@@ -60,8 +60,12 @@ list(
 
   tar_target(
     r_outcome_key,
-    read_csv("data/outcome-2021-09-27 15:01:07.csv") %>%
-      clean_names()
+    read_csv("data/outcome-2021-10-02 15:29:51.csv") %>%
+      clean_names() %>%
+      mutate(
+        outcome = fct_relevel(outcome, "mood_overall", "mood_depression", "mood_anxiety")
+      )
+
   ),
 
   # wrangle obs dat ---------------------------------------------------------
@@ -170,9 +174,6 @@ tar_target(
     filter(n_outcomes > 1) %>%
     unnest(outcome) %>%
     ungroup() %>%
-    mutate(
-      outcome = fct_relevel(outcome, "mood_overall", "mood_depression", "mood_anxiety")
-    ) %>%
     arrange(desc(n_outcomes), study_id, arm, timepoint, outcome)
 ),
 
@@ -243,7 +244,8 @@ tar_target(
                                        "withdrawal",
                                        "adverse_number")
 
-             )
+             ) %>%
+               left_join(r_outcome_key)
                ),
 
 
@@ -608,7 +610,10 @@ tar_target(
 
   tar_target(
     pw_type_ma,
-    pw_type_wide
+    pw_type_wide %>%
+      hpp_rma(),
+    pattern = map(pw_type_wide),
+    iteration = "list"
 
   ),
 

@@ -4,10 +4,11 @@
   library(glue)
   library(readr)
 
+  obs_dat_gs <- "https://docs.google.com/spreadsheets/d/1CMsqvOC3SteW1FsSomyfSAYSXRspuU17PWNJbrKRZKk/edit#gid=0"
+
 }
 
 
-obs_dat_gs <- "https://docs.google.com/spreadsheets/d/1CMsqvOC3SteW1FsSomyfSAYSXRspuU17PWNJbrKRZKk/edit#gid=0"
 
 # update obs --------------------------------------------------------------
 
