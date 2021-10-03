@@ -52,7 +52,7 @@ list(
 
   tar_target(
     r_obs_dat,
-    read_csv("data/obs_dat-2021-10-03 12:57:55.csv") %>%
+    read_csv("data/obs_dat-2021-10-03 15:07:10.csv") %>%
       clean_names() %>%
       mutate(gs_row = row_number() + 1) %>%
       select(gs_row, everything())
@@ -198,10 +198,15 @@ tar_target(w_outcome_key,
   tar_target(
     w_mood_exclude,
     w_mood_hierarchy %>%
+      mutate(
+          outcome = fct_relevel(outcome, "mood_overall",
+                                "mood_depression",
+                                "mood_anxiety")) %>%
       group_by(study_id, arm, timepoint) %>%
-      filter(outcome != first(outcome)) %>%
-      ungroup() %>%
-      select(-n_outcomes)
+      arrange(outcome) %>%
+  filter(outcome != first(outcome)) %>%
+  ungroup() %>%
+  select(-n_outcomes)
   ),
 
 
