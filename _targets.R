@@ -60,7 +60,7 @@ list(
 
   tar_target(
     r_outcome_key,
-    read_csv("data/outcome-2021-10-03 13:00:27.csv") %>%
+    read_csv("data/outcome-2021-10-03 15:15:15.csv") %>%
       clean_names() %>%
       mutate(
         outcome = fct_relevel(outcome, "mood_overall", "mood_depression", "mood_anxiety")
@@ -69,30 +69,31 @@ list(
   ),
 
 
-# wrangle outcome key -----------------------------------------------------
+  # wrangle outcome key -----------------------------------------------------
 
-tar_target(w_outcome_key,
-           r_outcome_key %>%
-             mutate(
-               outcome = fct_relevel(
-                 outcome,
-                 "pain_int",
-                 "pain_sub",
-                 "pain_mod",
-                 "mood",
-                 "physical",
-                 "sleep",
-                 "qol",
-                 "adverse",
-                 "withdrawal",
-                 "serious_adverse",
-                 "adverse_dropout",
-                 "adverse_number"
-               ),
-               outcome_nma = fct_reorder(outcome_nma, outcome, first),
-               outcome_label = fct_reorder(outcome_label, outcome_nma, first)
-             )
-           ),
+  tar_target(
+    w_outcome_key,
+    r_outcome_key %>%
+      mutate(
+        outcome = fct_relevel(
+          outcome,
+          "pain_int",
+          "pain_sub",
+          "pain_mod",
+          "mood",
+          "physical",
+          "sleep",
+          "qol",
+          "adverse",
+          "withdrawal",
+          "serious_adverse",
+          "adverse_dropout",
+          "adverse_number"
+        ),
+        outcome_nma = fct_reorder(outcome_nma, outcome, first),
+        outcome_label = fct_reorder(outcome_label, outcome_nma, first)
+      )
+  ),
   # wrangle obs dat ---------------------------------------------------------
 
   tar_target(
@@ -199,14 +200,15 @@ tar_target(w_outcome_key,
     w_mood_exclude,
     w_mood_hierarchy %>%
       mutate(
-          outcome = fct_relevel(outcome, "mood_overall",
-                                "mood_depression",
-                                "mood_anxiety")) %>%
+        outcome = fct_relevel(outcome, "mood_overall",
+                              "mood_depression",
+                              "mood_anxiety")
+      ) %>%
       group_by(study_id, arm, timepoint) %>%
       arrange(outcome) %>%
-  filter(outcome != first(outcome)) %>%
-  ungroup() %>%
-  select(-n_outcomes)
+      filter(outcome != first(outcome)) %>%
+      ungroup() %>%
+      select(-n_outcomes)
   ),
 
 
@@ -358,7 +360,7 @@ tar_target(w_outcome_key,
 
   tar_target(m_o_tt_key,
              if (!is.null(m_o_tt$error)) {
-               tibble(target = "m_o_tt",)
+               tibble(target = "m_o_tt", )
              } else {
                m_key_fn(m_o_tt, "m_o_tt")
              }
@@ -392,7 +394,7 @@ tar_target(w_outcome_key,
 
   tar_target(m_con_pain_sub_key,
              if (!is.null(m_con_pain_sub$error)) {
-               tibble(target = "m_con_pain_sub",)
+               tibble(target = "m_con_pain_sub", )
              } else {
                m_key_fn(m_con_pain_sub, "m_con_pain_sub") %>%
                  mutate(
@@ -431,7 +433,7 @@ tar_target(w_outcome_key,
 
   tar_target(m_con_mood_key,
              if (!is.null(m_con_mood$error)) {
-               tibble(target = "m_con_mood",)
+               tibble(target = "m_con_mood", )
              } else {
                m_key_fn(m_con_mood, "m_con_mood") %>%
                  mutate(
@@ -468,7 +470,7 @@ tar_target(w_outcome_key,
 
   tar_target(m_con_adverse_key,
              if (!is.null(m_con_adverse$error)) {
-               tibble(target = "m_con_adverse",)
+               tibble(target = "m_con_adverse", )
              } else {
                m_key_fn(m_con_adverse, "m_con_adverse") %>%
                  mutate(
@@ -514,8 +516,8 @@ tar_target(w_outcome_key,
       unique() %>%
       c("placebo", .) %>%
       combn(2) %>% {
-        tibble(int_1 = .[1,],
-               int_2 = .[2,])
+        tibble(int_1 = .[1, ],
+               int_2 = .[2, ])
       } %>%
       bind_cols(subgroup_type) %>%
       mutate(comp = glue("{int_1}_{int_2}")) %>%
@@ -605,10 +607,10 @@ tar_target(w_outcome_key,
                n,
                r,
                timepoint) %>%
-        rename_with( ~ glue("{.x}_comp"),
-                     any_of(c(
-                       "arm", "mean", "sd", "n", "r", "intervention"
-                     ))) %>%
+        rename_with(~ glue("{.x}_comp"),
+                    any_of(c(
+                      "arm", "mean", "sd", "n", "r", "intervention"
+                    ))) %>%
         full_join(int_dat[[1]],
                   by = c("outcome", "comp_grouping", "study_id", "timepoint")) %>%
         select(
