@@ -57,10 +57,14 @@ obs_excluded %>%
 ```{r}
 obs_excluded %>% 
   select(exclusion_reason, gs_row, outcome, study_id, intervention, timepoint, mean:change_score) %>% 
-  gt(rowname_col = "study_id") %>% 
+  gt(groupname_col = "study_id",
+     rowname_col = "exclusion_reason"
+     ) %>% 
   tab_header("Observations currently excluded") %>% 
   tab_options(
-    table.font.size = 12
+    table.font.size = 12,
+        row_group.background.color = hpp_pal(1)
+
   )
 
 ```
@@ -91,4 +95,18 @@ checked_obs %>%
 
 ```
 
+## Mood exclusions
+
+```{r}
+tar_read(w_mood_exclude) %>% 
+  gt() %>% 
+   tab_header("Mood observations excluded by hierarchy: all > depression > anxiety") %>% 
+  tab_options(
+    table.font.size = 12,
+        row_group.background.color = hpp_pal(1)
+
+  )
+
+
+```
 

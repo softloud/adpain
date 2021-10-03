@@ -16,6 +16,7 @@ moderate-pain-results
 nma-4
 documentation
 calculations-for-missing-observations
-number-of-studies-extracted-155
-excluded-observations-23-from-5-studies
+number-of-studies-extracted-158
+excluded-observations-35-from-10-studies
 random-sample-checked
+mood-exclusions

@@ -55,7 +55,7 @@ summary_dat %>%
     change_score = sum(change_score, na.rm = TRUE),
     participants = sum(n, na.rm = TRUE)
   ) %>% 
-  arrange(desc(participants), desc(studies)) %>% 
+  arrange(outcome_label, desc(participants), desc(studies)) %>% 
   gt() %>% 
   tab_header(
     "Outcome summary of interventions, studies, and conditions"
@@ -83,7 +83,7 @@ summary_dat %>%
   ) %>% 
   ungroup() %>% 
   group_by(outcome_label) %>% 
-  arrange(desc(participants), desc(studies)) %>% 
+  arrange(outcome_label, desc(participants), desc(studies)) %>% 
   gt() %>% 
   tab_options(
     table.font.size = 12,
@@ -114,7 +114,7 @@ summary_dat %>%
   ) %>% 
   ungroup() %>% 
   group_by(outcome_label) %>% 
-  arrange(desc(participants), desc(studies)) %>% 
+  arrange(outcome_label, desc(participants), desc(studies)) %>% 
   gt() %>% 
   tab_options(
     table.font.size = 12,
