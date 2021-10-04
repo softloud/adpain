@@ -12,10 +12,10 @@ hpp_nma <- function(dat, all_dat) {
 
     placebo_dat <-
       dat %>%
-      select(outcome, study, timepoint, condition_general) %>%
+      select(outcome, study, timepoint, general_pain_grouping) %>%
       distinct() %>%
       inner_join(all_dat %>%
-                   filter(type == "placebo"),
+                   filter(intervention_grouping == "placebo"),
                  by = c('outcome', "study", "timepoint"))
 
     dat <-

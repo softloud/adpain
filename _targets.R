@@ -13,6 +13,7 @@ suppressMessages({
   # library(hppapp) # should be calling from this app
   library(metafor)
   library(varameta)
+  library(broom)
 
   conflicted::conflict_prefer("filter", "dplyr")
 
@@ -52,7 +53,7 @@ list(
 
   tar_target(
     r_obs_dat,
-    read_csv("data/obs_dat-2021-10-03 15:07:10.csv") %>%
+    read_csv("data/obs_dat-2021-10-04 01:34:49.csv") %>%
       clean_names() %>%
       mutate(gs_row = row_number() + 1) %>%
       select(gs_row, everything())
@@ -255,6 +256,11 @@ list(
       )
   ),
 
+tar_target(
+  m_obs_dat,
+  obs_dat %>%
+    rename(study = study_id)
+),
 
   # subgroups ---------------------------------------------------------------
 
@@ -310,9 +316,6 @@ list(
   ),
 
 
-  # model data filtered -----------------------------------------------------
-
-
 
   # models ------------------------------------------------------------------
   tar_target(m_key_fn,
@@ -343,29 +346,38 @@ list(
 
 
   tar_target(
-    m_o_tt_dat,
-    obs_dat %>%
-      filter(type != "placebo") %>%
-      group_by(outcome, timepoint, type) %>%
+    m_type_dat,
+    subgroup_type %>%
+      left_join(m_obs_dat) %>%
+      select(-tar_group) %>%
+      group_by(outcome, intervention_grouping,
+               timepoint) %>%
       tar_group(),
     iteration = "group"
   ),
 
   tar_target(
-    m_o_tt,
-    hpp_nma(m_o_tt_dat, obs_dat),
-    pattern = map(m_o_tt_dat),
+    m_type_test,
+    m_type_dat %>%
+      filter(tar_group == 1) %>%
+      hpp_nma(m_obs_dat)
+  ),
+
+  tar_target(
+    m_type,
+    hpp_nma(m_type_dat, m_obs_dat),
+    pattern = map(m_type_dat),
     iteration = "list"
   ),
 
-  tar_target(m_o_tt_key,
-             if (!is.null(m_o_tt$error)) {
-               tibble(target = "m_o_tt", )
+  tar_target(m_type_key,
+             if (!is.null(m_type$error)) {
+               tibble(target = "m_type", )
              } else {
-               m_key_fn(m_o_tt, "m_o_tt")
+               m_key_fn(m_type, "m_type")
              }
              ,
-             pattern = map(m_o_tt)),
+             pattern = map(m_type)),
 
 
   # models by condition -----------------------------------------------------
@@ -489,7 +501,7 @@ list(
   tar_target(
     m_key,
     list(
-      m_o_tt_key,
+      m_type_key,
       m_con_pain_sub_key,
       m_con_mood_key,
       m_con_adverse_key
@@ -642,6 +654,36 @@ list(
   ),
 
 
+
+# pw forest ---------------------------------------------------------------
+
+tar_target(
+  pw_forest_dev,
+  pw_type_ma %>%
+    pluck(1) %>%
+  pw_forest()
+),
+
+
+# pw summary --------------------------------------------------------------
+tar_target(
+  pw_type_results, {
+    pw_type_group %>%
+      select(-study_id) %>%
+      ungroup() %>%
+      distinct()
+    # %>%
+      # bind_cols(
+      #   pw_type_ma %>%
+      #     glance() %>%
+      #     select(i.squared, tau.squared, tau.squared.se)
+      # )
+
+  }
+  #,
+  # pattern = map(pw_type_ma)
+),
+
   # network plots -----------------------------------------------------------
   tar_target(plot_net, {
     msg_mine("Set up title by outcome, type, timepoint")
@@ -658,7 +700,7 @@ list(
 
     msg_mine("Subtitle:")
     this_subtitle <- case_when(
-      m_key$target == "m_o_tt" ~
+      m_key$target == "m_type" ~
         glue(
           "Subgroups: timepoint [{m_key$timepoint}] and type [{m_key$type}]"
         ),
@@ -671,8 +713,8 @@ list(
     this_subtitle %>% print()
 
     mod <-
-      if (m_key$target == "m_o_tt") {
-        m_o_tt[[m_key$index]]
+      if (m_key$target == "m_type") {
+        m_type[[m_key$index]]
       } else if (m_key$target == "m_con_pain_sub") {
         m_con_pain_sub[[m_key$index]]
       } else if (m_key$target == "m_con_mood") {
@@ -693,7 +735,7 @@ list(
   tar_target(plot_net_write,
              {
                glue(
-                 " Writing net plot for m_o_tt:
+                 " Writing net plot for m_type:
                         outcome {m_key$outcome}
                         timepoint {m_key$timepoint}
                         type {m_key$type}
@@ -722,11 +764,11 @@ list(
     msg_mine("Select an arbitrary model")
 
     this_mod <-
-      m_o_tt %>%
+      m_type %>%
       pluck(1, "result")
 
     key <- m_key %>%
-      filter(target == "m_o_tt", index == 1)
+      filter(target == "m_type", index == 1)
 
     # print(summary(this_mod))
 
@@ -742,23 +784,23 @@ list(
   # forest: dev -------------------------------------------------------------
   tar_target(plot_forest_dev, {
     # select an arbitrary lor model
-    m_o_tt_key_row <-
+    m_type_key_row <-
       m_key %>%
-      filter(outcome == "mood", target == "m_o_tt") %>%
+      filter(outcome == "mood", target == "m_type") %>%
       head(1)
 
     msg_mine(" Selected row from m_model_key")
-    print(m_o_tt_key_row)
+    print(m_type_key_row)
 
     msg_mine(" Get model")
     mod <-
-      m_o_tt %>%
-      pluck(m_o_tt_key_row$index) %>%
+      m_type %>%
+      pluck(m_type_key_row$index) %>%
       pluck("result")
 
     msg_mine(" Create plot")
     hpp_forest(mod,
-               m_o_tt_key_row)
+               m_type_key_row)
 
   }),
 
@@ -778,8 +820,8 @@ list(
 
   tar_target(plot_forest, {
     mod <-
-      if (m_key$target == "m_o_tt") {
-        m_o_tt %>% pluck(m_key$index)
+      if (m_key$target == "m_type") {
+        m_type %>% pluck(m_key$index)
       } else if (m_key$target == "m_con_pain_sub") {
         m_con_pain_sub %>%
           pluck(m_key$index)

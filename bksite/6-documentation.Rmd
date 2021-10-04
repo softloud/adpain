@@ -14,6 +14,8 @@ Where possible required statistics calculated from reported statistics.
 
 Confidence intervals assumed to have $\alpha = 0.05$; i.e., 95% confidence intervals assumed.  
 
+If medians and interquartile ranges were reported, then means and standard deviations were estimated using an implmentation [@gray_2021] of [@wan_2014]'s method.
+
 Symbol | Statistic
 -|-
 $n$ | Sample size

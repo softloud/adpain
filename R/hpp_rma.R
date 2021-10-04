@@ -13,6 +13,7 @@ hpp_rma <- function(dat) {
   else if (m_type == "lor")
     "OR"
 
+  escalc_dat <-
   if (m_type == "smd") {
     metafor::escalc(
       measure = hpp_measure,
@@ -25,7 +26,6 @@ hpp_rma <- function(dat) {
       slab = study_id,
       data = dat
     )
-
   } else if (m_type == "lor") {
     metafor::escalc(
       measure = hpp_measure,
@@ -35,16 +35,16 @@ hpp_rma <- function(dat) {
       n2i = n_comp,
       slab = study_id,
       data = dat
-    ) %>%
-      rma(
-        yi = yi,
-        vi = vi,
-        slab = study_id,
-        data = .,
-        measure = hpp_measure
-      )
+    )
   }
 
+    rma(
+      yi = yi,
+      vi = vi,
+      slab = study_id,
+      data = escalc_dat,
+      measure = hpp_measure
+    )
 
 
 }
