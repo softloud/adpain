@@ -54,7 +54,7 @@ list(
 
   tar_target(
     r_obs_dat,
-    read_csv("data/obs_dat-2021-10-05 10:22:40.csv") %>%
+    read_csv("data/obs_dat-2021-10-05 16:10:34.csv") %>%
       clean_names() %>%
       mutate(across(where(is.character), tolower)) %>%
       mutate(gs_row = row_number() + 1) %>%
@@ -257,41 +257,54 @@ list(
 
   tar_target(m_obs_dat,
              obs_dat %>%
+               filter(
+                 outcome != "adverse_dropout",
+                 outcome != "adverse_number",
+                 outcome != "serious_adverse"
+               ) %>%
                rename(study = study_id,
                       type = intervention_grouping,
                       condition = general_pain_grouping,
-                      class = ad_class
-                      )),
+                      class = ad_class,
+                      dose = ad_dose_categorised
+                      ) %>%
+               ungroup() %>%
+               # filter to two outcomes for testing
+               filter(
+                 outcome %in% c("sleep", "pain_sub")
+               )
+             ),
 
   # subgroups ---------------------------------------------------------------
 
   tar_target(
-    subgroups,
+    subgroup_dat,
     m_obs_dat %>%
       filter(
-        outcome != "adverse_dropout",
-        outcome != "adverse_number",
-        outcome != "serious_adverse",
         type != "placebo",
         timepoint != "baseline"
-      ) %>%
-      select(
-        outcome,
-        type,
-        timepoint,
-        condition,
-        class
-      ) %>%
-      distinct()
-  ),
+      )   ),
 
   tar_target(
     subgroup_type,
-    subgroups %>%
-      select(outcome, type, timepoint) %>%
-      group_by(outcome, type, timepoint) %>%
+    subgroup_dat %>%
+      group_by(
+        outcome, type, timepoint
+      ) %>%
+      summarise(
+        studies = n_distinct(study),
+        participants_int = sum(n),
+        outcome = unique(outcome) %>% paste(collapse = ";"),
+        type = unique(type) %>% paste(collapse = ";"),
+        timepoint = unique(timepoint) %>% paste(collapse = ";"),
+        condition = unique(condition) %>% paste(collapse = ";"),
+        class = unique(class) %>% paste(collapse = ";"),
+        dose = unique(dose) %>% paste(collapse = ";")
+      ) %>%
       distinct() %>%
-      tar_group(),
+      arrange(desc(studies)) %>%
+      filter(studies > 1) %>%
+    tar_group(),
     iteration = "group"
   ),
 
@@ -315,8 +328,6 @@ list(
       tar_group(),
     iteration = "group"
   ),
-
-
 
   # models ------------------------------------------------------------------
   tar_target(m_key_fn,
@@ -865,64 +876,13 @@ list(
 
 
 
-  # # nma summary -------------------------------------------------------------
-  #
-  # tar_target(m_nma_summary_fn,
-  #            function(m) {
-  #              m_stan_df <-
-  #                m %>%
-  #                summary() %>%
-  #                as.data.frame()
-  #
-  #              m_stan_df %>%
-  #                filter(str_detect(parameter, "^d\\[")) %>%
-  #                arrange(mean) %>% # get lowest mean
-  #                select(parameter, ci_lb = "2.5%",
-  #                       ci_ub =  "97.5%",
-  #                       mean, sd) %>%
-  #                head(1) %>%
-  #                mutate(
-  #                  tau = m_stan_df %>% filter(parameter == "tau") %>% pluck("mean"),
-  #                  outcome = m$network$agd_arm$outcome %>% unique(),
-  #                  intervention = str_remove(parameter, "^d\\[") %>%
-  #                    str_remove("\\]")
-  #                ) %>%
-  #                select(-parameter)
-  #            }),
-  #
-  # tar_target(
-  #   m_nma_summary_all,
-  #   m_all_in %>%
-  #     discard( ~ length(.x) == 1) %>%
-  #     map_df(
-  #       .f = function(m) {
-  #         m_nma_summary_fn(m) %>%
-  #           mutate(condition = "all")
-  #       }
-  #     )
-  # ),
-  #
-  # tar_target(
-  #   m_nma_summary_condition,
-  #   m_condition %>%
-  #     discard( ~ length(.x) == 1) %>%
-  #     map_df(
-  #       .f = function(m) {
-  #         m_nma_summary_fn(m) %>%
-  #           mutate(condition = m$network$agd_arm$condition_general
-  #                  %>% unique())
-  #       }
-  #     )
-  # ),
-  #
-  # tar_target(
-  #   m_nma_summary,
-  #   m_nma_summary_all %>%
-  #     bind_rows(m_nma_summary_condition) %>%
-  #     mutate(ci_contains_0 = ci_lb < 0 & ci_ub > 0) %>%
-  #     select(outcome, condition, intervention, ci_contains_0, everything())
-  # ),
-  #
+
+# analysis table ----------------------------------------------------------
+
+tar_target(
+  m_analysis,
+  subgroups
+),
   # null --------------------------------------------------------------------
 
   NULL

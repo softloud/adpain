@@ -17,5 +17,5 @@ outcome-nma-subgroup-nma-condition-4
 documentation
 calculations-for-missing-observations
 number-of-studies-extracted-175
-excluded-observations-34-from-9-studies
+excluded-observations-26-from-7-studies
 random-sample-checked
