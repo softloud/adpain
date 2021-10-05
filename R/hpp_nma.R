@@ -10,19 +10,10 @@
 
 hpp_nma <- function(dat, all_dat) {
 
-    placebo_dat <-
-      dat %>%
-      select(outcome, study, timepoint, condition) %>%
-      distinct() %>%
-      inner_join(all_dat %>%
-                   filter(type == "placebo"),
-                 by = c('outcome', "study", "timepoint"))
 
-    dat <-
+    m_dat <-
       dat %>%
-      bind_rows(placebo_dat) %>%
-      viable_observations() %>%
-      distinct()
+      viable_observations()
 
     m_type <-
       dat %>%
@@ -30,6 +21,6 @@ hpp_nma <- function(dat, all_dat) {
       unique()
 
 
-    hpp_net(dat, m_type) %>%
+    hpp_net(m_dat, m_type) %>%
       safe_nma(trt_effects = "random")
 }

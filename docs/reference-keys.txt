@@ -16,6 +16,7 @@ moderate-pain-results
 outcome-nma-subgroup-nma-condition-4
 documentation
 calculations-for-missing-observations
+direction-of-improvement
 number-of-studies-extracted-175
 excluded-observations-26-from-7-studies
 random-sample-checked
