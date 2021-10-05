@@ -14,6 +14,7 @@ suppressMessages({
   library(metafor)
   library(varameta)
   library(broom)
+  library(latex2exp)
 
   conflicted::conflict_prefer("filter", "dplyr")
 
@@ -32,7 +33,7 @@ list.files("R", full.names = TRUE)  %>%
 
 # set iter > 2000 for final run
 safe_nma <- safely(nma, otherwise = "failed")
-
+# safe_rma <- safely(rma, otherwise = "failed")
 
 # set up targets ----------------------------------------------------------
 
@@ -53,22 +54,27 @@ list(
 
   tar_target(
     r_obs_dat,
-    read_csv("data/obs_dat-2021-10-04 01:34:49.csv") %>%
+    read_csv("data/obs_dat-2021-10-05 10:22:40.csv") %>%
       clean_names() %>%
+      mutate(across(where(is.character), tolower)) %>%
       mutate(gs_row = row_number() + 1) %>%
       select(gs_row, everything())
   ),
 
   tar_target(
     r_outcome_key,
-    read_csv("data/outcome-2021-10-03 15:15:15.csv") %>%
-      clean_names() %>%
-      mutate(
-        outcome = fct_relevel(outcome, "mood_overall", "mood_depression", "mood_anxiety")
-      )
+    read_csv("data/outcome-2021-10-05 10:23:26.csv") %>%
+      clean_names()
 
   ),
 
+  tar_target(
+    r_scale_key,
+    read_csv("data/scales-2021-10-05 11:50:08.csv") %>%
+      clean_names() %>%
+      rename(scale_dir = direction_of_improvement) %>%
+      mutate(across(contains("scale"), tolower))
+  ),
 
   # wrangle outcome key -----------------------------------------------------
 
@@ -76,8 +82,8 @@ list(
     w_outcome_key,
     r_outcome_key %>%
       mutate(
-        outcome = fct_relevel(
-          outcome,
+        outcome_nma = fct_relevel(
+          outcome_nma,
           "pain_int",
           "pain_sub",
           "pain_mod",
@@ -91,16 +97,31 @@ list(
           "adverse_dropout",
           "adverse_number"
         ),
-        outcome_nma = fct_reorder(outcome_nma, outcome, first),
         outcome_label = fct_reorder(outcome_label, outcome_nma, first)
       )
   ),
+
+  # join observations to outcome
+  tar_target(
+    w_obs_outcome,
+    r_obs_dat %>%
+      left_join(w_outcome_key,
+                by = "outcome")
+  ),
+
+
+  # scales ------------------------------------------------------------------
+  tar_target(
+    w_obs_scales,
+    w_obs_outcome %>%
+      left_join(r_scale_key, by = "scale")
+  ),
+
   # wrangle obs dat ---------------------------------------------------------
 
   tar_target(
     w_obs_calc,
-    r_obs_dat %>%
-      mutate(across(where(is.character), tolower)) %>%
+    w_obs_scales %>%
       mutate(
         # convert r percent to proportion
         r_percent = r_percent / 100,
@@ -153,7 +174,24 @@ list(
                      sd),
         se = if_else(sd > 0 & n > 0 & is.na(se),
                      sd / sqrt(n),
-                     se)
+                     se),
+
+        # change direction
+        mean = if_else(
+          model_type == "smd" &
+            direction_of_improvement == "higher" &
+            scale_dir == "lower" & !is.na(scale_dir),
+          -mean,
+          mean
+        ),
+        mean = if_else(
+          model_type == "smd" &
+            direction_of_improvement == "lower" &
+            scale_dir == "higher" & !is.na(scale_dir),
+          -mean,
+          mean
+        )
+
       )
   ),
 
@@ -171,53 +209,14 @@ list(
       )
   ),
 
-  tar_target(
-    w_obs_outcome,
-    w_obs_type %>%
-      left_join(w_outcome_key,
-                by = "outcome")
-  ),
 
-
-  # mood hierarchy ----------------------------------------------------------
-
-  tar_target(
-    w_mood_hierarchy,
-    w_obs_outcome %>%
-      filter(str_detect(outcome, "mood")) %>%
-      group_by(study_id, arm, timepoint) %>%
-      summarise(outcome = unique(outcome) %>% paste(collapse = ";")) %>%
-      mutate(
-        outcome = str_split(outcome, pattern = ";"),
-        n_outcomes = map_int(outcome, length)
-      ) %>%
-      filter(n_outcomes > 1) %>%
-      unnest(outcome) %>%
-      ungroup() %>%
-      arrange(desc(n_outcomes), study_id, arm, timepoint, outcome)
-  ),
-
-  tar_target(
-    w_mood_exclude,
-    w_mood_hierarchy %>%
-      mutate(
-        outcome = fct_relevel(outcome, "mood_overall",
-                              "mood_depression",
-                              "mood_anxiety")
-      ) %>%
-      group_by(study_id, arm, timepoint) %>%
-      arrange(outcome) %>%
-      filter(outcome != first(outcome)) %>%
-      ungroup() %>%
-      select(-n_outcomes)
-  ),
 
 
   # all data wrangled -------------------------------------------------------
 
   tar_target(
     obs_excluded,
-    w_obs_outcome %>%
+    w_obs_type %>%
       mutate(
         exclusion_reason = case_when(
           sd < 0 ~ "negative sd",
@@ -229,7 +228,8 @@ list(
             (is.na(r) | is.na(n)) ~ "lor_missing",
           n < 1 ~ "Sample size less than 1",
           r > n ~ "r > n",
-          is.na(outcome) ~ "outcome not specified"
+          is.na(outcome) ~ "outcome not specified",
+          model_type == "smd" & is.na(scale_dir) ~ "obs scale unmatched in scale key"
         )
       ) %>%
       filter(!is.na(exclusion_reason)) %>%
@@ -241,9 +241,8 @@ list(
 
   tar_target(
     obs_dat,
-    w_obs_outcome %>%
+    w_obs_type %>%
       anti_join(obs_excluded) %>%
-      anti_join(w_mood_exclude) %>%
       ungroup()  %>%
       mutate(
         outcome_all = outcome,
@@ -256,30 +255,32 @@ list(
       )
   ),
 
-tar_target(
-  m_obs_dat,
-  obs_dat %>%
-    rename(study = study_id)
-),
+  tar_target(m_obs_dat,
+             obs_dat %>%
+               rename(study = study_id,
+                      type = intervention_grouping,
+                      condition = general_pain_grouping,
+                      class = ad_class
+                      )),
 
   # subgroups ---------------------------------------------------------------
 
   tar_target(
     subgroups,
-    obs_dat %>%
+    m_obs_dat %>%
       filter(
         outcome != "adverse_dropout",
         outcome != "adverse_number",
         outcome != "serious_adverse",
-        intervention_grouping != "placebo",
+        type != "placebo",
         timepoint != "baseline"
       ) %>%
       select(
         outcome,
-        intervention_grouping,
+        type,
         timepoint,
-        general_pain_grouping,
-        ad_class
+        condition,
+        class
       ) %>%
       distinct()
   ),
@@ -287,8 +288,8 @@ tar_target(
   tar_target(
     subgroup_type,
     subgroups %>%
-      select(outcome, intervention_grouping, timepoint) %>%
-      group_by(outcome, intervention_grouping, timepoint) %>%
+      select(outcome, type, timepoint) %>%
+      group_by(outcome, type, timepoint) %>%
       distinct() %>%
       tar_group(),
     iteration = "group"
@@ -350,16 +351,17 @@ tar_target(
     subgroup_type %>%
       left_join(m_obs_dat) %>%
       select(-tar_group) %>%
-      group_by(outcome, intervention_grouping,
-               timepoint) %>%
-      tar_group(),
-    iteration = "group"
+      group_by(outcome,
+               type,
+               timepoint),
+    pattern = map(subgroup_type),
+    iteration = "list"
   ),
 
   tar_target(
     m_type_test,
     m_type_dat %>%
-      filter(tar_group == 1) %>%
+      pluck(1) %>%
       hpp_nma(m_obs_dat)
   ),
 
@@ -372,7 +374,7 @@ tar_target(
 
   tar_target(m_type_key,
              if (!is.null(m_type$error)) {
-               tibble(target = "m_type", )
+               tibble(target = "m_type",)
              } else {
                m_key_fn(m_type, "m_type")
              }
@@ -382,39 +384,40 @@ tar_target(
 
   # models by condition -----------------------------------------------------
 
-
   # condition: pain_sub -----------------------------------------------------
 
 
 
   tar_target(
     m_con_pain_sub_dat,
-    obs_dat %>%
+    m_obs_dat %>%
       filter(type != "placebo",
              outcome == "pain_sub") %>%
-      group_by(outcome, timepoint, type, condition_general) %>%
+      group_by(outcome,
+               timepoint,
+               type, condition) %>%
       tar_group(),
     iteration = "group"
   ),
 
   tar_target(
     m_con_pain_sub,
-    hpp_nma(m_con_pain_sub_dat, obs_dat),
+    hpp_nma(m_con_pain_sub_dat, m_obs_dat),
     pattern = map(m_con_pain_sub_dat),
     iteration = "list"
   ),
 
   tar_target(m_con_pain_sub_key,
              if (!is.null(m_con_pain_sub$error)) {
-               tibble(target = "m_con_pain_sub", )
+               tibble(target = "m_con_pain_sub",)
              } else {
                m_key_fn(m_con_pain_sub, "m_con_pain_sub") %>%
                  mutate(
                    condition =
                      m_con_pain_sub %>%
                      pluck("result", "network", "agd_arm") %>%
-                     filter(!is.na(condition_general)) %>%
-                     pull(condition_general) %>% unique()
+                     filter(!is.na(condition)) %>%
+                     pull(condition) %>% unique()
                  )
              }
              ,
@@ -428,32 +431,32 @@ tar_target(
 
   tar_target(
     m_con_mood_dat,
-    obs_dat %>%
+    m_obs_dat %>%
       filter(type != "placebo",
              outcome == "mood") %>%
-      group_by(outcome, timepoint, type, condition_general) %>%
+      group_by(outcome, timepoint, type, condition) %>%
       tar_group(),
     iteration = "group"
   ),
 
   tar_target(
     m_con_mood,
-    hpp_nma(m_con_mood_dat, obs_dat),
+    hpp_nma(m_con_mood_dat, m_obs_dat),
     pattern = map(m_con_mood_dat),
     iteration = "list"
   ),
 
   tar_target(m_con_mood_key,
              if (!is.null(m_con_mood$error)) {
-               tibble(target = "m_con_mood", )
+               tibble(target = "m_con_mood",)
              } else {
                m_key_fn(m_con_mood, "m_con_mood") %>%
                  mutate(
                    condition =
                      m_con_mood %>%
                      pluck("result", "network", "agd_arm") %>%
-                     filter(!is.na(condition_general)) %>%
-                     pull(condition_general) %>% unique()
+                     filter(!is.na(condition)) %>%
+                     pull(condition) %>% unique()
                  )
              }
              ,
@@ -465,32 +468,32 @@ tar_target(
 
   tar_target(
     m_con_adverse_dat,
-    obs_dat %>%
+    m_obs_dat %>%
       filter(type != "placebo",
              outcome == "adverse") %>%
-      group_by(outcome, timepoint, type, condition_general) %>%
+      group_by(outcome, timepoint, type, condition) %>%
       tar_group(),
     iteration = "group"
   ),
 
   tar_target(
     m_con_adverse,
-    hpp_nma(m_con_adverse_dat, obs_dat),
+    hpp_nma(m_con_adverse_dat, m_obs_dat),
     pattern = map(m_con_adverse_dat),
     iteration = "list"
   ),
 
   tar_target(m_con_adverse_key,
              if (!is.null(m_con_adverse$error)) {
-               tibble(target = "m_con_adverse", )
+               tibble(target = "m_con_adverse",)
              } else {
                m_key_fn(m_con_adverse, "m_con_adverse") %>%
                  mutate(
                    condition =
                      m_con_adverse %>%
                      pluck("result", "network", "agd_arm") %>%
-                     filter(!is.na(condition_general)) %>%
-                     pull(condition_general) %>% unique()
+                     filter(!is.na(condition)) %>%
+                     pull(condition) %>% unique()
                  )
              }
              ,
@@ -523,40 +526,40 @@ tar_target(
     pw_type_combn,
     subgroup_type %>%
       ungroup() %>%
-      inner_join(obs_dat) %>%
+      inner_join(m_obs_dat) %>%
       pull(intervention) %>%
       unique() %>%
       c("placebo", .) %>%
       combn(2) %>% {
-        tibble(int_1 = .[1, ],
-               int_2 = .[2, ])
+        tibble(int_1 = .[1,],
+               int_2 = .[2,])
       } %>%
       bind_cols(subgroup_type) %>%
       mutate(comp = glue("{int_1}_{int_2}")) %>%
-      rename(comp_grouping = intervention_grouping)
+      rename(comp_type = type)
     ,
     pattern = map(subgroup_type)
   ),
 
+  # identify what interventions studies have
   tar_target(
     pw_type_study,
-    obs_dat %>%
-      filter(
-        outcome == subgroup_type$outcome,
-        intervention_grouping %in% c(subgroup_type$intervention_grouping, "placebo")
-      ) %>%
+    subgroup_type %>%
+      bind_rows(subgroup_type %>% mutate(type = "placebo")) %>%
+      ungroup() %>%
+      inner_join(m_obs_dat) %>%
       select(
         outcome,
-        intervention_grouping,
-        study_id,
+        type,
+        study,
         intervention,
         timepoint
       ) %>%
       mutate(subgroup = subgroup_type$tar_group) %>%
-      group_by(outcome, study_id, subgroup, timepoint) %>%
+      group_by(outcome, study, subgroup, timepoint) %>%
       summarise(interventions = unique(intervention) %>% paste(collapse = ";")) %>%
       mutate(
-        comp_grouping = subgroup_type$intervention_grouping,
+        comp_type = subgroup_type$type,
         int_split = str_split(interventions, ";"),
         n_int = map_int(int_split, length)
       )
@@ -564,6 +567,7 @@ tar_target(
     pattern = map(subgroup_type)
   ),
 
+  # find studies that have both interventions
   tar_target(
     pw_type_match,
     pw_type_combn %>%
@@ -581,17 +585,17 @@ tar_target(
   tar_target(
     pw_type_group,
     pw_type_match %>%
-      group_by(outcome, comp_grouping, interventions, timepoint) %>%
+      group_by(outcome, comp_type, timepoint, comp, int_1, int_2) %>%
       summarise(
-        n_studies = n_distinct(study_id),
-        studies = unique(study_id) %>% paste(collapse = ";")
+        n_studies = n_distinct(study),
+        studies = unique(study) %>% paste(collapse = ";")
       ) %>%
       filter(n_studies > 1) %>%
       arrange(desc(n_studies)) %>%
-      mutate(study_id = str_split(studies, ";")) %>%
-      unnest(study_id) %>%
-      group_by(outcome, comp_grouping, interventions, timepoint) %>%
-      select(outcome, comp_grouping, interventions, study_id, everything()) %>%
+      mutate(study = str_split(studies, ";")) %>%
+      unnest(study) %>%
+      group_by(outcome, comp_type, comp, timepoint) %>%
+      select(outcome, comp_type, comp, study, everything()) %>%
       tar_group(),
     iteration = "group"
   ),
@@ -601,17 +605,19 @@ tar_target(
     {
       int_dat <-
         pw_type_group %>%
-        mutate(intervention = str_split(interventions, ";")) %>%
+        mutate(intervention = str_split(comp, "_")) %>%
         unnest(intervention) %>%
-        left_join(obs_dat,
-                  by = c("outcome", "study_id", "intervention", "timepoint")) %>%
+        left_join(m_obs_dat,
+                  by = c("outcome", "study", "intervention", "timepoint")) %>%
         group_split(intervention)
 
       int_dat %>%
         pluck(2) %>%
-        select(outcome,
-               comp_grouping,
-               study_id,
+        select(
+          model_type,
+          outcome,
+               comp_type,
+               study,
                intervention,
                arm,
                mean,
@@ -619,29 +625,21 @@ tar_target(
                n,
                r,
                timepoint) %>%
-        rename_with(~ glue("{.x}_comp"),
-                    any_of(c(
-                      "arm", "mean", "sd", "n", "r", "intervention"
-                    ))) %>%
-        full_join(int_dat[[1]],
-                  by = c("outcome", "comp_grouping", "study_id", "timepoint")) %>%
-        select(
-          model_type,
-          outcome,
-          timepoint,
-          comp_grouping,
-          study_id,
-          starts_with("arm"),
-          starts_with("mean"),
-          starts_with("sd"),
-          starts_with('n'),
-          starts_with("r"),
-          starts_with("intervention")
-        ) %>%
-        select(-r_percent)
+        rename_with( ~ glue("{.x}_comp"),
+                     any_of(c(
+                       "arm", "mean", "sd", "n", "r", "intervention"
+                     ))) %>%
+        full_join(int_dat[[1]])
     },
     pattern = map(pw_type_group),
     iteration = "list"
+  ),
+
+  tar_target(
+    pw_type_ma_test,
+    pw_type_wide %>%
+      pluck(1) %>%
+      hpp_rma()
   ),
 
   tar_target(
@@ -653,36 +651,38 @@ tar_target(
 
   ),
 
-
-
-# pw forest ---------------------------------------------------------------
-
-tar_target(
-  pw_forest_dev,
-  pw_type_ma %>%
-    pluck(1) %>%
-  pw_forest()
-),
-
-
-# pw summary --------------------------------------------------------------
-tar_target(
-  pw_type_results, {
+  # pw summary --------------------------------------------------------------
+  tar_target(pw_type_results, {
     pw_type_group %>%
-      select(-study_id) %>%
+      select(-study) %>%
       ungroup() %>%
-      distinct()
-    # %>%
-      # bind_cols(
-      #   pw_type_ma %>%
-      #     glance() %>%
-      #     select(i.squared, tau.squared, tau.squared.se)
-      # )
+      distinct() %>%
+      bind_cols(
+        pw_type_ma  %>%  tidy(),
+        pw_type_ma  %>% glance()
+      ) %>%
+      clean_names()
+    },
+  pattern = map(pw_type_ma, pw_type_group)
+  ),
 
-  }
-  #,
-  # pattern = map(pw_type_ma)
-),
+  tar_target(pw_type_mods,
+             pw_type_results %>%
+               mutate(mod = pw_type_ma
+                      ) %>%
+               relocate(starts_with('mod'), .before = outcome) %>%
+               left_join(w_outcome_key, by = c("outcome" = "outcome_nma"))
+             ),
+
+  # pw forest ---------------------------------------------------------------
+
+  tar_target(pw_forest_dev, {
+    this_mod <- pw_type_mods %>% head(1)
+
+    pw_forest(this_mod)
+  }),
+
+
 
   # network plots -----------------------------------------------------------
   tar_target(plot_net, {
@@ -926,4 +926,4 @@ tar_target(
   # null --------------------------------------------------------------------
 
   NULL
-)
+  )

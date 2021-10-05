@@ -14,7 +14,7 @@
 
 obs_file <- glue("obs_dat-{lubridate::now()}.csv")
 
-dat <- read_sheet(obs_dat_gs, "all data", col_types = "c")
+dat <- read_sheet(obs_dat_gs, "NMA analysis dataset", col_types = "c")
 
 system("rm data/obs_dat*.csv")
 
@@ -31,3 +31,16 @@ system("rm data/outcome*.csv")
 
 here("data", outcome_file) %>%
   write_csv(outcome_key, .)
+
+
+# scales ------------------------------------------------------------------
+
+outcome_key <- read_sheet(obs_dat_gs, "scales", col_types = "c")
+
+outcome_file <- glue("scales-{lubridate::now()}.csv")
+
+system("rm data/scales*.csv")
+
+here("data", outcome_file) %>%
+  write_csv(outcome_key, .)
+

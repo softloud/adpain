@@ -1,13 +1,5 @@
 # Documentation
 
-```{r}
-library(gt)
-tar_load(w_obs_outcome)
-tar_load(obs_excluded)
-
-
-```
-
 ## Calculations for missing observations
 
 Where possible required statistics calculated from reported statistics.
@@ -97,18 +89,5 @@ checked_obs %>%
 
 ```
 
-## Mood exclusions
 
-```{r}
-tar_read(w_mood_exclude) %>% 
-  gt() %>% 
-   tab_header("Mood observations excluded by hierarchy: all > depression > anxiety") %>% 
-  tab_options(
-    table.font.size = 12,
-        row_group.background.color = hpp_pal(1)
-
-  )
-
-
-```
 

@@ -34,7 +34,9 @@ tab %>%
     names_from = id_key,
     names_glue = "{.value}_{id_key}"
   ) %>%
-  left_join(tab %>% select(id, resources)) %>%
+  left_join(tab %>%
+              filter(str_length(resources) > 2) %>%
+              select(id, resources)) %>%
   mutate(across(everything(), str_remove_all, pattern = "\\n|\\t"))
 
 

@@ -7,8 +7,6 @@ bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
-
 knitr::opts_chunk$set(echo = FALSE, warnings = FALSE, message = FALSE)
 
 knitr::opts_knit$set(root.dir = "../")
@@ -29,8 +27,7 @@ source("preamble.R")
 
 # Overview
 
-```{r load summary data}
-tar_load(obs_dat)
+```{r make summary data}
 
 summary_dat <- obs_dat %>% 
   filter(timepoint != "baseline")
@@ -152,7 +149,9 @@ summary_dat %>%
 
 ## Comparisons
 
-```{r pw comp tab, message=FALSE}
+```{r pw comp tab, eval=FALSE, message=FALSE}
+# fix later
+
 tar_read(pw_type_group) %>%
   left_join(tar_read(r_outcome_key)) %>% 
   group_by(outcome_label, comp_grouping, interventions, timepoint) %>% 

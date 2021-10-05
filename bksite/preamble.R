@@ -1,5 +1,9 @@
 withr::with_dir(here::here(), {
   tar_load(m_key)
+  tar_load(w_obs_outcome)
+  tar_load(obs_excluded)
+  tar_load(obs_dat)
+
   source("R/hpp_themes.R")
 })
 
@@ -42,8 +46,10 @@ maketimepoints <- function(type) {
 # make chapter function
 
 makechapter <- function(outcome) {
-  cat("## NMA: ")
+  # consider removing nma from heading once other information goes in
+  cat("## Outcome NMA")
 
+  cat("## Subgroup NMA: condition")
 }
 
 makechapter_notype <- function(outcome) {

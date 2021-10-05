@@ -6,12 +6,10 @@
 
 hpp_rma <- function(dat) {
   m_type <- dat %>% pull(model_type) %>% unique()
+  msg_mine(glue("m_type {m_type}"))
 
   hpp_measure <-
-    if (m_type == "smd")
-      "SMD"
-  else if (m_type == "lor")
-    "OR"
+    if (m_type == "smd") "SMD" else if (m_type == "lor") "OR"
 
   escalc_dat <-
   if (m_type == "smd") {
@@ -23,7 +21,7 @@ hpp_rma <- function(dat) {
       sd2i = sd_comp,
       n1i = n,
       n2i = n_comp,
-      slab = study_id,
+      slab = study,
       data = dat
     )
   } else if (m_type == "lor") {
@@ -33,15 +31,19 @@ hpp_rma <- function(dat) {
       n1i = n,
       ci = r_comp,
       n2i = n_comp,
-      slab = study_id,
+      slab = study,
       data = dat
     )
   }
 
+  msg_mine(glue("escalc_dat rows: {nrow(escalc_dat)}"))
+
+  msg_mine(glue("escalc names: {names(escalc_dat %>% select(yi, vi))}"))
+
     rma(
       yi = yi,
       vi = vi,
-      slab = study_id,
+      slab = study,
       data = escalc_dat,
       measure = hpp_measure
     )
