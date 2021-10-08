@@ -8,6 +8,7 @@
 #' @export
 
 viable_observations <- function(hpp_df) {
+  viable <-
   hpp_df %>%
     group_by(study) %>%
     mutate(
@@ -17,4 +18,8 @@ viable_observations <- function(hpp_df) {
     arrange(study_obs_count, study) %>%
     filter(study_obs_count > 1)  %>%
     ungroup()
+
+  n_studies <- viable %>% pull(study) %>% unique() %>% length()
+
+  if (n_studies > 1) {viable} else {tibble()}
 }

@@ -1,0 +1,102 @@
+---
+title: "Report"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+  tar_load(m_key)
+  tar_load(w_obs_outcome)
+  tar_load(obs_excluded)
+  tar_load(obs_dat)
+  tar_load(pw_results)
+  source("R/hpp_themes.R")
+  source("R/msg_mine.R")
+
+library(knitr)
+
+conflicted::conflict_prefer("filter", "dplyr")
+
+```
+
+```{r}
+analysis <- function(subgroup,
+                     outcome,
+                     type,
+                     timepoint,
+                     condition = NULL) {
+  outcome_type_timepoint <-
+    pw_results %>%
+    filter(
+      .data$subgroup == .env$subgroup,
+      .data$outcome == .env$outcome,
+           .data$type == .env$type,
+           .data$timepoint == .env$timepoint)
+
+  pw_forest <-
+    outcome_type_timepoint
+
+  pw_forest_summary <-
+  pw_forest %>%
+    select(outcome_label, type_label, timepoint_label, n_studies, int_1, int_2)
+
+  pw_forest_files <-
+    pw_forest %>%
+    pull(pw_forest_file)
+
+  list(
+    pw_forest_summary = pw_forest_summary,
+    pw_forest_files = pw_forest_files
+  )
+}
+
+```
+
+
+# Outcome: Substantial pain (50% reduction)
+
+## Antidepressant comparisons
+
+# Outcome: Sleep
+
+## Antidepressant comparisons
+
+
+
+## Antidepressant
+
+### Post-intervention
+
+```{r }
+this_analysis <- 
+analysis(
+  subgroup = "subgroup_type",
+  outcome = this_outcome,
+  type = "ad",
+  timepoint = "post_int"
+) 
+
+
+```
+
+#### Pairwise results
+
+```{r}
+this_analysis$pw_forest_summary %>%
+  mutate(across(everything(), str_to_sentence)) %>% 
+  gt() %>% 
+  tab_header("Pairwise comparisons")
+
+```
+
+```{r testing graphics}
+this_analysis$pw_forest_files %>% 
+  include_graphics()
+```
+
+
+
+### Post-intervention
+
+### Change-score

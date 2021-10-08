@@ -1,6 +1,0 @@
-# Adverse results
-
-```{r,results='asis', warning=FALSE}
-makechapter("adverse") -> sink
-```
-

@@ -7,7 +7,7 @@ bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warnings = FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warnings = FALSE, message = TRUE)
 
 knitr::opts_knit$set(root.dir = "../")
 

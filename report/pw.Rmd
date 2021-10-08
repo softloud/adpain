@@ -1,0 +1,28 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# knitr::opts_knit$set(root.dir = "report")
+
+```
+
+## Pairwise comparisons
+
+![](type-pain_sub-ad-post_int-placebo_duloxetine.png)
+```{r}
+
+
+# knitr::include_graphics("type-pain_sub-ad-post_int-placebo_duloxetine.png")
+```
+
+```{r}
+list.files("bksite/images/pw-forest", full.names = TRUE) %>% 
+  pluck(1) %>% 
+  knitr::include_graphics()
+
+```
+

@@ -1,5 +1,0 @@
-# Substantial pain results
-
-```{r,results='asis', warning=FALSE}
-makechapter("pain_sub") -> sink
-```

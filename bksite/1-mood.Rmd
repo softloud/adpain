@@ -1,6 +1,0 @@
-# Mood results
-
-```{r,results='asis', warning=FALSE}
-makechapter("mood") -> sink
-```
-

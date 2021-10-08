@@ -40,13 +40,30 @@ hpp_rma <- function(dat) {
 
   msg_mine(glue("escalc names: {names(escalc_dat %>% select(yi, vi))}"))
 
-    rma(
-      yi = yi,
-      vi = vi,
-      slab = study,
-      data = escalc_dat,
-      measure = hpp_measure
+
+
+    tryCatch(
+      expr =     rma.mv(
+        yi = yi,
+        V = vi,
+        slab = study,
+        data = escalc_dat,
+        random = ~ 1|study/arm # need V for rma.mv
+      ),
+      error =
+      #   rma.mv(
+      #   yi = yi,
+      #   V = vi,
+      #   slab = study,
+      #   data = escalc_dat,
+      #   random = ~ 1|study/arm, # need V for rma.mv,
+      #   method = "FE"
+      # )
+        {
+          print("failed")
+          print(escalc_dat)
+
+        }
+
     )
-
-
 }

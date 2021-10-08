@@ -15,6 +15,8 @@ suppressMessages({
   library(varameta)
   library(broom)
   library(latex2exp)
+  library(crayon)
+  library(here)
 
   conflicted::conflict_prefer("filter", "dplyr")
 
@@ -32,7 +34,7 @@ list.files("R", full.names = TRUE)  %>%
   map(source)
 
 # set iter > 2000 for final run
-safe_nma <- safely(nma, otherwise = "failed")
+safe_hpp_nma <- safely(hpp_nma, otherwise = "failed")
 # safe_rma <- safely(rma, otherwise = "failed")
 
 # set up targets ----------------------------------------------------------
@@ -63,7 +65,7 @@ list(
 
   tar_target(
     r_outcome_key,
-    read_csv("data/outcome-2021-10-05 10:23:26.csv") %>%
+    read_csv("data/outcome-2021-10-06 11:44:20.csv") %>%
       clean_names()
 
   ),
@@ -118,6 +120,10 @@ list(
   ),
 
   # wrangle obs dat ---------------------------------------------------------
+
+
+  # calculations ------------------------------------------------------------
+
 
   tar_target(
     w_obs_calc,
@@ -180,20 +186,23 @@ list(
         mean = if_else(
           model_type == "smd" &
             direction_of_improvement == "higher" &
-            scale_dir == "lower" & !is.na(scale_dir),
-          -mean,
+            scale_dir == "lower" & !is.na(scale_dir),-mean,
           mean
         ),
         mean = if_else(
           model_type == "smd" &
             direction_of_improvement == "lower" &
-            scale_dir == "higher" & !is.na(scale_dir),
-          -mean,
+            scale_dir == "higher" & !is.na(scale_dir),-mean,
           mean
         )
 
       )
   ),
+
+
+  # type of comparison ------------------------------------------------------
+
+
 
   tar_target(
     w_obs_type,
@@ -208,9 +217,6 @@ list(
           )
       )
   ),
-
-
-
 
   # all data wrangled -------------------------------------------------------
 
@@ -229,7 +235,8 @@ list(
           n < 1 ~ "Sample size less than 1",
           r > n ~ "r > n",
           is.na(outcome) ~ "outcome not specified",
-          model_type == "smd" & is.na(scale_dir) ~ "obs scale unmatched in scale key"
+          model_type == "smd" &
+            is.na(scale_dir) ~ "obs scale unmatched in scale key"
         )
       ) %>%
       filter(!is.na(exclusion_reason)) %>%
@@ -255,66 +262,102 @@ list(
       )
   ),
 
-  tar_target(m_obs_dat,
-             obs_dat %>%
-               filter(
-                 outcome != "adverse_dropout",
-                 outcome != "adverse_number",
-                 outcome != "serious_adverse"
-               ) %>%
-               rename(study = study_id,
-                      type = intervention_category,
-                      condition = general_pain_grouping,
-                      class = ad_class,
-                      dose = ad_dose_categorised
-                      ) %>%
-               ungroup() %>%
-               # filter to two outcomes for testing
-               filter(
-                 outcome %in% c("sleep", "pain_sub")
-               )
 
-             ),
+  # model dat ---------------------------------------------------------------
+
+
+
+  tar_target(
+    m_obs_dat,
+    obs_dat %>%
+      filter(
+        outcome != "adverse_dropout",
+        outcome != "adverse_number",
+        outcome != "serious_adverse"
+      ) %>%
+      rename(
+        study = study_id,
+        type = intervention_category,
+        condition = general_pain_grouping,
+        class = ad_class,
+        dose = ad_dose_categorised
+      ) %>%
+      ungroup() %>%
+    #   # filter to two outcomes for testing
+    filter(outcome %in% c(
+      "sleep",
+      "pain_int",
+      "adverse",
+      "physical",
+      "qol",
+      "withdrawal",
+      # "pain_mod",
+      "mood",
+      "pain_sub"))
+
+  ),
+
+  tar_target(
+    m_type_label_key,
+    m_obs_dat %>%
+      select(intervention_grouping, type) %>%
+      distinct() %>%
+      rename(type_label = intervention_grouping)
+  ),
+
+  tar_target(
+    m_timepoint_label_key,
+    m_obs_dat %>%
+      select(timepoint) %>%
+      distinct() %>%
+      mutate(
+        timepoint_label =
+          case_when(
+            timepoint == "baseline" ~ "Baseline",
+            timepoint == "post_int" ~ "Post-intervention",
+            timepoint == "change_score" ~ "Change score",
+            timepoint == "follow_up" ~ "Follow-up"
+          )
+      )
+
+  ),
 
   # subgroups ---------------------------------------------------------------
 
   tar_target(
     subgroup_dat,
     m_obs_dat %>%
-      filter(
-        type != "placebo",
-        timepoint != "baseline"
-      )   ),
-
-  tar_target(
-    subgroup_fn,
-    function(dat, subgroup) {
-      dat %>%
-        summarise(
-          n_studies = n_distinct(study),
-          participants_int = sum(n),
-          studies = unique(study) %>% paste(collapse = ";"),
-          condition_s = unique(condition) %>% paste(collapse = ";"),
-          class_s = unique(class) %>% paste(collapse = ";"),
-          dose_s = unique(dose) %>% paste(collapse = ";"),
-          .groups = "keep"
-        ) %>%
-        distinct() %>%
-        arrange(desc(studies)) %>%
-        filter(studies > 1) %>%
-        mutate(subgroup = subgroup)
-
-    }
+      filter(type != "placebo",
+             timepoint != "baseline")
   ),
+
+  tar_target(subgroup_fn,
+             function(dat, subgroup) {
+               dat %>%
+                 summarise(
+                   n_studies = n_distinct(study),
+                   participants_int = sum(n),
+                   studies = unique(study) %>% paste(collapse = ";"),
+                   condition_s = unique(condition) %>% paste(collapse = ";"),
+                   class_s = unique(class) %>% paste(collapse = ";"),
+                   dose_s = unique(dose) %>% paste(collapse = ";"),
+                   intervention_s = unique(intervention) %>%
+                     paste(collapse = ";"),
+                   .groups = "keep"
+                 ) %>%
+                 distinct() %>%
+                 arrange(desc(studies)) %>%
+                 filter(n_studies > 1) %>%
+                 mutate(subgroup = subgroup)
+
+             }),
 
   tar_target(
     subgroup_type,
     subgroup_dat %>%
-      group_by(
-        outcome, type, timepoint
-      ) %>%
+      group_by(outcome, type, timepoint) %>%
       subgroup_fn("subgroup_type") %>%
-    tar_group(),
+      tar_group(),
     iteration = "group"
   ),
 
@@ -363,165 +406,246 @@ list(
                  unite(filename, everything(), sep = "-", remove = FALSE) %>%
                  mutate(
                    netpath = glue("images/net/{filename}.png"),
-                   forestpath = glue("images/forest/{filename}.png"),
-                   pwpath = glue("images/pw/{filename}.png")
+                   forestpath = glue("images/forest/{filename}.png")
                  ) %>%
                  left_join(r_outcome_key, by = c("outcome", "model_type")) %>%
                  select(outcome, everything(), contains("path"))
+
+             }),
+
+  tar_target(m_dat_fn,
+             function(s_dat) {
+               subgroup_dat <-
+                 s_dat %>%
+                 mutate(study = str_split(studies, ";")) %>%
+                 unnest(study)
+
+               int_dat <-
+                 subgroup_dat %>%
+                 inner_join(m_obs_dat)
+
+               placebo_dat <-
+                 subgroup_dat %>%
+                 mutate(type = "placebo") %>%
+                 inner_join(m_obs_dat)
+
+               bind_rows(int_dat, placebo_dat) %>%
+                 arrange(study) %>%
+                 select(study, arm, everything()) %>%
+                 viable_observations()
+
              }),
 
   # outcome, timepoint, type ------------------------------------------------
 
 
   tar_target(
-    m_type_dat, {
-      subgroup_dat <-
-      subgroup_type %>%
-        mutate(study = str_split(studies, ";")) %>%
-        unnest(study)
-
-      int_dat <-
-        subgroup_dat %>%
-        inner_join(m_obs_dat)
-
-      placebo_dat <-
-        subgroup_dat %>%
-        mutate(type = "placebo") %>%
-        inner_join(m_obs_dat)
-
-      bind_rows(int_dat, placebo_dat) %>%
-        arrange(study) %>%
-        select(study, arm, everything())
-
+    m_type_dat,
+    {
+      m_dat_fn(subgroup_type)
     },
     pattern = map(subgroup_type),
     iteration = "list"
   ),
 
-  tar_target(
-    check_viable,
-    m_type_dat %>%
-      pluck(1) %>%
-      viable_observations()
-  ),
+  tar_target(check_viable,
+             m_type_dat %>%
+               pluck(1) %>%
+               viable_observations()),
+
+  tar_target(m_type_test,
+             m_type_dat %>%
+               pluck(1) %>%
+               hpp_nma()),
 
   tar_target(
-    m_type_test,
-    m_type_dat %>%
-      pluck(1) %>%
-      hpp_nma(m_obs_dat)
+    m_type_check,
+    subgroup_type %>%
+      mutate(n_obs = nrow(m_type_dat)),
+    pattern = map(subgroup_type, m_type_dat)
   ),
+
+  tar_target(m_type_viable,
+             m_type_check %>%
+               filter(n_obs > 1)),
 
   tar_target(
     m_type,
-    hpp_nma(m_type_dat, m_obs_dat),
-    pattern = map(m_type_dat),
+    {
+      this_dat <- m_type_viable %>% pull(tar_group)
+      safe_hpp_nma(m_type_dat[[this_dat]])
+    },
+    pattern = map(m_type_viable),
     iteration = "list"
   ),
 
-  tar_target(m_type_key,
-             if (!is.null(m_type$error)) {
-               tibble(target = "m_type",)
-             } else {
-               m_key_fn(m_type, "m_type")
-             }
-             ,
-             pattern = map(m_type)),
 
+  tar_target(m_type_key, {
+    m_key_fn(m_type, "m_type") %>%
+      full_join(m_type_viable)
+  },
+  pattern = map(m_type, m_type_viable)),
+
+
+  # condition ---------------------------------------------------------------
+  tar_target(
+    m_con_dat,
+    {
+      m_dat_fn(subgroup_con)
+    },
+    pattern = map(subgroup_con),
+    iteration = "list"
+  ),
+
+  tar_target(
+    m_con_check,
+    subgroup_con %>%
+      mutate(n_obs = nrow(m_con_dat)),
+    pattern = map(subgroup_con, m_con_dat)
+  ),
+
+  tar_target(m_con_viable,
+             m_con_check %>%
+               filter(n_obs > 1)),
+
+  tar_target(
+    m_con,
+    {
+      this_dat <- m_con_viable %>% pull(tar_group)
+      safe_hpp_nma(m_con_dat[[this_dat]])
+    },
+    pattern = map(m_con_viable),
+    iteration = "list"
+  ),
+
+
+  tar_target(m_con_key, {
+    m_key_fn(m_con, "m_con") %>%
+      full_join(m_con_viable)
+  },
+  pattern = map(m_con, m_con_viable)),
 
   # wrangle model keys ------------------------------------------------------
 
   tar_target(
     m_key,
-    list(
-      m_type_key
-    ) %>%
-      map_df(bind_rows) %>%
+    bind_rows(m_type_key, m_con_key) %>%
+      # list(m_type_key) %>%
+      #   map_df(bind_rows) %>%
       group_by(target) %>%
       mutate(index = 1:n()) %>%
       select(target, index, everything()) %>%
-      filter(!is.na(outcome)) %>%
       ungroup() %>%
-      mutate(plot_index = row_number())
+      mutate(plot_index = row_number()) %>%
+      left_join(m_timepoint_label_key) %>%
+      left_join(m_type_label_key)
 
   ),
 
   # pairwise ----------------------------------------------------------------
 
+  tar_target(
+    pw_combn_fn,
+    function(dat) {
+      dat %>%
+        pull("intervention_s") %>%
+        str_split(pattern = ";") %>%
+        pluck(1) %>%
+        unique() %>%
+        c("placebo", .) %>%
+        combn(2) %>% {
+          tibble(int_1 = .[1, ],
+                 int_2 = .[2, ])
+        } %>%
+        bind_cols(dat) %>%
+        mutate(comp = glue("{int_1}_{int_2}")) %>%
+        rename(comp_type = type)
+
+    }
+  ),
   # get combinations
   tar_target(
     pw_type_combn,
     subgroup_type %>%
-      inner_join(m_obs_dat) %>%
-      pull(intervention) %>%
-      unique() %>%
-      c("placebo", .) %>%
-      combn(2) %>% {
-        tibble(int_1 = .[1,],
-               int_2 = .[2,])
-      } %>%
-      bind_cols(subgroup_type) %>%
-      mutate(comp = glue("{int_1}_{int_2}")) %>%
-      rename(comp_type = type)
+      pw_combn_fn()
     ,
     pattern = map(subgroup_type)
   ),
 
+  tar_target(pw_study_fn,
+             function(dat) {
+               dat %>%
+               bind_rows(dat %>% mutate(type = "placebo")) %>%
+                 ungroup() %>%
+                 inner_join(m_obs_dat) %>%
+                 select(-tar_group) %>%
+                 group_by(outcome, study, subgroup, timepoint) %>%
+                 summarise(interventions =
+                             unique(intervention) %>% paste(collapse = ";"),
+                           .groups = "keep") %>%
+                 mutate(
+                   # comp_type = dat$type,
+                   int_split = str_split(interventions, ";"),
+                   n_int = map_int(int_split, length)
+                 ) %>%
+                 left_join(dat)
+
+             }
+             ),
+
   # identify what interventions studies have
   tar_target(
     pw_type_study,
-    subgroup_type %>%
-      bind_rows(subgroup_type %>% mutate(type = "placebo")) %>%
-      ungroup() %>%
-      inner_join(m_obs_dat) %>%
-      select(
-        outcome,
-        type,
-        study,
-        intervention,
-        timepoint
-      ) %>%
-      mutate(subgroup = subgroup_type$tar_group) %>%
-      group_by(outcome, study, subgroup, timepoint) %>%
-      summarise(interventions =
-                  unique(intervention) %>% paste(collapse = ";")) %>%
-      mutate(
-        comp_type = subgroup_type$type,
-        int_split = str_split(interventions, ";"),
-        n_int = map_int(int_split, length)
-      )
-    ,
+    pw_study_fn(subgroup_type),
     pattern = map(subgroup_type)
   ),
+
+
+  tar_target(pw_match_fn,
+             function(combn, study_dat) {
+               combn %>%
+               select(-subgroup) %>%
+                 full_join(study_dat) %>%
+                 mutate(match = pmap_lgl(list(
+                   int_1, int_2, int_split
+                 ),
+                 function(i1, i2, i) {
+                   i1 %in% i & i2 %in% i
+                 })) %>%
+                 select(int_1, int_2, int_split, match, everything()) %>%
+                 filter(match)
+
+             }
+             ),
 
   # find studies that have both interventions
   tar_target(
     pw_type_match,
     pw_type_combn %>%
-      select(-subgroup) %>%
-      full_join(pw_type_study) %>%
-      mutate(match = pmap_lgl(list(
-        int_1, int_2, int_split
-      ),
-      function(i1, i2, i) {
-        i1 %in% i & i2 %in% i
-      })) %>%
-      select(int_1, int_2, int_split, match, everything()) %>%
-      filter(match)
+      pw_match_fn(pw_type_study)
+  ),
+
+  tar_target(
+    pw_group_fn,
+    function(match_dat) {
+      match_dat %>%
+        summarise(
+          n_studies = n_distinct(study),
+          studies = unique(study) %>% paste(collapse = ";"),
+          .groups = "keep"
+        ) %>%
+        filter(n_studies > 1) %>%
+        arrange(desc(n_studies)) %>%
+        mutate(study = str_split(studies, ";")) %>%
+        unnest(study)
+    }
   ),
 
   tar_target(
     pw_type_group,
     pw_type_match %>%
       group_by(outcome, comp_type, timepoint, comp, int_1, int_2) %>%
-      summarise(
-        n_studies = n_distinct(study),
-        studies = unique(study) %>% paste(collapse = ";")
-      ) %>%
-      filter(n_studies > 1) %>%
-      arrange(desc(n_studies)) %>%
-      mutate(study = str_split(studies, ";")) %>%
-      unnest(study) %>%
+      pw_group_fn() %>%
       group_by(outcome, comp_type, comp, timepoint) %>%
       select(outcome, comp_type, comp, study, everything()) %>%
       tar_group(),
@@ -529,21 +653,22 @@ list(
   ),
 
   tar_target(
-    pw_type_wide,
-    {
+    pw_wide_fn,
+    function(group_dat) {
       int_dat <-
-        pw_type_group %>%
+        group_dat %>%
         mutate(intervention = str_split(comp, "_")) %>%
         unnest(intervention) %>%
-        left_join(m_obs_dat,
-                  by = c("outcome", "study", "intervention", "timepoint")) %>%
+        inner_join(m_obs_dat
+                  # ,
+                  # by = c("outcome", "study", "intervention", "timepoint")
+                  ) %>%
         group_split(intervention)
 
       int_dat %>%
         pluck(2) %>%
-        select(
-          model_type,
-          outcome,
+        select(model_type,
+               outcome,
                comp_type,
                study,
                intervention,
@@ -553,64 +678,169 @@ list(
                n,
                r,
                timepoint) %>%
-        rename_with( ~ glue("{.x}_comp"),
-                     any_of(c(
-                       "arm", "mean", "sd", "n", "r", "intervention"
-                     ))) %>%
+        rename_with(~ glue("{.x}_comp"),
+                    any_of(c(
+                      "arm", "mean", "sd", "n", "r", "intervention"
+                    ))) %>%
         full_join(int_dat[[1]])
-    },
+
+    }
+  ),
+
+  tar_target(
+    pw_type_wide,
+    pw_wide_fn(pw_type_group),
     pattern = map(pw_type_group),
     iteration = "list"
   ),
 
-  tar_target(
-    pw_type_ma_test,
-    pw_type_wide %>%
-      pluck(1) %>%
-      hpp_rma()
-  ),
+  tar_target(pw_type_ma_test,
+             pw_type_wide %>%
+               pluck(49) %>%
+               hpp_rma()),
 
   tar_target(
-    pw_type_ma,
-    pw_type_wide %>%
-      hpp_rma(),
+    pw_type_ma, {
+      print(pw_type_wide)
+
+      pw_type_wide %>%
+        hpp_rma()
+    },
     pattern = map(pw_type_wide),
     iteration = "list"
 
   ),
 
-  # pw summary --------------------------------------------------------------
-  tar_target(pw_type_results, {
-    pw_type_group %>%
+
+# pw condition ------------------------------------------------------------
+
+tar_target(
+pw_con_combn,
+subgroup_con %>%
+  pw_combn_fn(),
+pattern = map(subgroup_con)
+),
+
+tar_target(
+  pw_con_study,
+  subgroup_con %>%
+    pw_study_fn(),
+  pattern = map(subgroup_con)
+),
+
+tar_target(
+  pw_con_match,
+  pw_con_combn %>%
+    pw_match_fn(pw_con_study)
+),
+
+tar_target(
+  pw_con_group,
+  pw_con_match %>%
+    group_by(outcome, comp_type, timepoint, comp, int_1, int_2, condition) %>%
+    pw_group_fn() %>%
+    group_by(outcome, comp_type, comp, timepoint, condition) %>%
+    select(outcome, comp_type, comp, study, everything()) %>%
+    tar_group(),
+  iteration = "group"
+),
+
+tar_target(
+  pw_con_wide_test,
+  pw_con_group %>%
+    filter(tar_group == 11) %>%
+    pw_wide_fn()
+),
+
+tar_target(
+  pw_con_wide,
+  pw_con_group %>%
+    pw_wide_fn(),
+  pattern = map(pw_con_group),
+  iteration = "list"
+),
+
+tar_target(
+  pw_con_ma,
+  pw_con_wide %>%
+    hpp_rma(),
+  pattern = map(pw_con_wide),
+  iteration = "list"
+
+),
+
+# pw summary --------------------------------------------------------------
+
+tar_target(
+  pw_results_fn,
+  function(group_dat, ma_dat, subgroup_dat) {
+    group_dat %>%
       select(-study) %>%
       ungroup() %>%
       distinct() %>%
-      bind_cols(
-        pw_type_ma  %>%  tidy(),
-        pw_type_ma  %>% glance()
-      ) %>%
-      clean_names()
-    },
-  pattern = map(pw_type_ma, pw_type_group)
-  ),
+      bind_cols(ma_dat  %>%  tidy(),
+                ma_dat  %>% glance()) %>%
+      clean_names() %>%
+      mutate(mod = list(ma_dat)) %>%
+      relocate(starts_with('mod'), .before = outcome) %>%
+      left_join(w_outcome_key, by = c("outcome" = "outcome_nma")) %>%
+      select(-type) %>%
+      rename(type = comp_type) %>%
+      left_join(m_type_label_key) %>%
+      left_join(m_timepoint_label_key) %>%
+      left_join(subgroup_dat %>%
+                  select(-studies, -n_studies, -tar_group)
+                  ) %>%
+      mutate(
+        pw_forest_file =
+          glue(
+            "images/pw-forest/{subgroup}-{outcome}-{type}-{timepoint}-{comp}.png"
+          )
+      )
 
-  tar_target(pw_type_mods,
-             pw_type_results %>%
-               mutate(mod = pw_type_ma
-                      ) %>%
-               relocate(starts_with('mod'), .before = outcome) %>%
-               left_join(w_outcome_key, by = c("outcome" = "outcome_nma"))
-             ),
+  }
+),
+
+tar_target(pw_type_results, {
+  pw_results_fn(pw_type_group, pw_type_ma, subgroup_type)
+},
+pattern = map(pw_type_ma, pw_type_group)),
+
+tar_target(pw_con_results, {
+  pw_results_fn(pw_con_group, pw_con_ma, subgroup_con)
+},
+pattern = map(pw_con_ma, pw_con_group)),
+
+tar_target(pw_results,
+           bind_rows(pw_type_results, pw_con_results)
+           ),
+
 
   # pw forest ---------------------------------------------------------------
 
   tar_target(pw_forest_dev, {
-    this_mod <- pw_type_mods %>% head(1)
+    this_mod <- pw_results %>%
+      # filter(
+      #   comp_type == "ad",
+      #   outcome == "pain_sub",
+      #   timepoint == "post_int",
+      #   comp == "placebo_desvenlafaxine"
+      # )
+      filter(subgroup == "subgroup_con") %>%
+      sample_n(1)
 
+    # this_mod
     pw_forest(this_mod)
   }),
 
+  tar_target(pw_forest_write, {
+    pw_forest(pw_results)
 
+    here("bksite", pw_results$pw_forest_file) %>%
+    # here(pw_results$pw_forest_file) %>%
+    ggsave(width = 5, height = 5)
+  },
+  pattern = map(pw_results)),
 
   # network plots -----------------------------------------------------------
   tar_target(plot_net, {
@@ -630,11 +860,11 @@ list(
     this_subtitle <- case_when(
       m_key$target == "m_type" ~
         glue(
-          "Subgroups: timepoint [{m_key$timepoint}] and type [{m_key$type}]"
+          "Subgroups: timepoint [{m_key$timepoint_label}] and type [{m_key$type_label}]"
         ),
       str_detect(m_key$target, "^m_con") ~
         glue(
-          "Subgroups: timepoint [{m_key$timepoint}], type [{m_key$type}], condition [{m_key$condition}]"
+          "Subgroups: timepoint [{m_key$timepoint_label}], type [{m_key$type_label}], condition [{m_key$condition_s}]"
         )
     )
 
@@ -714,7 +944,7 @@ list(
     # select an arbitrary lor model
     m_type_key_row <-
       m_key %>%
-      filter(outcome == "mood",
+      filter(outcome == "pain_sub",
              target == "m_type") %>%
       head(1)
 
@@ -795,25 +1025,28 @@ list(
 
 
 
-# analysis table ----------------------------------------------------------
+  # analysis table ----------------------------------------------------------
 
-tar_target(
-  m_analysis,
-  bind_rows(
-    subgroup_type,
-    subgroup_con,
-    subgroup_con_class,
-    subgroup_con_class_dose
-  ) %>%
-    mutate(subgroup = fct_relevel(subgroup,
-                                  "subgroup_type",
-                                  "subgroup_con",
-                                  "subgroup_con_class",
-                                  "subgroup_con_class_dose"
-                                  )) %>%
-    arrange(outcome, subgroup, type, class, dose)
-),
+  tar_target(
+    m_analysis,
+    bind_rows(
+      subgroup_type,
+      subgroup_con,
+      subgroup_con_class,
+      subgroup_con_class_dose
+    ) %>%
+      mutate(
+        subgroup = fct_relevel(
+          subgroup,
+          "subgroup_type",
+          "subgroup_con",
+          "subgroup_con_class",
+          "subgroup_con_class_dose"
+        )
+      ) %>%
+      arrange(outcome, subgroup, type, class, dose)
+  ),
   # null --------------------------------------------------------------------
 
   NULL
-  )
+)

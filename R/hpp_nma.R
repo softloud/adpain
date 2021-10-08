@@ -1,14 +1,14 @@
 #' NMA function for analysis
 #'
 #' @param dat A datset produced by a group target
-#' @param all_dat Entire dataset so placebo arms can be identified
 #'
 #' @return nma
 #' @export
 #'
 #' @examples
 
-hpp_nma <- function(dat, all_dat) {
+hpp_nma <- function(dat) {
+  if (class(dat) == "character") stop("Data not viable.")
 
 
     m_dat <-
@@ -22,5 +22,5 @@ hpp_nma <- function(dat, all_dat) {
 
 
     hpp_net(m_dat, m_type) %>%
-      safe_nma(trt_effects = "random")
+      nma(trt_effects = "random")
 }

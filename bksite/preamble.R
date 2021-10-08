@@ -3,8 +3,132 @@ withr::with_dir(here::here(), {
   tar_load(w_obs_outcome)
   tar_load(obs_excluded)
   tar_load(obs_dat)
+  tar_load(pw_results)
   source("R/hpp_themes.R")
+  source("R/msg_mine.R")
 })
+
+library(knitr)
+
+conflicted::conflict_prefer("filter", "dplyr")
+
+
+# the hard way ------------------------------------------------------------
+
+analysis <- function(subgroup,
+                     outcome,
+                     type,
+                     timepoint,
+                     condition = NULL) {
+  pw_dat <-
+    pw_results %>%
+    filter(
+      .data$subgroup == .env$subgroup,
+      .data$outcome == .env$outcome,
+      .data$type == .env$type,
+      .data$timepoint == .env$timepoint
+    )
+
+  pw_forest <-
+    if (is.null(condition)) {
+      pw_dat
+    } else {
+      pw_dat %>%
+        filter(.data$condition == .env$condition)
+    }
+
+  pw_forest_summary <-
+    pw_forest %>%
+    select(outcome_label,
+           type_label,
+           timepoint_label,
+           n_studies,
+           int_1,
+           int_2) %>%
+    mutate(across(everything(), str_to_sentence))
+
+
+
+  pw_forest_files <-
+    pw_forest %>%
+    pull(pw_forest_file)
+
+  list(pw_forest_summary = pw_forest_summary,
+       pw_forest_files = pw_forest_files)
+}
+
+
+
+# procedurally generated --------------------------------------------------
+
+
+analysis_output <- function(m_key_row) {
+  cat("##### Pairwise comparisons \n\n")
+
+  pw_files <-
+    pw_type_results %>%
+    select(-type) %>%
+    rename(type = comp_type) %>%
+    inner_join(m_key_row) %>%
+    pull(pw_forest_file)
+
+  msg_mine(glue("Number of pw_files {length(pw_files)}"))
+
+  msg_mine(glue("{pw_files}"))
+
+  pw_files %>%
+    map(function(file) {
+      "<img src=\"{file}\" />" %>% cat()
+    })
+
+  cat("\n\n")
+
+}
+
+
+# make chapter function
+
+makechapter <- function(outcome) {
+  # consider removing nma from heading once other information goes in
+  cat("## Outcome ", outcome, " data and analysis \n\n")
+
+  subsections <-
+    m_key %>%
+    count(type_label, timepoint_label)
+
+  subsections %>%
+    pull(type_label) %>%
+    unique() %>%
+    map(function(type) {
+      cat("### Type ", type, "\n\n")
+
+      subsections %>%
+        filter(type_label == type) %>%
+        pull(timepoint_label) %>%
+        map(function(timepoint_label) {
+          cat("#### ", timepoint_label, type, "\n\n")
+
+          this_m_key_row <-
+            tibble(
+              outcome = outcome,
+              target = "m_type",
+              timepoint_label = timepoint_label,
+              type_label = type
+            ) %>%
+            left_join(m_key) %>%
+            select(target, outcome, type, timepoint)
+
+          msg_mine(glue(
+            "Number of rows in this_m_key_row: {nrow(this_m_key_row)}"
+          ))
+
+          analysis_output(this_m_key_row)
+        })
+
+    })
+
+
+}
 
 # make plots function
 
@@ -34,22 +158,6 @@ mod_plots <- function(target, index) {
 
 
 
-
-
-# make timepoints
-
-maketimepoints <- function(type) {
-
-}
-
-# make chapter function
-
-makechapter <- function(outcome) {
-  # consider removing nma from heading once other information goes in
-  cat("## Outcome NMA")
-
-  cat("## Subgroup NMA: condition")
-}
 
 makechapter_notype <- function(outcome) {
   cat("## NMA: ",
@@ -98,5 +206,9 @@ makechapter_notype <- function(outcome) {
     )
 
 }
+
+
+#  copy files to docs -----------------------------------------------------
+
 
 system("cp -rf images ../docs/")
