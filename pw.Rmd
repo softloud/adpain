@@ -26,29 +26,41 @@ analysis <- function(subgroup,
                      type,
                      timepoint,
                      condition = NULL) {
-  outcome_type_timepoint <-
+  pw_dat <-
     pw_results %>%
     filter(
       .data$subgroup == .env$subgroup,
       .data$outcome == .env$outcome,
-           .data$type == .env$type,
-           .data$timepoint == .env$timepoint)
+      .data$type == .env$type,
+      .data$timepoint == .env$timepoint
+    )
 
   pw_forest <-
-    outcome_type_timepoint
+    if (is.null(condition)) {
+      pw_dat
+    } else {
+      pw_dat %>%
+        filter(.data$condition == .env$condition)
+    }
 
   pw_forest_summary <-
-  pw_forest %>%
-    select(outcome_label, type_label, timepoint_label, n_studies, int_1, int_2)
+    pw_forest %>%
+    select(outcome_label,
+           type_label,
+           timepoint_label,
+           n_studies,
+           int_1,
+           int_2) %>%
+    mutate(across(everything(), str_to_sentence))
+
+
 
   pw_forest_files <-
     pw_forest %>%
     pull(pw_forest_file)
 
-  list(
-    pw_forest_summary = pw_forest_summary,
-    pw_forest_files = pw_forest_files
-  )
+  list(pw_forest_summary = pw_forest_summary,
+       pw_forest_files = pw_forest_files)
 }
 
 ```
@@ -59,6 +71,11 @@ analysis <- function(subgroup,
 ## Antidepressant comparisons
 
 # Outcome: Sleep
+
+```{r}
+this_outcome <- "sleep"
+```
+
 
 ## Antidepressant comparisons
 

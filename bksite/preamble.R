@@ -23,8 +23,8 @@ analysis <- function(subgroup,
   pw_dat <-
     pw_results %>%
     filter(
-      .data$subgroup == .env$subgroup,
       .data$outcome == .env$outcome,
+      .data$subgroup == .env$subgroup,
       .data$type == .env$type,
       .data$timepoint == .env$timepoint
     )

@@ -1,0 +1,184 @@
+# Substantial pain reduction (50%)
+
+```{r }
+this_outcome <- "pain_sub"
+
+```
+
+
+
+```{r}
+# m_key %>%
+#   filter(outcome == this_outcome,
+#          target == "m_type"
+#          ) %>% 
+#   count(type_label, timepoint_label) %>% 
+#   gt()
+
+```
+
+```{r}
+pw_results %>% 
+  filter(
+    outcome == this_outcome
+  ) %>% 
+  select(outcome, subgroup, type, timepoint, condition_s, int_1, int_2, n_studies) %>% 
+  gt() %>% 
+  tab_header(glue("Pairwise comparisons for {this_outcome}"))
+
+
+```
+
+
+## Antidepressant
+
+### Post-intervention
+
+```{r }
+this_analysis <- 
+analysis(
+  subgroup = "subgroup_type",
+  outcome = this_outcome,
+  type = "ad",
+  timepoint = "post_int"
+) 
+
+
+```
+
+#### Pairwise results
+
+```{r}
+this_analysis$pw_forest_summary %>%
+  gt() %>% 
+  tab_header("Pairwise comparisons")
+
+```
+
+```{r }
+this_analysis$pw_forest_files %>% 
+  include_graphics()
+```
+
+## Conditions
+
+```{r}
+pw_results %>% 
+  filter(subgroup == "subgroup_con",
+         outcome == this_outcome
+         ) %>% 
+  select(type, timepoint, condition, int_1, int_2, n_studies) %>% 
+  gt()
+
+```
+
+
+## Condition: Fibromylalgia
+
+```{r}
+pw_results %>% 
+  filter(subgroup == "subgroup_con",
+         outcome == this_outcome,
+         condition == "fibromyalgia"
+         ) %>% 
+  select(type, timepoint, condition, int_1, int_2, n_studies) %>% 
+  gt()
+
+```
+
+### Antidepressant: Post intervention
+
+
+```{r }
+this_analysis <- 
+analysis(
+  subgroup = "subgroup_con",
+  outcome = this_outcome,
+  type = "ad",
+  timepoint = "post_int",
+  condition = "fibromyalgia"
+) 
+
+
+```
+
+##### Pairwise results
+
+```{r}
+this_analysis$pw_forest_summary %>%
+  gt() %>% 
+  tab_header("Pairwise comparisons")
+
+```
+
+```{r }
+this_analysis$pw_forest_files %>% 
+  include_graphics()
+```
+
+## Condition: Neuropathic
+
+### Antidepressant: Post intervention
+
+
+
+```{r }
+this_analysis <- 
+analysis(
+  subgroup = "subgroup_con",
+  outcome = this_outcome,
+  type = "ad",
+  timepoint = "post_int",
+  condition = "neuropathic"
+) 
+
+
+```
+
+#### Pairwise results
+
+```{r}
+this_analysis$pw_forest_summary %>%
+  gt() %>% 
+  tab_header("Pairwise comparisons")
+
+```
+
+```{r }
+this_analysis$pw_forest_files %>% 
+  include_graphics()
+```
+
+## Condition: Musculoskeletal
+
+### Antidepressant: Post intervention
+
+
+
+```{r }
+this_analysis <- 
+analysis(
+  subgroup = "subgroup_con",
+  outcome = this_outcome,
+  type = "ad",
+  timepoint = "post_int",
+  condition = "musculoskeletal"
+) 
+
+
+```
+
+#### Pairwise results
+
+```{r}
+this_analysis$pw_forest_summary %>%
+  gt() %>% 
+  tab_header("Pairwise comparisons")
+
+```
+
+```{r }
+this_analysis$pw_forest_files %>% 
+  include_graphics()
+```
+

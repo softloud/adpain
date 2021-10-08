@@ -286,13 +286,13 @@ list(
     #   # filter to two outcomes for testing
     filter(outcome %in% c(
       "sleep",
-      "pain_int",
-      "adverse",
-      "physical",
-      "qol",
-      "withdrawal",
+      # "pain_int",
+      # "adverse",
+      #"physical",
+      #"qol",
+      #"withdrawal",
       # "pain_mod",
-      "mood",
+      #"mood",
       "pain_sub"))
 
   ),
