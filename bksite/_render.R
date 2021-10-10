@@ -8,5 +8,5 @@ browseURL(
 
 
 browseURL(
-  xfun::in_dir("bksite", bookdown::preview_chapter("6-documentation.Rmd"))
+  xfun::in_dir("bksite", bookdown::preview_chapter("98-testing.Rmd"))
 )

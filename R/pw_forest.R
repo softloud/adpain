@@ -59,8 +59,8 @@ pw_forest <- function(mod_key) {
            estimate_type = fct_relevel(estimate_type, "study"),
            m_type = m_type,
            effect_ref = 0,
-           study = reorder(study,effect)
-           ) %>%
+           study = reorder(study,effect),
+                      ) %>%
     arrange(estimate_type)
 
 
@@ -68,9 +68,26 @@ pw_forest <- function(mod_key) {
     plot_dat %>% mutate(across(c(effect, lower, upper, effect_ref), exp))
   } else if (m_type == "smd") {plot_dat}
 
+  # add text labels
+  plot_dat <-
+    plot_dat %>%
+    mutate(text_label =
+             glue("{round(effect, 2)} [{round(lower,2)}, {round(upper,2)}]")
+    )
+
 
 # plot set up -------------------------------------------------------------
 
+  # set xlims
+  ci_lims <-
+    c(
+      quantile(plot_dat$lower, 0.25) - quantile(plot_dat$effect, 0.5) / 2,
+      quantile(plot_dat$upper, 0.75) + quantile(plot_dat$effect, 0.5) / 2
+    ) %>% as.numeric()
+
+  text_x <-
+    if_else(dir == "upper", ci_lims[2] + (sum(ci_lims) * 0.2),
+      ci_lims[1] - (sum(ci_lims) * 0.4))
 
 
   active_pal <- dirty_xmas_pal
@@ -93,6 +110,10 @@ pw_forest <- function(mod_key) {
 
 
   plot_dat %>%
+    mutate(
+      text_x = text_x,
+      lower = if_else(lower < ci_lims[1], ci_lims[1], lower),
+      upper = if_else(upper > ci_lims[2], ci_lims[2], upper)) %>%
     ggplot() +
     geom_vline(
       aes(
@@ -115,6 +136,14 @@ pw_forest <- function(mod_key) {
       show.legend = FALSE,
       aes(x = effect, y = study, size = rel_weight,
       colour = I(if_else(effect < effect_ref, active_pal[[1]], active_pal[[2]])))
+    ) +
+    geom_text(
+      aes(
+        x = text_x,
+        y = study,
+        label = text_label
+      ),
+      size = 2
     ) +
     facet_grid(estimate_type ~ .,
                scales = "free_y",

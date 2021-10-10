@@ -1,0 +1,6 @@
+# test : pain int
+
+```{r test makechapter, results='asis'}
+makechapter("pain_int") # <- sink
+```
+

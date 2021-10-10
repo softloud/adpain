@@ -1,0 +1,231 @@
+---
+title: "checks"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# pkgs
+library(gt)
+
+```
+
+
+```{r load targets}
+tar_load(r_obs_dat)
+tar_load(m_obs_dat)
+tar_load(subgroup_type)
+tar_load(pw_type_combn)
+
+
+```
+
+
+# Follow at least one meta-analysis all the way through manually
+
+## Compare raw data with model input data
+
+```{r}
+# raw data
+raw_dat <-
+r_obs_dat %>% 
+  filter(
+    outcome == "pain_mod",
+    timepoint == "post_int",
+    intervention %in% c("duloxetine", "placebo")
+  ) %>% 
+  count(arm)
+
+mod_input <-
+m_obs_dat %>% 
+  filter(
+    outcome == "pain_mod",
+    timepoint == "post_int",
+    intervention %in% c("duloxetine", "placebo")
+  ) %>% 
+  count(arm)
+
+full_join(raw_dat, mod_input, by = "arm") %>% 
+  mutate(n.x == n.y) %>% 
+  gt() %>% 
+  tab_header("Comparison of raw and model-input data")
+```
+
+Happily all the observations have been captured in wrangling. 
+
+## Find out what studies have both interventions
+
+```{r}
+obs_dat <- 
+  m_obs_dat %>% 
+    filter(
+    outcome == "pain_mod",
+    timepoint == "post_int",
+    intervention %in% c("duloxetine", "placebo")
+  ) 
+
+# Number of observations total
+obs_dat %>% nrow()
+
+```
+
+```{r}
+# Pivot by intervention
+study_int <-
+obs_dat %>% 
+  select(
+    study, intervention
+  ) %>% 
+  pivot_wider(
+    names_from = intervention,
+    values_from = intervention,
+    values_fn = length
+  ) 
+
+study_int %>% 
+  gt() %>% 
+  tab_header("Number of arms per study")
+
+```
+
+```{r}
+viable_studies <-
+  study_int %>% 
+  filter(placebo > 0, duloxetine > 0) %>% 
+  mutate(total_arms = placebo + duloxetine)
+
+viable_studies %>% 
+  gt() %>% 
+  tab_header("Studies with both") %>% 
+  summary_rows(
+    columns = c(placebo, duloxetine, total_arms),
+    fns = list(Total = "sum")
+  ) %>% 
+  summary_rows(
+    columns = study,
+    fns = list("Number of studies" = "n_distinct")
+  )
+
+```
+
+
+## Check the pipeline
+
+```{r eval=FALSE}
+subgroup_type %>% 
+  filter(
+    outcome == "pain_mod",
+    type == "ad",
+    timepoint == "post_int"
+  ) %>% 
+  pull(tar_group)
+
+
+```
+
+```{r error=TRUE}
+# this currently doesn't run
+tar_read(pw_type_wide) %>% 
+  pluck(1) %>% # need to identify duloxetine group
+  select(outcome)
+
+```
+
+```{r}
+tar_visnetwork(allow = starts_with("pw_type"))
+
+```
+
+```{r}
+combn_group <- 
+pw_type_combn %>% 
+  filter(
+    outcome == "pain_mod",
+    comp_type == "ad",
+    timepoint == "post_int",
+    int_1 == "placebo",
+    int_2 == "duloxetine"
+  )  
+
+combn_group
+
+combn_group %>% 
+  pull(tar_group)
+
+
+```
+
+```{r}
+tar_read(pw_type_study) %>% 
+    filter(
+    outcome == "pain_mod",
+    type == "ad",
+    timepoint == "post_int",
+    str_detect(interventions, "duloxe")
+  )  %>% 
+  nrow()
+
+
+
+```
+
+
+```{r}
+tar_read(pw_type_match) %>% 
+      filter(
+    outcome == "pain_mod",
+    type == "ad",
+    timepoint == "post_int",
+    int_2 == "duloxetine"
+  ) %>% 
+  count(study) %>% 
+  arrange(n)
+
+# thank the fucking lord
+
+```
+
+```{r}
+# find out what group so can find wide
+tar_read(pw_type_group) %>% 
+      filter(
+    outcome == "pain_mod",
+    comp_type == "ad",
+    timepoint == "post_int",
+    int_2 == "duloxetine"
+  ) %>% 
+  select(-studies) %>% 
+  gt()
+
+# 20! 
+
+tar_read(pw_type_wide) %>% pluck(1) %>% 
+  summarise(
+    studies = n_distinct(study),
+    obs = n()
+  )
+# 28! 
+
+
+```
+
+# Check class
+
+
+```{r}
+m_obs_dat %>% 
+      filter(
+    outcome == "pain_mod",
+    type %in% c("placebo", "ad"),
+    timepoint == "post_int",
+    condition == "fibromyalgia",
+    intervention %in% c("placebo", "duloxetine"),
+    class %in% c("snri", "n/a")
+  ) %>% 
+  count(intervention, class)
+
+```
+

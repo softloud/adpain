@@ -186,13 +186,15 @@ list(
         mean = if_else(
           model_type == "smd" &
             direction_of_improvement == "higher" &
-            scale_dir == "lower" & !is.na(scale_dir),-mean,
+            scale_dir == "lower" & !is.na(scale_dir),
+          -mean,
           mean
         ),
         mean = if_else(
           model_type == "smd" &
             direction_of_improvement == "lower" &
-            scale_dir == "higher" & !is.na(scale_dir),-mean,
+            scale_dir == "higher" & !is.na(scale_dir),
+          -mean,
           mean
         )
 
@@ -264,9 +266,6 @@ list(
 
 
   # model dat ---------------------------------------------------------------
-
-
-
   tar_target(
     m_obs_dat,
     obs_dat %>%
@@ -283,17 +282,21 @@ list(
         dose = ad_dose_categorised
       ) %>%
       ungroup() %>%
-    #   # filter to two outcomes for testing
-    filter(outcome %in% c(
-      "sleep",
-      # "pain_int",
-      # "adverse",
-      #"physical",
-      #"qol",
-      #"withdrawal",
-      # "pain_mod",
-      #"mood",
-      "pain_sub"))
+      #   # filter to two outcomes for testing
+      filter(
+        outcome %in% c(
+          "sleep",
+          "pain_int",
+          "adverse",
+          "mood",
+          "pain_sub",
+          "physical",
+          "qol",
+          "withdrawal",
+          "pain_mod",
+          NULL
+        )
+      )
 
   ),
 
@@ -380,6 +383,15 @@ list(
   ),
 
   tar_target(
+    subgroup_con_dose,
+    subgroup_dat %>%
+      group_by(outcome, type, timepoint, condition, dose) %>%
+      subgroup_fn("subgroup_con_dose") %>%
+      tar_group(),
+    iteration = "group"
+  ),
+
+  tar_target(
     subgroup_con_class_dose,
     subgroup_dat %>%
       group_by(outcome, type, timepoint, condition, class, dose) %>%
@@ -387,6 +399,7 @@ list(
       tar_group(),
     iteration = "group"
   ),
+
 
   # models ------------------------------------------------------------------
   tar_target(m_key_fn,
@@ -426,6 +439,7 @@ list(
 
                placebo_dat <-
                  subgroup_dat %>%
+                 # should remove class & dose
                  mutate(type = "placebo") %>%
                  inner_join(m_obs_dat)
 
@@ -544,25 +558,23 @@ list(
 
   # pairwise ----------------------------------------------------------------
 
-  tar_target(
-    pw_combn_fn,
-    function(dat) {
-      dat %>%
-        pull("intervention_s") %>%
-        str_split(pattern = ";") %>%
-        pluck(1) %>%
-        unique() %>%
-        c("placebo", .) %>%
-        combn(2) %>% {
-          tibble(int_1 = .[1, ],
-                 int_2 = .[2, ])
-        } %>%
-        bind_cols(dat) %>%
-        mutate(comp = glue("{int_1}_{int_2}")) %>%
-        rename(comp_type = type)
+  tar_target(pw_combn_fn,
+             function(dat) {
+               dat %>%
+                 pull("intervention_s") %>%
+                 str_split(pattern = ";") %>%
+                 pluck(1) %>%
+                 unique() %>%
+                 c("placebo", .) %>%
+                 combn(2) %>% {
+                   tibble(int_1 = .[1,],
+                          int_2 = .[2,])
+                 } %>%
+                 bind_cols(dat) %>%
+                 mutate(comp = glue("{int_1}_{int_2}")) %>%
+                 rename(comp_type = type)
 
-    }
-  ),
+             }),
   # get combinations
   tar_target(
     pw_type_combn,
@@ -575,28 +587,27 @@ list(
   tar_target(pw_study_fn,
              function(dat) {
                dat %>%
-               bind_rows(dat %>% mutate(type = "placebo")) %>%
                  ungroup() %>%
                  inner_join(m_obs_dat) %>%
-                 select(-tar_group) %>%
                  group_by(outcome, study, subgroup, timepoint) %>%
-                 summarise(interventions =
-                             unique(intervention) %>% paste(collapse = ";"),
-                           .groups = "keep") %>%
-                 mutate(
-                   # comp_type = dat$type,
-                   int_split = str_split(interventions, ";"),
-                   n_int = map_int(int_split, length)
+                 summarise(
+                   interventions =
+                     unique(intervention) %>% paste(collapse = ";"),
+                   .groups = "keep"
                  ) %>%
+                 mutate(int_split = str_split(interventions, ";"),
+                        n_int = map_int(int_split, length)) %>%
                  left_join(dat)
 
-             }
-             ),
+             }),
 
   # identify what interventions studies have
   tar_target(
     pw_type_study,
-    pw_study_fn(subgroup_type),
+    subgroup_type %>%
+      bind_rows(subgroup_type %>%
+                  mutate(type = "placebo")) %>%
+    pw_study_fn(),
     pattern = map(subgroup_type)
   ),
 
@@ -604,88 +615,107 @@ list(
   tar_target(pw_match_fn,
              function(combn, study_dat) {
                combn %>%
-               select(-subgroup) %>%
-                 full_join(study_dat) %>%
-                 mutate(match = pmap_lgl(list(
-                   int_1, int_2, int_split
-                 ),
-                 function(i1, i2, i) {
-                   i1 %in% i & i2 %in% i
-                 })) %>%
+                 select(-subgroup) %>%
+                 select(-tar_group) %>%
+                 full_join(study_dat %>% select(-tar_group)) %>%
+                 mutate(match = pmap_lgl(list(int_1, int_2, int_split),
+                                         function(i1, i2, i) {
+                                           i1 %in% i & i2 %in% i
+                                         })) %>%
                  select(int_1, int_2, int_split, match, everything()) %>%
                  filter(match)
 
-             }
-             ),
+             }),
 
   # find studies that have both interventions
-  tar_target(
-    pw_type_match,
-    pw_type_combn %>%
-      pw_match_fn(pw_type_study)
-  ),
+  tar_target(pw_type_match,
+             pw_type_combn %>%
+               pw_match_fn(pw_type_study)),
 
-  tar_target(
-    pw_group_fn,
-    function(match_dat) {
-      match_dat %>%
-        summarise(
-          n_studies = n_distinct(study),
-          studies = unique(study) %>% paste(collapse = ";"),
-          .groups = "keep"
-        ) %>%
-        filter(n_studies > 1) %>%
-        arrange(desc(n_studies)) %>%
-        mutate(study = str_split(studies, ";")) %>%
-        unnest(study)
-    }
-  ),
+  tar_target(pw_group_fn,
+             function(match_dat) {
+               match_dat %>%
+                 summarise(
+                   n_studies = n_distinct(study),
+                   studies = unique(study) %>% paste(collapse = ";"),
+                   .groups = "keep"
+                 ) %>%
+                 filter(n_studies > 1) %>%
+                 arrange(desc(n_studies)) %>%
+                 mutate(study = str_split(studies, ";")) %>%
+                 unnest(study)
+             }),
 
   tar_target(
     pw_type_group,
     pw_type_match %>%
       group_by(outcome, comp_type, timepoint, comp, int_1, int_2) %>%
       pw_group_fn() %>%
-      group_by(outcome, comp_type, comp, timepoint) %>%
       select(outcome, comp_type, comp, study, everything()) %>%
       tar_group(),
     iteration = "group"
   ),
 
-  tar_target(
-    pw_wide_fn,
-    function(group_dat) {
-      int_dat <-
-        group_dat %>%
-        mutate(intervention = str_split(comp, "_")) %>%
-        unnest(intervention) %>%
-        inner_join(m_obs_dat
-                  # ,
-                  # by = c("outcome", "study", "intervention", "timepoint")
-                  ) %>%
-        group_split(intervention)
+  tar_target(pw_wide_fn,
+             function(group_dat) {
+               int_dat <-
+                 group_dat %>%
+                 mutate(intervention = str_split(comp, "_")) %>%
+                 unnest(intervention)
 
-      int_dat %>%
-        pluck(2) %>%
-        select(model_type,
-               outcome,
-               comp_type,
-               study,
-               intervention,
-               arm,
-               mean,
-               sd,
-               n,
-               r,
-               timepoint) %>%
-        rename_with(~ glue("{.x}_comp"),
-                    any_of(c(
-                      "arm", "mean", "sd", "n", "r", "intervention"
-                    ))) %>%
-        full_join(int_dat[[1]])
+               set_class_dose <-
+                 if ("dose" %in% names(int_dat) & "class" %in% names(int_dat)) {
+                   int_dat %>%
+                     mutate(
+                       dose = if_else(intervention == "placebo", "n/a",
+                                      dose),
+                       class = if_else(intervention == "placebo", "n/a",
+                                       class)
+                     )
 
-    }
-  ),
+                 } else if ("dose" %in% names(int_dat)) {
+                   int_dat %>%
+                     mutate(
+                       dose = if_else(intervention == "placebo", "n/a",
+                                       dose)
+                     )
+                 } else if ("class" %in% names(int_dat)) {
+                   int_dat %>%
+                     mutate(
+                       class = if_else(intervention == "placebo", "n/a",
+                                       class)
+                     )
+
+                 } else {int_dat}
+
+               # join to observations
+
+               obs_dat <-
+                 set_class_dose %>%
+                 inner_join(m_obs_dat) %>%
+                 group_split(intervention)
+
+
+               obs_dat %>%
+                 pluck(2) %>%
+                 select(model_type,
+                        outcome,
+                        comp_type,
+                        study,
+                        intervention,
+                        arm,
+                        mean,
+                        sd,
+                        n,
+                        r,
+                        timepoint) %>%
+                 rename_with( ~ glue("{.x}_comp"),
+                              any_of(c(
+                                "arm", "mean", "sd", "n", "r", "intervention"
+                              ))) %>%
+                 full_join(obs_dat[[1]])
+
+             }),
 
   tar_target(
     pw_type_wide,
@@ -696,11 +726,12 @@ list(
 
   tar_target(pw_type_ma_test,
              pw_type_wide %>%
-               pluck(49) %>%
+               pluck(43) %>%
                hpp_rma()),
 
   tar_target(
-    pw_type_ma, {
+    pw_type_ma,
+    {
       print(pw_type_wide)
 
       pw_type_wide %>%
@@ -712,108 +743,365 @@ list(
   ),
 
 
-# pw condition ------------------------------------------------------------
+  # pw condition ------------------------------------------------------------
+
+  tar_target(
+    pw_con_combn,
+    subgroup_con %>%
+      pw_combn_fn(),
+    pattern = map(subgroup_con)
+  ),
+
+  # identify what interventions studies have
+  tar_target(
+    pw_con_study,
+    subgroup_con %>%
+      bind_rows(subgroup_con %>%
+                  mutate(type = "placebo")) %>%
+      pw_study_fn(),
+    pattern = map(subgroup_con)
+  ),
+
+  tar_target(pw_con_match,
+             pw_con_combn %>%
+               pw_match_fn(pw_con_study)),
+
+  tar_target(
+    pw_con_group,
+    pw_con_match %>%
+      group_by(outcome, comp_type, timepoint, comp, int_1, int_2, condition) %>%
+      pw_group_fn() %>%
+      group_by(outcome, comp_type, comp, timepoint, condition) %>%
+      select(outcome, comp_type, comp, study, everything()) %>%
+      tar_group(),
+    iteration = "group"
+  ),
+
+  tar_target(
+    pw_con_wide_test,
+    pw_con_group %>%
+      filter(tar_group == 11) %>%
+      pw_wide_fn()
+  ),
+
+  tar_target(
+    pw_con_wide,
+    pw_con_group %>%
+      pw_wide_fn(),
+    pattern = map(pw_con_group),
+    iteration = "list"
+  ),
+
+  tar_target(
+    pw_con_ma,
+    pw_con_wide %>%
+      hpp_rma(),
+    pattern = map(pw_con_wide),
+    iteration = "list"
+
+  ),
+
+
+  # pw class ----------------------------------------------------------------
+  tar_target(
+    pw_con_class_combn,
+    subgroup_con_class %>%
+      pw_combn_fn(),
+    pattern = map(subgroup_con_class)
+  ),
+
+  # identify what interventions studies have
+  tar_target(
+    pw_con_class_study,
+    subgroup_con_class %>%
+      bind_rows(subgroup_con_class %>%
+                  mutate(type = "placebo",
+                         class = "n/a"
+                         )) %>%
+      pw_study_fn(),
+    pattern = map(subgroup_con_class)
+  ),
+
+  tar_target(
+    pw_con_class_match,
+    pw_con_class_combn %>%
+      pw_match_fn(pw_con_class_study)
+  ),
+
+  tar_target(
+    pw_con_class_group,
+    pw_con_class_match %>%
+      group_by(
+        outcome,
+        comp_type,
+        timepoint,
+        comp,
+        int_1,
+        int_2,
+        condition,
+        class
+      ) %>%
+      pw_group_fn() %>%
+      group_by(outcome, comp_type, comp, timepoint, condition, class) %>%
+      select(outcome, comp_type, comp, study, everything()) %>%
+      tar_group(),
+    iteration = "group"
+  ),
+
+  tar_target(
+    pw_con_class_wide_test,
+    pw_con_class_group %>%
+      filter(tar_group == 11) %>%
+      pw_wide_fn()
+  ),
+
+  tar_target(
+    pw_con_class_wide,
+    pw_con_class_group %>%
+      pw_wide_fn(),
+    pattern = map(pw_con_class_group),
+    iteration = "list"
+  ),
+
+  tar_target(
+    pw_con_class_ma,
+    pw_con_class_wide %>%
+      hpp_rma(),
+    pattern = map(pw_con_class_wide),
+    iteration = "list"
+
+  ),
+
+
+
+# con dose ---------------------------------------------------------------
+
+  tar_target(
+    pw_con_dose_combn,
+    subgroup_con_dose %>%
+      pw_combn_fn(),
+    pattern = map(subgroup_con_dose)
+  ),
+
+  # identify what interventions studies have
+  tar_target(
+    pw_con_dose_study,
+    subgroup_con_dose %>%
+      bind_rows(subgroup_con_dose %>%
+                  mutate(type = "placebo",
+                         dose = "n/a"
+                  )) %>%
+      pw_study_fn(),
+    pattern = map(subgroup_con_dose)
+  ),
+
+  tar_target(
+    pw_con_dose_match,
+    pw_con_dose_combn %>%
+      pw_match_fn(pw_con_dose_study)
+  ),
+
+  tar_target(
+    pw_con_dose_group,
+    pw_con_dose_match %>%
+      group_by(
+        outcome,
+        comp_type,
+        timepoint,
+        comp,
+        int_1,
+        int_2,
+        condition,
+        dose
+      ) %>%
+      pw_group_fn() %>%
+      select(outcome, comp_type, comp, study, everything()) %>%
+      tar_group(),
+    iteration = "group"
+  ),
+
+  tar_target(
+    pw_con_dose_wide_test,
+    pw_con_dose_group %>%
+      filter(tar_group == 11) %>%
+      pw_wide_fn()
+  ),
+
+  tar_target(
+    pw_con_dose_wide,
+    pw_con_dose_group %>%
+      pw_wide_fn(),
+    pattern = map(pw_con_dose_group),
+    iteration = "list"
+  ),
+
+  tar_target(
+    pw_con_dose_ma,
+    pw_con_dose_wide %>%
+      hpp_rma(),
+    pattern = map(pw_con_dose_wide),
+    iteration = "list"
+
+  ),
+
+
+# class and dose ----------------------------------------------------------
+
 
 tar_target(
-pw_con_combn,
-subgroup_con %>%
-  pw_combn_fn(),
-pattern = map(subgroup_con)
+  pw_con_class_dose_combn,
+  subgroup_con_class_dose %>%
+    pw_combn_fn(),
+  pattern = map(subgroup_con_class_dose)
 ),
 
+# identify what interventions studies have
 tar_target(
-  pw_con_study,
-  subgroup_con %>%
+  pw_con_class_dose_study,
+  subgroup_con_class_dose %>%
+    bind_rows(subgroup_con_class_dose %>%
+                mutate(type = "placebo",
+                       class = "n/a",
+                       dose = "n/a"
+                )) %>%
     pw_study_fn(),
-  pattern = map(subgroup_con)
+  pattern = map(subgroup_con_class_dose)
 ),
 
 tar_target(
-  pw_con_match,
-  pw_con_combn %>%
-    pw_match_fn(pw_con_study)
+  pw_con_class_dose_match,
+  pw_con_class_dose_combn %>%
+    pw_match_fn(pw_con_class_dose_study)
 ),
 
 tar_target(
-  pw_con_group,
-  pw_con_match %>%
-    group_by(outcome, comp_type, timepoint, comp, int_1, int_2, condition) %>%
+  pw_con_class_dose_group,
+  pw_con_class_dose_match %>%
+    group_by(
+      outcome,
+      comp_type,
+      timepoint,
+      comp,
+      int_1,
+      int_2,
+      condition,
+      class,
+      dose
+    ) %>%
     pw_group_fn() %>%
-    group_by(outcome, comp_type, comp, timepoint, condition) %>%
     select(outcome, comp_type, comp, study, everything()) %>%
     tar_group(),
   iteration = "group"
 ),
 
 tar_target(
-  pw_con_wide_test,
-  pw_con_group %>%
+  pw_con_class_dose_wide_test,
+  pw_con_class_dose_group %>%
     filter(tar_group == 11) %>%
     pw_wide_fn()
 ),
 
 tar_target(
-  pw_con_wide,
-  pw_con_group %>%
+  pw_con_class_dose_wide,
+  pw_con_class_dose_group %>%
     pw_wide_fn(),
-  pattern = map(pw_con_group),
+  pattern = map(pw_con_class_dose_group),
   iteration = "list"
 ),
 
 tar_target(
-  pw_con_ma,
-  pw_con_wide %>%
+  pw_con_class_dose_ma,
+  pw_con_class_dose_wide %>%
     hpp_rma(),
-  pattern = map(pw_con_wide),
+  pattern = map(pw_con_class_dose_wide),
   iteration = "list"
-
 ),
 
-# pw summary --------------------------------------------------------------
 
-tar_target(
-  pw_results_fn,
-  function(group_dat, ma_dat, subgroup_dat) {
-    group_dat %>%
-      select(-study) %>%
-      ungroup() %>%
-      distinct() %>%
-      bind_cols(ma_dat  %>%  tidy(),
-                ma_dat  %>% glance()) %>%
-      clean_names() %>%
-      mutate(mod = list(ma_dat)) %>%
-      relocate(starts_with('mod'), .before = outcome) %>%
-      left_join(w_outcome_key, by = c("outcome" = "outcome_nma")) %>%
-      select(-type) %>%
-      rename(type = comp_type) %>%
-      left_join(m_type_label_key) %>%
-      left_join(m_timepoint_label_key) %>%
-      left_join(subgroup_dat %>%
-                  select(-studies, -n_studies, -tar_group)
-                  ) %>%
+  # pw summary --------------------------------------------------------------
+
+  tar_target(pw_results_fn,
+             function(group_dat, ma_dat, subgroup_dat) {
+               group_dat %>%
+                 select(-study) %>%
+                 ungroup() %>%
+                 distinct() %>%
+                 bind_cols(ma_dat  %>%  tidy(),
+                           ma_dat  %>% glance()) %>%
+                 clean_names() %>%
+                 mutate(mod = list(ma_dat),
+                        rma_class = class(ma_dat) %>% pluck(1)
+                        ) %>%
+                 relocate(starts_with('mod'), .before = outcome) %>%
+                 left_join(w_outcome_key, by = c("outcome" = "outcome_nma")) %>%
+                 select(-type) %>%
+                 rename(type = comp_type) %>%
+                 left_join(m_type_label_key) %>%
+                 left_join(m_timepoint_label_key) %>%
+                 left_join(subgroup_dat %>%
+                             select(-studies,-n_studies,-tar_group))
+
+
+             }),
+
+  tar_target(pw_type_results, {
+    pw_results_fn(pw_type_group, pw_type_ma, subgroup_type)
+  },
+  pattern = map(pw_type_ma, pw_type_group)),
+
+  tar_target(pw_con_results, {
+    pw_results_fn(pw_con_group, pw_con_ma, subgroup_con)
+  },
+  pattern = map(pw_con_ma, pw_con_group)),
+
+  tar_target(pw_con_class_results, {
+    pw_results_fn(pw_con_class_group, pw_con_class_ma, subgroup_con_class)
+  },
+  pattern = map(pw_con_class_ma, pw_con_class_group)),
+
+tar_target(pw_con_dose_results, {
+  pw_results_fn(pw_con_dose_group, pw_con_dose_ma, subgroup_con_dose)
+},
+pattern = map(pw_con_dose_ma, pw_con_dose_group)),
+
+tar_target(pw_con_class_dose_results, {
+  pw_results_fn(pw_con_class_dose_group, pw_con_class_dose_ma, subgroup_con_class_dose)
+},
+pattern = map(pw_con_class_dose_ma, pw_con_class_dose_group)),
+
+  tar_target(
+    pw_results,
+    bind_rows(pw_type_results,
+              pw_con_results,
+              pw_con_class_results,
+              pw_con_class_dose_results
+              ) %>%
+      mutate(
+        condition = if_else(
+          is.na(condition),
+          "all conditions",
+          condition
+        ) %>% fct_relevel("all conditions"),
+        class = if_else(
+          is.na(class),
+          "all classes",
+          class
+        ) %>% fct_relevel("all classes"),
+        dose = if_else(
+          is.na(dose),
+          "all doses",
+          dose
+        ) %>% fct_relevel("all doses"),
+        timepoint = fct_relevel(timepoint, "post_int")
+      ) %>%
+      arrange(outcome, condition, type, class, dose) %>%
       mutate(
         pw_forest_file =
           glue(
-            "images/pw-forest/{subgroup}-{outcome}-{type}-{timepoint}-{comp}.png"
+            "images/pw-forest/{subgroup}-{outcome}-{condition}-{type}-{timepoint}-{class}-{dose}-{comp}.png"
           )
       )
-
-  }
-),
-
-tar_target(pw_type_results, {
-  pw_results_fn(pw_type_group, pw_type_ma, subgroup_type)
-},
-pattern = map(pw_type_ma, pw_type_group)),
-
-tar_target(pw_con_results, {
-  pw_results_fn(pw_con_group, pw_con_ma, subgroup_con)
-},
-pattern = map(pw_con_ma, pw_con_group)),
-
-tar_target(pw_results,
-           bind_rows(pw_type_results, pw_con_results)
-           ),
+  ),
 
 
   # pw forest ---------------------------------------------------------------
@@ -826,21 +1114,33 @@ tar_target(pw_results,
       #   timepoint == "post_int",
       #   comp == "placebo_desvenlafaxine"
       # )
-      filter(subgroup == "subgroup_con") %>%
+      # filter(subgroup == "subgroup_con") %>%
       sample_n(1)
 
     # this_mod
     pw_forest(this_mod)
   }),
 
-  tar_target(pw_forest_write, {
-    pw_forest(pw_results)
+  tar_target(
+    pw_plot,
+    pw_results %>%
+      filter(rma_class == "rma.mv") %>%
+      mutate(
+        plot_height = n_studies / max(n_studies),
+        plot_height = if_else(plot_height < 0.5, 0.7, plot_height)
+      ) %>%
+      select(-tar_group) %>%
+      ungroup()
+  ),
 
-    here("bksite", pw_results$pw_forest_file) %>%
-    # here(pw_results$pw_forest_file) %>%
-    ggsave(width = 5, height = 5)
+  tar_target(pw_forest_write, {
+    pw_forest(pw_plot)
+
+    here("bksite", pw_plot$pw_forest_file) %>%
+      # here(pw_results$pw_forest_file) %>%
+      ggsave(width = 7, height = 8 * pw_plot$plot_height)
   },
-  pattern = map(pw_results)),
+  pattern = map(pw_plot)),
 
   # network plots -----------------------------------------------------------
   tar_target(plot_net, {

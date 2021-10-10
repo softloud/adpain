@@ -42,28 +42,29 @@ hpp_rma <- function(dat) {
 
 
 
+  try_mv <-
     tryCatch(
-      expr =     rma.mv(
+      expr =
+        rma.mv(
         yi = yi,
         V = vi,
         slab = study,
         data = escalc_dat,
         random = ~ 1|study/arm # need V for rma.mv
       ),
-      error =
-      #   rma.mv(
-      #   yi = yi,
-      #   V = vi,
-      #   slab = study,
-      #   data = escalc_dat,
-      #   random = ~ 1|study/arm, # need V for rma.mv,
-      #   method = "FE"
-      # )
-        {
-          print("failed")
-          print(escalc_dat)
-
-        }
+      error = function(cond) {
+        message("mv failed")
+      }
 
     )
+
+  if (is.null(try_mv)) {
+    rma(
+      yi = yi,
+      vi = vi,
+      slab = study,
+      data = escalc_dat
+    )
+  } else try_mv
+
 }
