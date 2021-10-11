@@ -1031,7 +1031,9 @@ list(
                  mutate(mod = list(ma_mod),
                         rma_class = ma_mod %>% pluck("rma_mv") %>%
                           class() %>% pluck(1),
-                        i_sq = ma_mod$rma$I2,
+                        i_sq = ma_mod$rma %>%
+                          glance() %>%
+                          pluck("i.squared"),
                         dat = list(ma_dat),
                         n_obs = nrow(ma_dat)
 

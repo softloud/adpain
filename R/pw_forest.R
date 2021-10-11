@@ -40,7 +40,7 @@ pw_forest <- function(mod_key) {
   95% confidence intervals that estimate an effect are black, those that do not are grey.
   Points are sized by relative variance.
 
-  Ratio of true heterogeneity to total observed variation (I-squared): {round(mod_key$i_sq, 4)}.
+  Ratio of true heterogeneity to total observed variation (I-squared): {round(mod_key$i_sq, 4)}%.
     Estimated variation between studies (tau-squared): {round(mod_key$tau_squared, 4)}.
 
 {rma_cap}"
