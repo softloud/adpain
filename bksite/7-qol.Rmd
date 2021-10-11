@@ -1,0 +1,6 @@
+# Quality of life
+
+```{r results='asis'}
+makechapter("qol")  #<- sink
+```
+

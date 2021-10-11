@@ -1,0 +1,6 @@
+# Adverse events
+
+```{r results='asis'}
+makechapter("adverse")  #<- sink
+```
+

@@ -91,8 +91,14 @@ analysis_output <- function(m_key_row) {
 
 makechapter <- function(this_outcome) {
 
-  outcome_pw <- pw_results %>%
-    filter(outcome == this_outcome)  %>%
+  outcome_dulox <- if (this_outcome == "duloxetine") {
+    pw_results %>% filter(str_detect(comp, "duloxetine"))
+  } else {
+    pw_results %>%
+      filter(outcome == this_outcome)  }
+
+  outcome_pw <-
+    outcome_dulox %>%
     mutate(across(everything(), str_to_sentence)) %>%
     mutate(class = if_else(
       class == "All classes",

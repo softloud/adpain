@@ -1,0 +1,6 @@
+# Substantial pain (50% reduction)
+
+```{r results='asis'}
+makechapter("pain_sub")  #<- sink
+```
+

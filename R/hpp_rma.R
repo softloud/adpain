@@ -55,16 +55,24 @@ hpp_rma <- function(dat) {
       error = function(cond) {
         message("mv failed")
       }
-
     )
 
-  if (is.null(try_mv)) {
+  rma <-
     rma(
       yi = yi,
       vi = vi,
       slab = study,
       data = escalc_dat
     )
+
+  rma_mv_try <-
+  if (is.null(try_mv)) {
+    rma
   } else try_mv
+
+  list(
+    rma_mv = rma_mv_try,
+    rma = rma
+  )
 
 }

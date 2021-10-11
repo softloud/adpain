@@ -1,0 +1,6 @@
+# Sleep
+
+```{r results='asis'}
+makechapter("sleep")  #<- sink
+```
+
