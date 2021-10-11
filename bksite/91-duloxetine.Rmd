@@ -1,6 +1,6 @@
 # Duloxetine
 
-```{r results='asis'}
+```{r results='asis',warning=FALSE}
 makechapter("duloxetine")
 
 ```

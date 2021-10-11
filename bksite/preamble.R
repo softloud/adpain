@@ -134,6 +134,7 @@ makechapter <- function(this_outcome) {
           outcome_pw %>%
             filter(condition == this_condition,
                    type_label == this_type,
+                   timepoint_label == this_timepoint,
                    class == this_class,
                    dose == this_dose
                    ) %>%

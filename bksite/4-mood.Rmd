@@ -1,6 +1,6 @@
 # Mood
 
-```{r results='asis'}
+```{r results='asis',warning=FALSE}
 makechapter("mood")  #<- sink
 ```
 

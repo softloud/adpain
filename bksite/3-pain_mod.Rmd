@@ -1,6 +1,6 @@
 # Moderate pain (30% reduction)
 
-```{r results='asis'}
+```{r results='asis', warning=FALSE}
 makechapter("pain_mod")  #<- sink
 ```
 

@@ -1,6 +1,6 @@
 # Physical function
 
-```{r results='asis'}
+```{r results='asis', warning=FALSE}
 makechapter("physical")  #<- sink
 ```
 

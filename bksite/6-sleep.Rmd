@@ -1,6 +1,6 @@
 # Sleep
 
-```{r results='asis'}
+```{r results='asis', warning=FALSE}
 makechapter("sleep")  #<- sink
 ```
 

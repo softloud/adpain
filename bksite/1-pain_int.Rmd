@@ -1,6 +1,6 @@
 # Pain intensity (continuous measure)
 
-```{r results='asis'}
+```{r results='asis', warning=FALSE}
 makechapter("pain_int")  #<- sink
 ```
 

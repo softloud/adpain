@@ -60,7 +60,8 @@ summary_dat %>%
   tab_source_note("General pain grouping is currently being used, but this can be switched or duplicated for IASP.") %>% 
   tab_options(
     table.font.size = 12,
-    row_group.background.color = hpp_pal(1)
+    row_group.background.color = hpp_pal(1),
+    table.layout = "auto"
   )
 
 ```
