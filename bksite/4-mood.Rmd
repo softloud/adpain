@@ -1,6 +1,189 @@
 # Mood
 
-```{r results='asis',warning=FALSE}
-makechapter("mood")  #<- sink
+# Mood
+
+
+***
+
+
+```{r }
+this_key_row <- 
+subgroup_type %>% 
+  filter(
+    outcome == "mood",
+    timepoint == "change_score",
+    type == "ad"
+  )
+
+```
+
+
+```{r eval=FALSE}
+nma_mood_cs <- 
+  pres_nma(this_key_row)
+
+write_pres_nma(nma_mood_cs, this_key_row)
+
+```
+
+```{r}
+nma_mood_cs <- read_rds("/home/cantabile/Documents/gh-repos/adpain/data/pres/subgroup_type_mood_ad_change_score_.rds")
+
+```
+
+```{r}
+nma_mood_cs_plot <- make_forest(nma_mood_cs, this_key_row) 
+
+```
+
+
+```{r}
+nma_mood_cs_plot + 
+  facet_grid(class ~ ., scales = "free", space = "free") +
+  coord_cartesian(xlim = c(-6, 4))
+
+```
+
+***
+
+
+```{r }
+this_key_row <- 
+subgroup_type %>% 
+  filter(
+    outcome == "mood",
+    timepoint == "post_int",
+    type == "ad"
+  )
+
+```
+
+
+```{r eval=FALSE}
+nma_mood_pi <- 
+  pres_nma(this_key_row)
+
+write_pres_nma(nma_mood_pi, this_key_row)
+
+```
+
+```{r}
+nma_mood_pi <- read_rds("/home/cantabile/Documents/gh-repos/adpain/data/pres/subgroup_type_mood_ad_post_int_.rds")
+
+```
+
+```{r}
+nma_mood_pi_plot <- make_forest(nma_mood_pi, this_key_row) 
+
+```
+
+
+```{r}
+nma_mood_pi_plot + 
+  facet_grid(class ~ ., scales = "free", space = "free") +
+  coord_cartesian(xlim = c(-4, 1))
+
+```
+
+## SNRI and mood
+
+```{r}
+this_pw <-
+pw_results %>% 
+  filter(
+    outcome == "mood",
+    subgroup == "subgroup_class",
+    class == "snri"
+  ) %>% 
+  group_by(tar_group) %>% 
+  slice(1)  %>%
+  arrange(comp) %>% 
+  ungroup()
+
+this_pw %>% 
+  select(timepoint, comp, n_studies, participants, int_2, class) %>% 
+  rename_with(str_to_sentence, everything()) %>% 
+  gt(groupname_col = "Int_2") %>% 
+  tab_header("Pairwise comparisons of substantial pain by dose") %>% 
+  cols_label(
+    N_studies = "Studies",
+    Comp = "Comparison"
+  ) %>% 
+  tab_options(row_group.background.color = hpp_pal(1)
+    
+  )
+
+
+```
+
+### First we'll look at duloxetine and then the other results
+
+*** 
+
+```{r}
+this_key_row <- 
+subgroup_type %>% 
+  filter(
+    outcome == "mood",
+    timepoint == "change_score",
+    type == "ad"
+  )
+
+
+make_forest(nma_mood_cs, this_key_row, this_class = "snri")
+
+```
+
+
+***
+
+```{r}
+this_key_row <- 
+subgroup_type %>% 
+  filter(
+    outcome == "mood",
+    timepoint == "post_int",
+    type == "ad"
+  )
+
+make_forest(nma_mood_pi, this_key_row, this_class = "snri")
+
+```
+
+*** 
+
+
+
+```{r}
+this_pw %>% 
+  filter(
+    str_detect(comp, "dulox"),
+    timepoint == "change_score"
+  ) %>% 
+  pull(pw_forest_file) %>% read_rds()
+
+```
+
+***
+
+```{r}
+this_pw %>% 
+  filter(
+    str_detect(comp, "dulox"),
+    timepoint == "post_int"
+  ) %>% 
+  pull(pw_forest_file) %>% read_rds()
+
+```
+
+***
+
+```{r}
+this_pw %>% 
+  filter(
+    str_detect(comp, "miln")
+  ) %>% 
+  pull(pw_forest_file) %>% read_rds()
+
 ```
 

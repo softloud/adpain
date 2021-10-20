@@ -1,6 +1,3 @@
 # Quality of life
 
-```{r results='asis',warning=FALSE}
-makechapter("qol")  #<- sink
-```
 

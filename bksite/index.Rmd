@@ -7,7 +7,12 @@ bibliography: references.bib
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, warnings = FALSE, message = FALSE)
+knitr::opts_chunk$set(echo = FALSE,
+                      fig.width = 10,
+                      fig.height = 5,
+                      eval=TRUE,
+                      warnings = FALSE, 
+                      message = FALSE)
 
 knitr::opts_knit$set(root.dir = "../")
 

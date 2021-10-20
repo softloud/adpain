@@ -1,6 +1,2 @@
 # Withdrawal
 
-```{r results='asis',warning=FALSE}
-makechapter("withdrawal")  #<- sink
-```
-

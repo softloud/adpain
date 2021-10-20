@@ -1,6 +1,2 @@
 # Sleep
 
-```{r results='asis', warning=FALSE}
-makechapter("sleep")  #<- sink
-```
-

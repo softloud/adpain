@@ -1,7 +1,3 @@
 # Duloxetine
 
-```{r results='asis',warning=FALSE}
-makechapter("duloxetine")
-
-```
 

@@ -1,6 +1,501 @@
 # Substantial pain (50% reduction)
 
-```{r results='asis', warning=FALSE}
-makechapter("pain_sub")  #<- sink
+
+```{r eval=FALSE}
+subgroup_type %>% 
+  filter(outcome == "pain_sub",
+         # timepoint == "post_int",
+         type == "ad"
+         )
+
 ```
+
+
+```{r }
+this_key_row <- 
+subgroup_type %>% 
+  filter(
+    outcome == "pain_sub",
+    timepoint == "post_int",
+    type == "ad"
+  )
+
+```
+
+
+```{r eval=FALSE}
+nma_pain <- 
+  pres_nma(this_key_row)
+
+write_pres_nma(nma_pain, this_key_row)
+
+```
+
+```{r}
+nma_pain_sub <- read_rds("data/pres/subgroup_type_pain_sub_ad_post_int_.rds")
+
+```
+
+```{r}
+nma_pain_sub_plot <- make_forest(nma_pain_sub, this_key_row) 
+
+```
+
+***
+
+```{r}
+nma_pain_sub_plot + 
+  facet_grid(class ~ ., scales = "free", space = "free") + 
+  coord_cartesian(xlim = c(-1,7.5))
+
+```
+
+
+***
+
+```{r}
+make_forest(nma_pain_sub, this_key_row, this_class = "snri") +
+  facet_grid(class ~ ., scales = "free", space = "free") 
+
+```
+
+***
+
+```{r}
+make_forest(nma_pain_sub, this_key_row, this_class = "tca") 
+
+```
+
+
+## Do NMA results for SNRI differ from pairwise comparisons?
+
+```{r }
+this_pw <- 
+pw_results %>% 
+  filter(subgroup == "subgroup_class",
+         outcome == "pain_sub",
+         class == "snri"
+         ) %>% 
+  arrange(desc(n_studies)) 
+
+  
+this_pw %>%   
+  select(int_1, int_2, n_studies) %>% 
+  gt() %>% 
+  cols_label(
+    int_1 = "Control",
+    int_2 = "Treatment",
+    n_studies = "Studies"
+  ) %>% 
+  tab_header("Possible meta-analtyic comparisons for SNRI")
+  
+
+
+```
+
+***
+
+```{r}
+this_pw[1,]$pw_forest_file %>% read_rds() +
+  coord_cartesian(xlim = c(0, 6))
+
+```
+
+*** 
+```{r}
+this_pw[2,]$pw_forest_file %>% read_rds() 
+
+```
+
+***
+
+```{r}
+this_pw[3,]$pw_forest_file %>% read_rds()
+
+```
+
+
+***
+
+```{r}
+this_pw[4,]$pw_forest_file %>% read_rds()
+
+```
+
+
+##  Substantial pain | Do the results differ for fibromyalgia?
+
+```{r eval=FALSE}
+subgroup_con %>% 
+  filter(outcome == "pain_sub",
+         ) %>% 
+  select(outcome, timepoint, condition, participants_int, n_studies, type) %>% 
+  arrange(desc(participants_int), desc(n_studies))    
+
+```
+
+
+```{r }
+this_pw <- 
+pw_results %>% 
+  filter(
+    outcome == "pain_sub",
+    subgroup == "subgroup_con"
+  ) %>% 
+  arrange(desc(participants), desc(n_studies))
+
+this_tab <- 
+this_pw %>% 
+  select(int_1, int_2, condition, participants, n_studies) %>% 
+  gt() %>% 
+  cols_label(
+    int_1 = "Control",
+    int_2 = "Treatment",
+    n_studies = "Studies",
+    condition = "Condition"
+  ) %>% 
+  tab_header("Duloxetine and milnacipran pairwise for specific conditions")
+
+
+```
+
+
+***
+
+```{r }
+this_key_row <- 
+subgroup_con %>% 
+  filter(
+    outcome == "pain_sub",
+    timepoint == "post_int",
+    type == "ad",
+    condition == "fibromyalgia"
+  )
+
+```
+
+
+```{r eval=FALSE}
+nma_pain_fibro <- 
+  pres_nma(this_key_row)
+
+write_pres_nma(nma_pain_fibro, this_key_row)
+
+```
+
+```{r}
+nma_pain_fibro <- read_rds("/home/cantabile/Documents/gh-repos/adpain/data/pres/subgroup_con_pain_sub_ad_post_int_fibromyalgia_.rds")
+
+```
+
+```{r}
+nma_pain_fibro_plot <- make_forest(nma_pain_fibro, this_key_row) 
+
+```
+
+
+```{r}
+nma_pain_fibro_plot + 
+  facet_grid(class ~ ., scales = "free", space = "free")
+
+```
+
+***
+```{r}
+this_pw %>% 
+  filter(condition == "fibromyalgia") %>% 
+  slice(1) %>% 
+  pull(pw_forest_file) %>% 
+  read_rds()
+  
+```
+
+***
+```{r}
+this_pw %>% 
+  filter(condition == "fibromyalgia") %>% 
+  slice(2) %>% 
+  pull(pw_forest_file) %>% 
+  read_rds()
+  
+```
+
+***
+```{r}
+this_pw %>% 
+  filter(condition == "fibromyalgia") %>% 
+  slice(3) %>% 
+  pull(pw_forest_file) %>% 
+  read_rds()
+  
+```
+
+##  Substantial pain | Do the results differ for musculoskeletal?
+
+
+***
+
+
+```{r }
+this_key_row <- 
+subgroup_con %>% 
+  filter(
+    outcome == "pain_sub",
+    timepoint == "post_int",
+    type == "ad",
+    condition == "musculoskeletal"
+  )
+
+```
+
+
+```{r eval=FALSE}
+nma_pain_muscu <- 
+  pres_nma(this_key_row)
+
+write_pres_nma(nma_pain_muscu, this_key_row)
+
+```
+
+```{r}
+nma_pain_muscu <- read_rds("/home/cantabile/Documents/gh-repos/adpain/data/pres/subgroup_con_pain_sub_ad_post_int_musculoskeletal_.rds")
+
+```
+
+```{r}
+nma_pain_muscu_plot <- make_forest(nma_pain_muscu, this_key_row) 
+
+```
+
+
+```{r}
+nma_pain_muscu_plot + 
+  facet_grid(class ~ ., scales = "free", space = "free")
+
+```
+
+
+
+
+***
+```{r}
+this_pw %>% 
+  filter(str_detect(condition, "musc")) %>% 
+  pull(pw_forest_file) %>% 
+  read_rds() +
+  coord_cartesian(xlim = c(0, 10))
+  
+```
+
+
+## Substantial pain | Do the results differ for neuropathic?
+
+***
+
+```{r }
+this_key_row <- 
+subgroup_con %>% 
+  filter(
+    outcome == "pain_sub",
+    timepoint == "post_int",
+    type == "ad",
+    condition == "neuropathic"
+  )
+
+```
+
+
+```{r eval=FALSE}
+nma_pain_neuro <- 
+  pres_nma(this_key_row)
+
+write_pres_nma(nma_pain_neuro, this_key_row)
+
+```
+
+```{r}
+nma_pain_neuro <- read_rds("/home/cantabile/Documents/gh-repos/adpain/data/pres/subgroup_con_pain_sub_ad_post_int_neuropathic_.rds")
+
+```
+
+```{r}
+nma_pain_neuro_plot <- make_forest(nma_pain_neuro, this_key_row) 
+
+```
+
+
+```{r}
+nma_pain_neuro_plot + 
+  facet_grid(class ~ ., scales = "free", space = "free") +
+  coord_cartesian(xlim = c(-2, 4))
+
+```
+
+***
+```{r}
+this_pw %>% 
+  filter(str_detect(condition, "neuro")) %>% 
+  slice(1) %>% 
+  pull(pw_forest_file) %>% 
+  read_rds()
+  
+```
+
+
+
+## Is there a difference in results for dose? | Substantial pain
+
+
+```{r}
+this_pw <- 
+pw_results %>% 
+  filter(outcome == "pain_sub",
+         subgroup == "subgroup_dose"
+         )
+
+this_pw %>% 
+  select(timepoint_label, comp, dose, n_studies, participants, int_2) %>% 
+  arrange(comp, dose) %>%
+  rename_with(str_to_sentence, everything()) %>% 
+  gt(groupname_col = "Int_2") %>% 
+  tab_header("Pairwise comparisons of substantial pain by dose") %>% 
+  cols_label(
+    N_studies = "Studies",
+    Comp = "Comparison"
+  ) %>% 
+  tab_options(row_group.background.color = hpp_pal(1)
+    
+  )
+  
+```
+
+***
+
+```{r}
+this_pw %>% 
+  filter(str_detect(int_2, "dulox"), dose == "high") %>% 
+  pull(pw_forest_file) %>% 
+  read_rds() +
+  coord_cartesian(xlim = c(0,5))
+
+```
+
+***
+
+```{r}
+this_pw %>% 
+  filter(str_detect(int_2, "dulox"), dose == "standard") %>% 
+  pull(pw_forest_file) %>% 
+  read_rds() +
+  coord_cartesian(xlim = c(0,5))
+
+```
+
+***
+
+```{r}
+this_pw %>% 
+  filter(str_detect(int_2, "dulox"), dose == "low") %>% 
+  pull(pw_forest_file) %>% 
+  read_rds() +
+  coord_cartesian(xlim = c(0,5))
+
+```
+
+## Does desvenlafaxine show the same attributes?
+
+Effective across doses? Results agree across doses?
+
+```{r}
+this_pw %>%
+  filter(str_detect(int_2, "desv")) %>% 
+  select(timepoint_label, comp, dose, n_studies, participants, int_2) %>% 
+  arrange(comp, dose) %>%
+  rename_with(str_to_sentence, everything()) %>% 
+  gt(groupname_col = "Int_2") %>% 
+  tab_header("Pairwise comparisons of substantial pain by dose") %>% 
+  cols_label(
+    N_studies = "Studies",
+    Comp = "Comparison"
+  ) %>% 
+  tab_options(row_group.background.color = hpp_pal(1)
+    
+  )
+  
+```
+
+***
+
+
+```{r}
+this_pw %>% 
+  filter(str_detect(int_2, "desv"), dose == "high") %>% 
+  pull(pw_forest_file) %>% 
+  read_rds()
+
+```
+
+***
+
+```{r}
+this_pw %>% 
+  filter(str_detect(int_2, "desv"), dose == "standard") %>% 
+  pull(pw_forest_file) %>% 
+  read_rds() 
+
+```
+
+## Do results agree for milnacipran?
+
+```{r}
+this_pw %>%
+  filter(str_detect(int_2, "miln")) %>% 
+  select(timepoint_label, comp, dose, n_studies, participants, int_2) %>% 
+  arrange(comp, dose) %>%
+  rename_with(str_to_sentence, everything()) %>% 
+  gt(groupname_col = "Int_2") %>% 
+  tab_header("Pairwise comparisons of substantial pain by dose") %>% 
+  cols_label(
+    N_studies = "Studies",
+    Comp = "Comparison"
+  ) %>% 
+  tab_options(row_group.background.color = hpp_pal(1)
+    
+  )
+
+```
+
+***
+
+```{r}
+this_pw %>% 
+  filter(str_detect(int_2, "miln"), dose == "standard") %>% 
+  pull(pw_forest_file) %>% 
+  read_rds()
+
+```
+
+***
+
+```{r}
+this_pw %>% 
+  filter(str_detect(int_2, "miln"), dose != "standard") %>% 
+  pull(pw_forest_file) %>% 
+  read_rds() 
+
+```
+
+***
+
+#### A final look at overall results for substantial pain
+
+***
+
+```{r}
+nma_pain_sub_plot + 
+  facet_grid(class ~ ., scales = "free", space = "free") + 
+  coord_cartesian(xlim = c(-1,7.5))
+
+```
+
 

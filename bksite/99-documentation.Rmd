@@ -114,4 +114,43 @@ checked_obs %>%
 ```
 
 
+# Pipeline
 
+We need pairwise and NMA available on the data with specifications for
+
+- outcomes
+- timepoints
+- class
+- dose
+- type of comparison made
+
+We need to verify the data are what we think they are, what model is output, 
+and capture meta-data about the analysis. Crucially, plot output needs to be captured in the output meta-data, as does the location of the model. 
+
+The clean data is found in `mod_dat`.
+
+```{r echo=TRUE, eval=TRUE}
+tar_load(mod_dat)
+
+mod_dat %>% 
+  dim()
+
+mod_dat %>% sample_n(10) %>% head()
+
+```
+
+## Getting data
+
+Based on specific filters, we want to get data for NMA or for PW.
+
+-[] Create get NMA dat fn.
+-[] Create get MA dat fn.
+- Resist the urge to combine the two.
+-[] Create target to test get NMA.
+-[] Create in document.
+-[] Write example.
+-[] Write asserts or tests based on example.
+
+For example, suppose we wish to 
+
+Let's check that our function works as it should. 

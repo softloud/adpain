@@ -1,6 +1,287 @@
-# Pain intensity (continuous measure)
+# Pain intensity | continuous measure
 
-```{r results='asis', warning=FALSE}
-makechapter("pain_int")  #<- sink
+
+***
+
+
+```{r }
+this_key_row <- 
+subgroup_type %>% 
+  filter(
+    outcome == "pain_int",
+    timepoint == "change_score",
+    type == "ad"
+  )
+
 ```
 
+
+```{r eval=FALSE}
+nma_pain_int_cs <- 
+  pres_nma(this_key_row)
+
+write_pres_nma(nma_pain_int_cs, this_key_row)
+
+```
+
+```{r}
+nma_pain_int_cs <- read_rds("/home/cantabile/Documents/gh-repos/adpain/data/pres/subgroup_type_pain_int_ad_change_score_.rds")
+
+```
+
+```{r}
+nma_pain_int_cs_plot <- make_forest(nma_pain_int_cs, this_key_row) 
+
+```
+
+
+```{r}
+nma_pain_int_cs_plot + 
+  facet_grid(class ~ ., scales = "free", space = "free") +
+  coord_cartesian(xlim = c(-4, 1))
+
+```
+
+***
+
+```{r }
+this_key_row <- 
+subgroup_type %>% 
+  filter(
+    outcome == "pain_int",
+    timepoint == "post_int",
+    type == "ad"
+  )
+
+```
+
+
+```{r eval=FALSE}
+nma_pain_int <- 
+  pres_nma(this_key_row)
+
+write_pres_nma(nma_pain_int, this_key_row)
+
+```
+
+```{r}
+nma_pain_int <- read_rds("/home/cantabile/Documents/gh-repos/adpain/data/pres/subgroup_type_pain_int_ad_post_int_.rds")
+
+```
+
+```{r}
+nma_pain_int_plot <- make_forest(nma_pain_int, this_key_row) 
+
+```
+
+
+```{r}
+nma_pain_int_plot + 
+  facet_grid(class ~ ., scales = "free", space = "free") +
+  coord_cartesian(xlim = c(-4, 1))
+
+```
+
+## Pain intensity & SNRI
+
+***
+
+```{r}
+this_key_row <- 
+subgroup_type %>% 
+  filter(
+    outcome == "pain_int",
+    timepoint == "post_int",
+    type == "ad"
+  )
+
+make_forest(nma_pain_int, this_key_row, this_class = "snri")
+
+```
+
+***
+
+```{r}
+this_key_row <- 
+subgroup_type %>% 
+  filter(
+    outcome == "pain_int",
+    timepoint == "change_score",
+    type == "ad"
+  )
+
+make_forest(nma_pain_int_cs, this_key_row, this_class = "snri")
+
+```
+
+## Direct evidence for SNRI in pain intensity
+
+```{r}
+this_pw <-
+
+pw_results %>% 
+  filter(subgroup == "subgroup_class",
+         outcome == "pain_int",
+         class == "snri",
+         type == "ad"
+         ) %>% 
+  arrange(int_2, desc(participants), desc(n_studies)) 
+
+this_pw %>% 
+  select(timepoint, comp, n_studies, participants, int_2) %>% 
+  rename_with(str_to_sentence, everything()) %>% 
+  gt(groupname_col = "Int_2") %>% 
+  tab_header("Pairwise comparisons of substantial pain by dose") %>% 
+  cols_label(
+    N_studies = "Studies",
+    Comp = "Comparison"
+  ) %>% 
+  tab_options(row_group.background.color = hpp_pal(1)
+    
+  )
+
+```
+
+***
+
+```{r}
+this_pw %>% 
+  filter(str_detect(comp, "dulox"), timepoint == "change_score") %>% 
+  pull(pw_forest_file) %>% 
+  read_rds()
+  
+```
+
+
+***
+
+```{r}
+this_pw %>% 
+  filter(str_detect(comp, "dulox"), timepoint == "post_int") %>% 
+  pull(pw_forest_file) %>% 
+  read_rds()
+  
+```
+
+
+***
+
+```{r}
+this_pw %>% 
+  filter(str_detect(comp, "miln"), timepoint == "change_score") %>% 
+  pull(pw_forest_file) %>% 
+  read_rds()
+  
+```
+
+
+***
+
+```{r}
+this_pw %>% 
+  filter(str_detect(comp, "miln"), timepoint == "post_int") %>% 
+  pull(pw_forest_file) %>% 
+  read_rds()
+  
+```
+
+## SSRI & pain intensity
+
+***
+
+```{r}
+this_key_row <- 
+subgroup_type %>% 
+  filter(
+    outcome == "pain_int",
+    timepoint == "change_score",
+    type == "ad"
+  )
+
+make_forest(nma_pain_int_cs, this_key_row, this_class = "ssri")
+
+```
+
+***
+
+```{r}
+this_key_row <- 
+subgroup_type %>% 
+  filter(
+    outcome == "pain_int",
+    timepoint == "post_int",
+    type == "ad"
+  )
+
+make_forest(nma_pain_int, this_key_row, this_class = "ssri")
+
+```
+
+## No direct evidence for SSRI in pain intensity
+
+***
+
+## Pain intensity and TCA
+
+***
+
+```{r}
+this_key_row <- 
+subgroup_type %>% 
+  filter(
+    outcome == "pain_int",
+    timepoint == "change_score",
+    type == "ad"
+  )
+
+make_forest(nma_pain_int_cs, this_key_row, this_class = "tca")
+
+```
+
+***
+
+```{r}
+this_key_row <- 
+subgroup_type %>% 
+  filter(
+    outcome == "pain_int",
+    timepoint == "post_int",
+    type == "ad"
+  )
+
+make_forest(nma_pain_int, this_key_row, this_class = "tca")
+
+```
+
+## Pain intensity | Only direct evidence for amitriptyline
+
+```{r}
+this_pw <-
+pw_results %>% 
+  filter(subgroup == "subgroup_class",
+         outcome == "pain_int",
+         class == "tca",
+         type == "ad"
+         ) %>% 
+  arrange(int_2, desc(participants), desc(n_studies)) 
+
+this_pw %>% 
+  select(timepoint, comp, n_studies, participants, int_2) %>% 
+  rename_with(str_to_sentence, everything()) %>% 
+  gt(groupname_col = "Int_2") %>% 
+  tab_header("Pairwise comparisons of substantial pain by dose") %>% 
+  cols_label(
+    N_studies = "Studies",
+    Comp = "Comparison"
+  ) %>% 
+  tab_options(row_group.background.color = hpp_pal(1)
+    
+  )
+
+```
+
+***
+
+```{r}
+this_pw$pw_forest_file %>% read_rds()
+```
