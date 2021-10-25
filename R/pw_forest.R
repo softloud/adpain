@@ -1,4 +1,4 @@
-pw_forest <- function(mod_key) {
+pw_forest <- function(mod_key, font_size = 16) {
   dirty_xmas_pal <- list(red = "#b12a1b",
                          green = "#67852e")
 
@@ -18,23 +18,31 @@ pw_forest <- function(mod_key) {
 
   dir <- mod_key$direction_of_improvement
 
-  rma_cap <- if (mod_key$rma_class == "rma.uni") "Multi-level model failed to converge, so a meta-analysis model was fitted instead." else {
-    glue("Multi-level meta-analysis model: accounts for depency of within-study variance,
-    where there are more than one arm (e.g. different dose) for the same intervention in the same study.
-    Study-level coefficient variation (sigma squared 1): {round(ma$sigma2[[1]], 4)}.
-    Within-study coefficient variation (sigma squared 2): {round(ma$sigma2[[2]],4)}.")
-  }
+  rma_cap <-
+if (mod_key$rma_class == "rma.uni") {"
+  Random-effects meta-analysis"} else {"Multi-level random effects meta-analysis"}
+  #   if (mod_key$rma_class == "rma.uni") "Multi-level model failed to converge, so a meta-analysis model was fitted instead." else {
+  #   glue("Multi-level meta-analysis model: accounts for depedency of within-study variance,
+  #   where there are more than one arm (e.g. different dose) for the same intervention in the same study.
+  #   Study-level coefficient variation (sigma squared 1): {round(ma$sigma2[[1]], 4)}.
+  #   Within-study coefficient variation (sigma squared 2): {round(ma$sigma2[[2]],4)}.")
+  # }
 
   this_title <-
     glue(
-      "Outcome {mod_key$outcome_label}: {mod_key$timepoint_label} {mod_key$type_label} comparison"
-    ) %>% str_wrap(60)
+      "MA {mod_key$outcome_label}: {mod_key$timepoint_label} {mod_key$type_label}"
+    ) %>% str_wrap(40)
   this_subtitle <-
     glue(
       "Interventions: {mod_key$int_1} vs {mod_key$int_2}. Condition: {mod_key$condition}. Class: {mod_key$class}. Dose: {mod_key$dose}"
-    ) %>% str_wrap()
-  this_caption <- glue_col(
-    "Participants: {mod_key$int_1} {participants$n}; {mod_key$int_2} {participants$n_comp}; total {participants$total}.
+    ) %>% str_wrap(60)
+
+  this_caption <- glue("{rma_cap}. Participants {participants$total}. I-squared {round(mod_key$i_sq, 2)}%; tau-squared {round(mod_key$tau_squared, 4)}.")
+
+    long_caption <-
+       glue(
+    "{rma_cap}. Participants {participants$total}. I-squared {round(mod_key$i_sq, 4)}%; tau-squared {round(mod_key$tau_squared, 4)}
+#Participants: {mod_key$int_1} {participants$n}; {mod_key$int_2} {participants$n_comp}; total {participants$total}.
 
     Estimate in direction of improvement ({mod_key$direction_of_improvement}) green, otherwise red.
   95% confidence intervals that estimate an effect are black, those that do not are grey.
@@ -43,8 +51,7 @@ pw_forest <- function(mod_key) {
   Ratio of true heterogeneity to total observed variation (I-squared): {round(mod_key$i_sq, 4)}%.
     Estimated variation between studies (tau-squared): {round(mod_key$tau_squared, 4)}.
 
-{rma_cap}"
-  )
+{rma_cap}") %>% str_wrap(120)
 
   # wrangle plotdat ---------------------------------------------------------
 
@@ -63,12 +70,15 @@ pw_forest <- function(mod_key) {
     )
 
 
-  tidy_ma <-
+ tidy_ma <-
     ma %>% tidy() %>%
     clean_names() %>%
     rename(effect = estimate) %>%
     mutate(estimate_type = "synthesised",
+           # ci_lb = ma$ci.lb,
+           # ci_ub = ma$ci.ub,
            study = "RE model",
+           # study = glue("RE model: {round({effect},2)} [{round({ci_lb},2)}, {round({ci_ub}, 2)}]"),
            rel_weight = 1)
 
 
@@ -80,11 +90,9 @@ pw_forest <- function(mod_key) {
       higher = effect + qnorm(1 - 0.05 / 2) * std_error,
       estimate_type = fct_relevel(estimate_type, "study"),
       m_type = m_type,
-      effect_ref = 0,
-      study = reorder(study, effect),
+      effect_ref = 0
     ) %>%
     arrange(estimate_type)
-
 
   plot_dat <- if (m_type == "lor") {
     plot_dat %>% mutate(across(c(effect, lower, higher, effect_ref), exp))
@@ -96,7 +104,14 @@ pw_forest <- function(mod_key) {
   plot_dat <-
     plot_dat %>%
     mutate(text_label =
-             glue("{round(effect, 2)} [{round(lower,2)}, {round(higher,2)}]"))
+             glue("{round(effect, 2)} [{round(lower,2)}, {round(higher,2)}]")) %>%
+    mutate(
+      study = if_else(study == "RE model",
+                      glue("{as.character(study)} {text_label}"),
+                      study
+                      ),
+      study = reorder(study, desc(effect))
+    )
 
 
   # plot set up -------------------------------------------------------------
@@ -154,9 +169,7 @@ pw_forest <- function(mod_key) {
 
   plot_dat %>%
     mutate(
-      text_x = text_x # ,
-      # lower = if_else(lower < ci_lims[1], ci_lims[1], lower),
-      # higher = if_else(higher > ci_lims[2], ci_lims[2], higher)
+      text_x = text_x
     ) %>%
     ggplot() +
     geom_vline(
@@ -182,6 +195,7 @@ pw_forest <- function(mod_key) {
       size = 1
     ) +
     geom_point(show.legend = FALSE,
+               shape = 15,
                aes(
                  x = effect,
                  y = study,
@@ -190,14 +204,29 @@ pw_forest <- function(mod_key) {
                    effect < effect_ref, active_pal[[1]], active_pal[[2]]
                  ))
                )) +
-    geom_text(aes(x = text_x,
-                  y = study,
-                  label = text_label),
-              size = 2) +
+
+    # add diamond
+    geom_point(show.legend = FALSE,
+               data = plot_dat %>%
+                 filter(str_detect(study, "RE model")),
+               shape = 18,
+               size = 8,
+               aes(
+                 x = effect,
+                 y = study,
+                 colour = I(if_else(
+                   effect < effect_ref, active_pal[[1]], active_pal[[2]]
+                 ))
+               )) +
+
+    # geom_text(aes(x = text_x,
+    #               y = study,
+    #               label = text_label),
+    #          size = 3.5) +
     facet_grid(estimate_type ~ .,
                scales = "free_y",
                space = "free_y") +
-    ggthemes::theme_tufte(base_size = 10) +
+    ggthemes::theme_tufte(base_size = font_size) +
     labs(y = "",
          x = mod_key$model_text,
          linetype = "Effect reference") +
