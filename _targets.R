@@ -279,9 +279,9 @@ list(
     m_obs_dat,
     obs_dat %>%
       filter(
-        outcome != "adverse_dropout",
-        outcome != "adverse_number",
-        outcome != "serious_adverse"
+        # outcome != "adverse_dropout",
+        # outcome != "serious_adverse",
+        outcome != "adverse_number"
       ) %>%
       rename(
         study = study_id,
@@ -290,23 +290,7 @@ list(
         class = ad_class,
         dose = ad_dose_categorised
       ) %>%
-      ungroup() %>%
-      #   # filter to two outcomes for testing
-      filter(
-        outcome %in% c(
-          "sleep",
-          "pain_int",
-          "adverse",
-          "mood",
-          "pain_sub",
-          "physical",
-          "qol",
-          "withdrawal",
-          "pain_mod",
-          NULL
-        )
-      ) %>%
-      select(-outcome_all)
+      ungroup()
 
   ),
 
@@ -369,7 +353,8 @@ list(
     subgroup_type,
     subgroup_dat %>%
       group_by(outcome, type, timepoint) %>%
-      subgroup_fn("subgroup_type") ,
+      subgroup_fn("subgroup_type") %>%
+      tar_group(),
     iteration = "group"
   ),
 
@@ -377,7 +362,8 @@ list(
     subgroup_con,
     subgroup_dat %>%
       group_by(outcome, type, timepoint, condition) %>%
-      subgroup_fn("subgroup_con"),
+      subgroup_fn("subgroup_con") %>%
+      tar_group(),
     iteration = "group"
   ),
 
@@ -386,7 +372,8 @@ list(
     subgroup_dat %>%
       filter(type == "ad") %>%
       group_by(outcome, type, timepoint, class) %>%
-      subgroup_fn("subgroup_class"),
+      subgroup_fn("subgroup_class") %>%
+      tar_group(),
     iteration = "group"
   ),
 
@@ -2016,11 +2003,44 @@ list(
   pattern = map(m_key_pres)),
 
 
- # report
+# report ------------------------------------------------------------------
+
+
 tar_target(
   mod_dat,
   m_obs_dat
 ),
+
+tar_target(
+  pw_dat_check,
+  get_pw_dat(
+    dat = mod_dat,
+    outcome = "pain_sub",
+    type = "ad",
+    timepoint = "post_int",
+    g1 = "placebo",
+    g2 = "duloxetine")
+
+),
+
+tar_target(
+  pw_rma_check,
+  get_pw_dat(
+    dat = mod_dat,
+    outcome = "pain_sub",
+    type = "ad",
+    timepoint = "post_int",
+    g1 = "placebo",
+    g2 = "duloxetine")  %>%
+    hpp_rma()
+
+),
+
+tar_target(
+  pw_forest_check,
+  pw_forest_plot(pw_rma_check$rma_mv, m_type = "lor", dir = "higher")
+),
+
   # null --------------------------------------------------------------------
 
   NULL
