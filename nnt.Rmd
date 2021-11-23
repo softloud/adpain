@@ -1,0 +1,184 @@
+---
+title: "NNT"
+output: 
+# html_document
+  pdf_document
+urlcolor: blue
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  warning = FALSE,
+  message = FALSE,
+  echo = FALSE)
+
+library(targets)
+library(tidyverse)
+library(gt)
+tar_load(nnt_long)
+tar_load(nnt_results)
+
+```
+
+> [The Number Needed to Treat (NNT) is the number of patients you need to treat to prevent one additional bad outcome (death, stroke, etc.).](https://www.cebm.ox.ac.uk/resources/ebm-tools/number-needed-to-treat-nnt)
+
+## NNT values are not plausible?
+
+```{r}
+# plot goes here  
+nnt_long  %>% 
+  ggplot(aes(
+    x = nnt,
+    linetype = calculation
+  )) +
+  geom_density(alpha = 0.5) +
+  facet_wrap(
+    ~ outcome_label,
+    # space = "free",
+    scales = "free",
+  ) +
+  ggthemes::theme_tufte() +
+  labs(
+    title = "Distribution of NNTs for each outcome",
+    x = "NNT",
+    linetype = "Calculation"
+  )
+
+```
+
+```{r}
+nnt_results %>% 
+  ggplot(
+    aes(x = nnt_arr, y = nnt_acr) 
+  ) +
+  geom_smooth(
+    colour = "grey"
+  ) +
+  geom_point(alpha = 0.5) +
+facet_wrap(outcome_label ~ ., scales =  "free") +
+  ggthemes::theme_tufte() +
+  labs(
+    title = "Comparison on NNT calculations for each outcome",
+    subtitle = "Direct calculation vs odds-ratio calculation",
+    x = "NNT calculated from data",
+    y = "NNT calculated from odds-ratio"
+  )
+
+```
+
+```{r}
+nnt_results %>% 
+  ggplot(
+    aes(x = nnt_diff) 
+  ) +
+ geom_density(alpha = 0.5) +
+  facet_wrap(
+    ~ outcome,
+    # space = "free",
+    scales = "free",
+  ) +
+  ggthemes::theme_tufte() +
+  labs(
+    title = "Distribution of differences in NNTs for each outcome",
+    x = "NNT"
+  )
+
+```
+
+```{r}
+
+nnt_results %>% 
+  filter(
+    intervention %in% c("duloxetine", "milnacipran", "amitriptyline")
+  ) %>% 
+  select(outcome_label, everything()) %>% 
+  select(-outcome) %>% 
+  gt() %>% 
+  tab_header(
+    title = "NNT calculations",
+    subtitle = "For duloxetine, milnacipran, amitriptyline" ) %>% 
+  cols_label(
+    outcome_label = "Outcome",
+    timepoint = "Timepoint",
+    intervention = "Intervention",
+    nnt_arr = "NNT direct",
+    nnt_acr = "NNT OR",
+    nnt_diff = "Difference of NNTs"
+  ) %>% 
+  tab_options(
+    table.width = px(400)
+  )
+
+
+```
+
+
+
+## Calculating from the raw data
+
+One way to calculate NNT is to compare the rates in the analysis data using the Absolute Risk Reduction ([ARR](https://www.cebm.ox.ac.uk/resources/ebm-tools/number-needed-to-treat-nnt)). 
+
+$$
+\text{NNT} := 1/\text{Absolute risk reduction} \\
+= 1 / [{\text{Control event rate} - \text{Experimental event rate}]}
+$$
+
+So, for the $i$th intervention, for the $k$th outcome,
+$$
+\text{NNT}_{ik} := 1/[\frac{\Sigma_{ik} r^P_{ik}} {\Sigma_{ik} n^P_{ik}} -
+\frac{\Sigma_{ik} r^T_{ik}} {\Sigma_{ik} n^T_{ik}}]
+$$
+where $r^P_{ik}$ is the rate for the placebo group for the $i$th intervention and $k$th outcome; and $n^T_{ik}$ indicates the sample size of the treatment group for the same intervention and outcome.
+
+> Gav, does the direction of improvement alter the order of this calculation?  
+
+
+
+## Calculating using odds-ratios
+
+[Cochrane example](https://handbook-5-1.cochrane.org/chapter_12/12_5_4_3_computing_absolute_risk_reduction_or_nnt_from_an_odds.htm) 
+
+$$
+\text{NNT} := 1/|ACR - (OR \times ACR) / (1 - ACR + OR \times ACR)|
+$$
+where $ACR$ is the assumed control risk. 
+
+There are a few ways to calculate ACR: 
+
+- from model
+- from baseline data
+- from all data
+
+We are currently calculating ACR from overall rate for the placebo group across all data because baseline data is not available for most of our outcomes.
+
+
+### Checking function works as it should
+
+
+```{r echo=TRUE}
+library(adpain)
+
+or <- 0.73
+
+acr <- 0.3
+
+nnt_cochrane <- 
+  ceiling(16.2)
+
+# calculate
+nnt_adpain <- nnt(or, acr) 
+
+# results
+nnt_cochrane
+nnt_adpain
+
+# compare
+nnt_adpain == nnt_cochrane
+```
+
+## Questions
+
+- Does direction of improvement matter for calculation? i.e., NNTH and NNTB (harm vs benefit)? 
+- In one of the resources there are two equations?
+- Do we wish to see big numbers for one and small for the other direction?
+- Should this be approached by examining how ACR is calculated? 
