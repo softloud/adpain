@@ -1,409 +1,245 @@
 # Adverse events
 
-# Adverse events
-
-```{r eval=FALSE}
-subgroup_type %>% 
+```{r}
+adverse_dir <- 
+  outcome_key %>% 
   filter(outcome == "adverse") %>% 
+  pull(direction_of_improvement)
   
-
+  
 ```
 
 
-***
+There are three types of adverse outcome. 
+
+```{r}
+mod_dat %>% 
+  filter(str_detect(outcome, "adverse")) %>% 
+  group_by(outcome_label) %>% 
+  summarise(
+    n_studies = n_distinct(study),
+    n_obs = length(study),
+    Participants = sum(n)
+  ) %>% 
+  gt() %>% 
+  tab_header("Number of studies and arms") %>% 
+  cols_label(
+    outcome_label = "Outcome",
+    n_studies = "Studies",
+    n_obs = "Arms"
+  ) %>% 
+  tab_source_note("Comparisons with less than 200 participants excluded")
+
+
+```
 
 
 ```{r }
-this_key_row <- 
-subgroup_type %>% 
-  filter(
-    outcome == "adverse",
-    timepoint == "post_int",
-    type == "ad"
-  )
+adverse_comp <- 
+  mod_dat %>% 
+  filter(str_detect(outcome, "adverse")) %>% 
+  group_by(outcome, type, timepoint) %>%  
+  filter(type != "placebo") %>% 
+  summarise(
+    n_studies = n_distinct(study),
+    n_obs = length(study),
+    Participants = sum(n)
+  ) %>% 
+  filter(n_studies > 1)
+
 
 ```
 
+***
+
+```{r}
+adverse_comp %>%
+  ungroup() %>% 
+  filter(Participants >= 200) %>% 
+  gt(groupname_col = "outcome") %>%
+  tab_header("Possible adverse comparisons") %>% 
+  tab_options(row_group.background.color = hpp_pal(1))
+```
+
+
+
+## Adverse events
 
 ```{r eval=FALSE}
 nma_adverse <- 
-  pres_nma(this_key_row)
+get_nma_dat(
+  mod_dat,
+  outcome == "adverse",
+  timepoint == "post_int",
+  type %in% c("ad", "placebo")
+) %>% 
+  hpp_nma()
 
-write_pres_nma(nma_adverse, this_key_row)
+write_rds(nma_adverse, "exports/adverse/nma-adverse.rds")
+```
+
+```{r}
+nma_adverse <- read_rds("exports/adverse/nma-adverse.rds")
 
 ```
 
 ```{r}
-nma_adverse <- read_rds("/home/cantabile/Documents/gh-repos/adpain/data/pres/subgroup_type_adverse_ad_post_int_.rds")
+hpp_forest(nma_adverse, mod_type = "lor", dir = "lower") +
+  coord_cartesian(xlim = c(0, 5))
+
+```
+
+### Direct evidence for adverse events
+
+```{r}
+adverse_pw <- 
+  pw_int(
+    mod_dat,
+    this_outcome = "adverse",
+    this_type = "ad",
+    this_timepoint = "post_int"
+  ) 
 
 ```
 
 ```{r}
-nma_adverse_plot <- make_forest(nma_adverse, this_key_row) 
-
-```
-
-
-```{r}
-nma_adverse_plot + 
-  facet_grid(class ~ ., scales = "free", space = "free") +
-  coord_cartesian(xlim = c(-2, 4))
-
-```
-
-## Adverse events and SNRI
-
-### Only post-intervention results
-
-### Pair-wise comparisons
-
-```{r}
-this_pw <- 
-pw_results %>% 
-  filter(
-    subgroup == "subgroup_class",
-    outcome == "adverse",
-    class == "snri"
-  ) %>% 
-  arrange(desc(participants), desc(n_studies)) 
-
-this_pw %>% 
-  select(comp, n_studies, participants) %>% 
-  rename_with(str_to_sentence, everything()) %>% 
-  gt() %>% 
-  tab_header("Pairwise comparisons of adverse pain for SNRI") %>% 
-  cols_label(
-    N_studies = "Studies",
-    Comp = "Comparison"
-  ) %>% 
-  tab_options(row_group.background.color = hpp_pal(1)
-    
+  adverse_pw %>% 
+  filter(intervention == "duloxetine") %>%
+  pull(mod) %>% 
+  pluck(1, "rma_mv") %>% 
+  pw_forest_plot(
+    m_type = "lor",
+    dir = adverse_dir
+  ) +
+  coord_cartesian(xlim = c(0, 1)) +
+  labs(
+    title = "Adverse events and duloxetine",
+    subtitle = "Post-intervention antidepressant meta-analysis"
   )
-
-
-```
-
-
-***
-
-```{r}
-make_forest(nma_adverse, this_key_row, this_class = "snri") 
-
-```
-
-***
-
-```{r}
-this_pw$pw_forest_file[1] %>% read_rds()
-
-```
-
-*** 
-
-```{r}
-this_pw$pw_forest_file[2] %>% read_rds() +
-  coord_cartesian(xlim = c(-0.5, 5))
-
-```
-
-*** 
-
-```{r}
-this_pw$pw_forest_file[3] %>% read_rds()
-
-```
-
-*** 
-
-```{r}
-this_pw$pw_forest_file[4] %>% read_rds()
-
-```
-
-*** 
-
-```{r}
-this_pw$pw_forest_file[5] %>% read_rds()
-
-```
-
-## Adverse events & TCA
-
-***
-
-```{r}
-make_forest(nma_adverse, this_key_row, this_class = "tca") +
-  coord_cartesian(xlim = c(-0.5, 15))
-
-```
-
-## Direct evidence for TCA with adverse events
-
-```{r}
-this_pw <- 
-pw_results %>% 
-  filter(
-    subgroup == "subgroup_class",
-    outcome == "adverse",
-    class == "tca"
-  ) %>% 
-  arrange(desc(participants), desc(n_studies)) 
-
-this_pw %>% 
-  select(comp, n_studies, participants) %>% 
-  rename_with(str_to_sentence, everything()) %>% 
-  gt() %>% 
-  tab_header("Pairwise comparisons of adverse pain for SNRI") %>% 
-  cols_label(
-    N_studies = "Studies",
-    Comp = "Comparison"
-  ) %>% 
-  tab_options(row_group.background.color = hpp_pal(1)
-    
-  )
-
-```
-
-***
-
-```{r}
-this_pw$pw_forest_file[1] %>% read_rds() +
-  coord_cartesian(xlim = c(-0.5, 20))
-
-```
-
-
-***
-
-```{r}
-this_pw$pw_forest_file[2] %>% read_rds()
-
-```
-
-## No pairwise analyses available for SSRI
-
-***
-
-```{r}
-make_forest(nma_adverse, this_key_row, this_class = "ssri") +
-  coord_cartesian(xlim = c(-0.5, 15))
-
-```
-
-## No direct evidence for adverse events by condition
-
-## Adverse events and dose
-
-```{r}
-this_pw <- 
-pw_results %>% 
-  filter(
-    subgroup == "subgroup_dose",
-    outcome == "adverse"
-  ) %>% 
-  arrange(desc(participants), desc(n_studies)) 
-
-this_pw %>% 
-  select(comp, n_studies, participants, dose, int_2) %>% 
-  rename_with(str_to_sentence, everything()) %>% 
-  gt(groupname_col = "Int_2") %>% 
-  tab_header("Direct evidence for conditions") %>% 
-  cols_label(
-    N_studies = "Studies",
-    Comp = "Comparison"
-  ) %>% 
-  tab_options(row_group.background.color = hpp_pal(1)
-    
-  )
-
-
-```
-
-## Adverse events for duloxetine by dose
-
-***
-
-```{r}
-this_pw %>% 
-  filter(dose == "high", str_detect(comp, "dulox")) %>% 
-  pull(pw_forest_file) %>% 
-  read_rds()
-
-```
-
-***
-
-```{r}
-this_pw %>% 
-  filter(dose == "standard", str_detect(comp, "dulox")) %>% 
-  pull(pw_forest_file) %>% 
-  read_rds()
-
-```
-
-## Adverse events and conditions
-
-```{r}
-this_pw <- 
-pw_results %>% 
-  filter(
-    outcome == "adverse",
-    subgroup == "subgroup_con"
-  ) %>% 
-  arrange(desc(participants), desc(n_studies))
-
-this_pw %>% 
-  select(condition, comp, n_studies, participants) %>% 
-  gt(
-    groupname_col = "condition"
-  ) %>% 
-  tab_header("Direct evidence by condition") %>% 
-  tab_options(row_group.background.color = hpp_pal(1)
-  ) %>% 
-  cols_label(
-    comp = "Comparison",
-    n_studies = "Studies",
-    participants = "Participants"
-  )
-
-
-```
-
-## Adverse events and fibromyalgia
-
-```{r}
-this_pw %>% 
-  filter(str_detect(condition, "fibro")) %>% 
-    select(condition, comp, n_studies, participants) %>% 
-  gt(
-    groupname_col = "condition"
-  ) %>% 
-  tab_header("Direct evidence by condition") %>% 
-  tab_options(row_group.background.color = hpp_pal(1)
-  ) %>% 
-  cols_label(
-    comp = "Comparison",
-    n_studies = "Studies",
-    participants = "Participants"
-  )
-
-
-
-```
-
-
-***
-
-```{r}
-this_pw %>% 
-  filter(str_detect(condition, "fibro")) %>% 
-  slice(1) %>% 
-  pull(pw_forest_file) %>% 
-  read_rds() +
-  coord_cartesian(xlim = c(-1, 7.5))
-
-```
-
-***
-
-```{r}
-this_pw %>% 
-  filter(str_detect(condition, "fibro")) %>% 
-  slice(2) %>% 
-  pull(pw_forest_file) %>% 
-  read_rds()
-```
-
-***
-
-```{r}
-this_pw %>% 
-  filter(str_detect(condition, "fibro")) %>% 
-  slice(3) %>% 
-  pull(pw_forest_file) %>% 
-  read_rds()
-```
-
-***
-```{r}
-this_pw %>% 
-  filter(str_detect(condition, "fibro")) %>% 
-  slice(4) %>% 
-  pull(pw_forest_file) %>% 
-  read_rds() +
-  coord_cartesian(xlim = c(-1, 5))
   
 ```
 
-## Adverse events and musculoskeletal
-
 ```{r}
-this_pw %>% 
-  filter(str_detect(condition, "muscu")) %>% 
-    select(condition, comp, n_studies, participants) %>% 
-  gt(
-    groupname_col = "condition"
-  ) %>% 
-  tab_header("Direct evidence by condition") %>% 
-  tab_options(row_group.background.color = hpp_pal(1)
-  ) %>% 
-  cols_label(
-    comp = "Comparison",
-    n_studies = "Studies",
-    participants = "Participants"
+  adverse_pw %>% 
+  filter(intervention == "amitriptyline") %>%
+  pull(mod) %>% 
+  pluck(1, "rma_mv") %>% 
+  pw_forest_plot(
+    m_type = "lor",
+    dir = adverse_dir
+  ) +
+  coord_cartesian(xlim = c(0, 1)) +
+  labs(
+    title = "Adverse events and amitriptyline",
+    subtitle = "Post-intervention antidepressant meta-analysis"
   )
-
-
-
+  
 ```
 
-***
 
 ```{r}
-this_pw %>% 
-  filter(str_detect(condition, "muscu")) %>% 
-  slice(1) %>% 
-  pull(pw_forest_file) %>% 
-  read_rds()
-```
-
-## Adverse events in patients with neuropathic conditions
-
-```{r}
-this_pw %>% 
-  filter(str_detect(condition, "muscu")) %>% 
-    select(condition, comp, n_studies, participants) %>% 
-  gt(
-    groupname_col = "condition"
-  ) %>% 
-  tab_header("Direct evidence by condition") %>% 
-  tab_options(row_group.background.color = hpp_pal(1)
-  ) %>% 
-  cols_label(
-    comp = "Comparison",
-    n_studies = "Studies",
-    participants = "Participants"
+  adverse_pw %>% 
+  filter(intervention == "milnacipran") %>%
+  pull(mod) %>% 
+  pluck(1, "rma_mv") %>% 
+  pw_forest_plot(
+    m_type = "lor",
+    dir = adverse_dir
+  ) +
+    labs(
+    title = "Adverse events and milnacipran",
+    subtitle = "Post-intervention antidepressant meta-analysis"
   )
 
 ```
 
-***
 
-```{r}
-this_pw %>% 
-  filter(str_detect(condition, "muscu")) %>% 
-  pull(pw_forest_file) %>% 
-  read_rds()
+
+## Serious adverse events
+
+```{r eval=FALSE}
+nma_adverse_serious <- 
+get_nma_dat(
+  mod_dat,
+  outcome == "serious_adverse",
+  timepoint == "post_int",
+  type %in% c("ad", "placebo")
+) %>% 
+  hpp_nma()
+
+write_rds(
+  nma_adverse_serious,
+  "exports/adverse/nma-serious.rds")
 
 ```
 
 
-## A final look at overall results
 
 ```{r}
-nma_adverse_plot + 
-  facet_grid(class ~ ., scales = "free", space = "free") +
-  coord_cartesian(xlim = c(-2, 4))
+read_rds("exports/adverse/nma-serious.rds") %>% 
+  hpp_forest(mod_type = "lor", dir = "lower") +
+  coord_cartesian(xlim = c(0, 5))
+
 
 ```
+
+
+### Duloxetine
+
+```{r}
+get_pw_dat(
+  dat = mod_dat,
+  outcome = "serious_adverse",
+  type = "ad",
+  timepoint = "post_int",
+  g1 = "duloxetine",
+  g2 = "placebo"
+) %>% 
+  mutate(
+    model_type = if_else(
+      is.na(model_type),
+      "lor",
+      model_type
+    ) 
+  ) %>% 
+  hpp_rma() %>% 
+  pw_forest_plot(
+  m_type = "lor",
+  dir = adverse_dir
+)
+
+```
+
+
+
+## Dropout due to adverse events
+
+```{r eval=FALSE}
+nma_adverse_dropout <- 
+get_nma_dat(
+  mod_dat,
+  outcome == "adverse_dropout",
+  timepoint == "post_int",
+  type %in% c("ad", "placebo")
+) %>% 
+  hpp_nma()
+
+write_rds(
+  nma_adverse_dropout,
+  "exports/adverse/nma-dropout.rds"
+)
+
+```
+
+
+```{r}
+nma_dropout <- read_rds("exports/adverse/nma-dropout.rds")
+
+hpp_forest(nma_dropout, mod_type = "lor", dir = "lower") +
+  coord_cartesian(
+    xlim = c(0, 10)
+  )
+
+```
+
 

@@ -1,0 +1,419 @@
+---
+title: "Summary of findings development"
+# geometry: "left=1cm,right=1cm,top=1cm,bottom=1cm"
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    fig_align: center
+  # pdf_document
+  # pdf_document:
+  #   extra_dependencies: "subfig"
+  # ioslides_presentation:
+  #   widescreen: true
+
+---
+
+```{r eval=FALSE, include=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE,
+  warning = FALSE,
+  echo = FALSE
+  )
+
+
+library(targets)
+library(kableExtra)
+library(adpain)
+library(multinma)
+library(tidyverse)
+tar_load(rob)
+tar_load(sof_acr)
+tar_load(timepoint_key)
+tar_load(type_key)
+
+
+conflicted::conflict_prefer("filter", "dplyr")
+
+
+
+```
+
+```{r eval=FALSE}
+sof_output <- function(this_mod) {
+  
+  # results table
+  sof_results_dat(this_mod) %>%
+    left_join(rob) %>% 
+    mutate(high_risk_p = round(high_risk_p, 2)) %>% 
+    mutate(intervention = str_to_sentence(intervention)) %>% 
+    select(intervention, 
+           # type,
+           # timepoint,
+           RCT = tab_rct,
+           participants,
+           rel = tab_rel, 
+           high_risk_p,
+           rank = tab_rank) %>% 
+    kable(
+      col.names = c(
+        "Intervention",
+        # "Type",
+        # "Timepoint",
+        "RCT",
+        "Participants",
+        "Relative effect (2)",
+        "p[ROB] (3)",
+        "Rank (2)"
+      )
+    ) %>% 
+    kable_styling() %>% 
+    add_footnote(
+      c("RCT := Number of randomised control trials", 
+        "Mean estimate with 95 per cent credible interval",
+        "p[ROB] := Proportion of high-bias observations"
+        ), 
+      notation = "number"
+    ) %>% 
+    column_spec(4, width = "4cm") %>% 
+    column_spec(6, width = "3cm")
+
+  }
+
+sof_output_acr <- function(this_mod, acr = 0.31) {
+
+  results <- sof_results_dat(this_mod) %>% 
+    left_join(rob) %>% 
+    mutate(
+      high_risk_p = high_risk_p %>% round(2)
+    )
+  
+  
+  acr_dat <-
+   results %>% 
+    sof_nnt(acr) %>%
+    select(intervention, nf_1000, nnt)
+  
+  results %>% 
+    left_join(acr_dat) %>%
+    mutate(nnt = glue("{nnt} of 1000")) %>% 
+    arrange(nnt) %>% 
+    select(intervention,
+           # type, 
+           # timepoint,
+           RCT = tab_rct,
+           participants,
+           # nf_1000,
+           NNTH = nnt,
+           rel = tab_rel, 
+           high_risk_p,
+           rank = tab_rank
+           ) %>% 
+    mutate(intervention = str_to_sentence(intervention)) %>% 
+    kable(
+            col.names = c(
+        "Intervention",
+        # "Type",
+        # "Timepoint",
+        "RCT (1)",
+        "Participants",
+        "NNTH (3)",
+        "Relative effect (2)",
+        "p[ROB] (4)",
+        "Rank (2)"
+      )
+
+    ) %>% 
+    kable_styling() %>% 
+    add_footnote(
+      c("RCT := Number of randomised control trials", 
+        "Mean estimate with 95 per cent credible interval",
+        "NNTH: Number needed to treat to harm",
+        "p[ROB] := Proportion of high-bias observations"
+        ), 
+      notation = "number"
+    ) %>% 
+    column_spec(5, width = "4cm") %>% 
+    column_spec(7, width = "3cm")
+}
+
+sof_output_styling <- function(so) {
+
+}
+
+sof_pico <- function(this_mod) {
+  this_mod$network$agd_arm %>% 
+    left_join(timepoint_key %>% select(timepoint, timepoint_label)) %>% 
+    left_join(type_key %>% select(type, type_label)) %>% 
+    summarise(
+      outcome = unique(outcome_label),
+      timepoint = unique(timepoint_label),
+      type = unique(type_label) %>% 
+        paste(collapse = ";") %>% str_remove(";*placebo;*"),
+      participants = sum(n),
+      studies = n_distinct(.study),
+      model = unique(model_text)
+    ) %>% 
+    mutate(
+      population = "adults with chronic pain",
+      comparator = "placebo"
+    ) %>% 
+    select(
+      population, outcome, type, timepoint, everything(), comparator 
+    ) %>% 
+    t() %>% 
+    as_data_frame(rownames = "descriptor") %>% 
+    rename(
+      details = V1
+    ) %>% 
+    mutate(across(everything(), str_to_sentence)) %>% 
+    kable(col.names = NULL) %>% 
+    kable_styling()
+    
+}
+
+```
+
+
+
+
+```{r eval=FALSE}
+
+sof_acr %>% 
+  left_join(outcome_key) %>% 
+  mutate(acr = round(acr, 2)) %>% 
+  select(Outcome = outcome_label, ACR = acr) %>% 
+  kable() %>% 
+  kable_styling(full_width = F)
+
+```
+
+
+## Pain intensity 
+
+### Change score
+
+```{r}
+
+this_mod <- 
+  read_rds("exports/pain_int/nma-cs.rds")
+
+sof_pico(this_mod)
+
+this_mod$network %>% plot()
+
+sof_output(this_mod) 
+
+
+```
+
+
+### Post-intervention
+
+```{r}
+
+this_mod <- read_rds("exports/pain_int/nma-pi.rds")
+sof_pico(this_mod)
+this_mod$network %>% plot()
+sof_output(this_mod) 
+
+
+```
+
+
+## Adverse 
+
+```{r }
+
+this_mod <- read_rds("exports/adverse/nma-adverse.rds")
+sof_pico(this_mod)
+this_mod$network %>% plot()
+this_acr <- 
+  sof_acr %>% 
+  filter(outcome == "adverse") %>% 
+  pull(acr)
+sof_output_acr(this_mod, this_acr) 
+
+
+```
+
+
+## Mood
+
+### Change score
+
+```{r }
+
+this_mod <- read_rds("exports/mood/nma-mod-cs.rds")
+sof_pico(this_mod)
+this_mod$network %>% plot()
+sof_output(this_mod) 
+
+```
+
+
+### Post-intervention
+
+```{r }
+
+this_mod <- read_rds("exports/mood/nma-mood.rds")
+sof_pico(this_mod)
+this_mod$network %>% plot()
+sof_output(this_mod) 
+
+
+```
+
+## Serious adverse
+
+
+```{r }
+
+this_mod <- read_rds("exports/adverse/nma-serious.rds")
+sof_pico(this_mod)
+this_mod$network %>% plot()
+this_acr <- 
+  sof_acr %>% 
+  filter(outcome == "adverse") %>% 
+  pull(acr)
+sof_output_acr(this_mod, this_acr) 
+
+
+```
+
+
+## Dropout due to adverse events
+
+
+```{r }
+
+this_mod <- read_rds("exports/adverse/nma-dropout.rds")
+sof_pico(this_mod)
+this_mod$network %>% plot()
+this_acr <- 
+  sof_acr %>% 
+  filter(outcome == "adverse_dropout") %>% 
+  pull(acr)
+sof_output_acr(this_mod, this_acr) 
+
+
+```
+
+
+## Substantial pain
+
+```{r }
+
+this_mod <- read_rds("exports/pain_sub/nma-sub.rds")
+sof_pico(this_mod)
+this_mod$network %>% plot()
+sof_output_acr(this_mod, outcome_acr("pain_sub")) 
+
+
+```
+
+
+## Moderate pain
+
+```{r}
+
+this_mod <- read_rds("exports/pain_mod/nma-mod.rds")
+sof_pico(this_mod)
+this_mod$network %>% plot()
+this_acr <- 
+  sof_acr %>% 
+  filter(outcome == "pain_mod") %>% 
+  pull(acr)
+
+sof_output_acr(this_mod,this_acr) 
+
+
+
+```
+
+
+## Sleep
+
+
+### Change score
+
+```{r }
+
+
+this_mod <- read_rds("exports/sleep/nma-mod-cs.rds")
+sof_pico(this_mod)
+this_mod$network %>% plot()
+sof_output(this_mod) 
+```
+
+
+### Post intervention
+
+```{r }
+
+this_mod <- read_rds("exports/sleep/nma-mod.rds")
+sof_pico(this_mod)
+this_mod$network %>% plot()
+sof_output(this_mod) 
+
+```
+
+## Withdrawal
+
+```{r}
+this_mod <- read_rds("exports/withdrawal/nma-mod.rds")
+sof_pico(this_mod)
+this_mod$network %>% plot()
+this_acr <- 
+  sof_acr %>% 
+  filter(outcome == "withdrawal") %>% 
+  pull(acr)
+sof_output_acr(this_mod, this_acr) 
+
+```
+
+## Quality of life
+
+
+### Change score
+
+```{r}
+this_mod <- read_rds("exports/qol/nma-mod-cs.rds")
+sof_pico(this_mod)
+this_mod$network %>% plot()
+sof_output(this_mod) 
+
+```
+
+### Post intervention
+
+```{r}
+this_mod <- read_rds("exports/qol/nma-mod.rds")
+sof_pico(this_mod)
+this_mod$network %>% plot()
+sof_output(this_mod) 
+
+```
+
+
+## Physical functioning
+
+### Change score
+
+```{r}
+this_mod <- read_rds("exports/physical/nma-mod-cs.rds")
+sof_pico(this_mod)
+this_mod$network %>% plot()
+sof_output(this_mod) 
+
+```
+
+### Post intervention
+
+```{r}
+this_mod <- read_rds("exports/physical/nma-mod.rds")
+sof_pico(this_mod)
+this_mod$network %>% plot()
+sof_output(this_mod) 
+
+```

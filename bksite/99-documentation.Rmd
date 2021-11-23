@@ -1,5 +1,13 @@
 # Documentation
 
+## ACR
+
+Let $k$ denote an outcome and $i$ an observation for that outcome, then the assumed comparator risk (ACR) is calculated:
+
+$$
+\Sigma_{ki} r_{ki} / \Sigma_{ki} n_{ki}
+$$
+
 ## Calculations for missing observations
 
 Where possible required statistics calculated from reported statistics.
@@ -154,3 +162,196 @@ Based on specific filters, we want to get data for NMA or for PW.
 For example, suppose we wish to 
 
 Let's check that our function works as it should. 
+
+## Tasks
+
+- [] Provide placebo vs duloxetine stratified by dose
+
+### Placebo vs duloxetine
+
+We have a function to identify the studies that contain both the comparators. Let's check it gives us the number of studies we expect.
+
+```{r}
+# Count number of studies that have duloxetine
+dulox_s <- 
+  mod_dat %>%
+  filter(
+    outcome == "pain_sub",
+    intervention == "duloxetine") %>% 
+  nrow()
+
+```
+
+```{r}
+
+pw_studies <- 
+mod_dat %>% 
+  filter(outcome == "pain_sub") %>% 
+  find_pw_studies("placebo", "duloxetine", .)
+
+# There should be less than or equal to studies
+length(pw_studies) <= dulox_s
+
+```
+
+Now that we have the studies that have both, we can capture the observations.
+
+```{r}
+pw_dat <- 
+mod_dat %>% 
+  filter(
+    outcome == "pain_sub",
+    intervention %in% c("duloxetine", "placebo"),
+    study %in% pw_studies
+  )
+
+
+```
+
+Check we have the right number of studies.
+
+```{r}
+pw_dat %>% 
+  summarise(studies = n_distinct(study)) %>% 
+  pull(studies)
+
+pw_studies %>% length()
+
+```
+
+Now we need to put the data into wide format. First check there is not more than one placebo per study.
+
+```{r}
+pw_dat %>% 
+  group_by(study) %>% 
+  count(intervention) %>% 
+  filter(intervention == "placebo") %>% 
+  filter(n > 1)
+
+```
+
+Since we have one placebo per study, we can bind the placebo data to the data as the control. Should label as control. Need to capture various things, and this is the tricky part. 
+
+```{r}
+pw_wide <-
+pw_dat %>% 
+  filter(intervention == "placebo") %>% 
+  rename_with(~ glue("{.x}_control"), everything()) %>% 
+  rename(study = study_control) %>% 
+  full_join(pw_dat %>% filter(intervention == "duloxetine"))
+
+
+
+```
+
+Check how many studies and arms are expected.
+
+```{r}
+pw_dat %>% 
+  group_by(study) %>% 
+  count(intervention) %>% 
+  filter(intervention != "placebo") %>% 
+  pull(n) %>% sum()
+
+# Compare with number of rows in wide
+
+pw_wide %>% nrow()
+
+```
+
+
+
+```{r}
+rma <- 
+get_pw_dat(
+    dat = mod_dat,
+    outcome = "pain_sub",
+             type = "ad",
+             timepoint = "post_int",
+             g1 = "placebo",
+             g2 = "duloxetine")  %>% 
+  hpp_rma()
+
+rma
+
+```
+
+Now we need a forest plot that can be stratified on class, dose, condition.
+
+```{r}
+# write equations
+
+pw_forest_plot()
+
+```
+
+### Getting NMA data
+
+Key thing for these is that we need to exclude single-arm studies.
+
+For example:
+
+```{r }
+nma_dat <- 
+    mod_dat %>%
+    filter(outcome == "pain_int",
+           timepoint == "post_int",
+           condition == "fibromyalgia",
+           dose == "standard") %>% 
+    group_by(study) %>%
+    mutate(
+      study_obs_count = length(study)
+    ) %>%
+    select(study_obs_count, everything()) %>%
+    arrange(study_obs_count, study) %>% 
+  ungroup()
+
+nma_dat %>%
+    filter(study_obs_count > 1)  %>%
+    ungroup() %>% 
+  nrow()
+
+  get_nma_dat(nma_dat) %>% 
+    nrow()
+
+nma_dat %>% 
+  count(outcome)
+  
+```
+
+```{r error=TRUE}
+set_agd_arm(nma_dat[1:3,], study = study, trt = intervention, r = r, n = n)
+
+
+```
+
+But if we filter out the single-row studies, we get the viable observations for the model, or an empty tibble for no viable observations.
+
+
+```{r}
+nma_dat[1:3,] %>% 
+  viable_observations()
+
+nma_dat %>% viable_observations()
+```
+
+```{r}
+nma_int_dat <-  
+  get_nma_dat(mod_dat, outcome == "pain_int",
+              dose == "low"
+              ) 
+
+nma_int_dat %>% 
+  nrow()
+
+nma_int_dat %>% 
+  viable_observations() %>% 
+  nrow()
+
+```
+
+
+```{r}
+# return a list object with model as one element and meta data as the rest
+```
+

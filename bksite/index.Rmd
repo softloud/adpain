@@ -9,8 +9,9 @@ bibliography: references.bib
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE,
                       fig.width = 10,
-                      fig.height = 5,
+                      fig.height = 8,
                       eval=TRUE,
+                      error = TRUE,
                       warnings = FALSE, 
                       message = FALSE)
 
@@ -23,6 +24,9 @@ suppressPackageStartupMessages({
   library(assertthat)
   library(glue)
   library(gt)
+  library(janitor)
+  library(broom)
+  library(adpain)
 })
 
 source("preamble.R")
@@ -64,9 +68,10 @@ summary_dat %>%
   ) %>% 
   tab_source_note("General pain grouping is currently being used, but this can be switched or duplicated for IASP.") %>% 
   tab_options(
+    # specify width in or percentage
+    table.width = px(400),
     table.font.size = 12,
-    row_group.background.color = hpp_pal(1),
-    table.layout = "auto"
+    row_group.background.color = hpp_pal(1)
   )
 
 ```
@@ -89,6 +94,7 @@ summary_dat %>%
   arrange(outcome_label, desc(participants), desc(studies)) %>% 
   gt() %>% 
   tab_options(
+    table.width = px(400),
     table.font.size = 12,
     row_group.background.color = hpp_pal(1)
   )

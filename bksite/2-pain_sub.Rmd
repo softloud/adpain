@@ -1,5 +1,123 @@
 # Substantial pain (50% reduction)
 
+```{r}
+sub_dir <- 
+  outcome_key %>% 
+  filter(outcome == "pain_sub") %>% 
+  pull(direction_of_improvement)
+
+```
+
+
+
+```{r}
+mod_dat %>% 
+  filter(str_detect(outcome, "pain_sub"),
+         intervention != "placebo") %>% 
+  group_by(outcome_label, type_label, timepoint_label) %>% 
+  summarise(
+    n_studies = n_distinct(study),
+    n_obs = length(study),
+    Participants = sum(n)
+  ) %>% 
+  ungroup() %>% 
+  gt() %>% 
+  tab_header("Number of studies and arms") %>% 
+  cols_label(
+    outcome_label = "Outcome",
+    n_studies = "Studies",
+    n_obs = "Arms",
+    type_label = "Comparison",
+    timepoint_label = "Timepoint"
+  ) %>% 
+  tab_source_note("Comparisons with less than 200 participants excluded")
+
+
+```
+
+
+## Antidepressant
+
+```{r eval=FALSE}
+nma_sub <- 
+get_nma_dat(
+  mod_dat,
+  outcome == "pain_sub",
+  timepoint == "post_int",
+  type %in% c("ad", "placebo")
+) %>% 
+  hpp_nma()
+
+write_rds(nma_sub, "exports/pain_sub/nma-sub.rds")
+
+```
+
+```{r}
+read_rds("exports/pain_sub/nma-sub.rds") %>%  
+hpp_forest(mod_type = "lor", dir = sub_dir) +
+  coord_cartesian(xlim = c(0, 5))
+
+```
+
+### Antidepressants: direct evidence
+
+```{r}
+sub_pw <- 
+  mod_dat %>%
+    filter(outcome == "pain_sub",
+           type %in% c("placebo", "ad"),
+           timepoint == "post_int") %>%
+  pw_int(
+    this_dat = .,
+    this_outcome = "pain_sub",
+         this_type = "ad",
+         this_timepoint = "post_int")
+
+```
+
+## Direct evidence and condition
+
+```{r}
+sub_pw_dulox <- 
+sub_pw %>% 
+  filter(intervention == "duloxetine")
+
+pw_forest_plot(
+  sub_pw_dulox$mod[[1]]$rma_mv,
+  sub_pw_dulox$dat[[1]],
+  m_type = "lor",
+  dir = sub_dir
+)
+
+```
+
+
+
+## Non-antidepressant pharmacological
+
+```{r eval=FALSE}
+nma_sub_nadph <- 
+get_nma_dat(
+  mod_dat,
+  outcome == "pain_sub",
+  timepoint == "post_int",
+  type %in% c("nad_pharm", "placebo")
+) %>% 
+  hpp_nma()
+
+write_rds(nma_sub_nadph, "exports/sub/nma-sub-nadph.rds")
+```
+
+```{r eval=FALSE}
+read_rds("exports/sub/nma-sub-nadph.rds") %>%  
+hpp_forest(mod_type = "lor", dir = "lower") 
+# +
+#   coord_cartesian(xlim = c(0, 5))
+
+```
+
+## from pres
+
 
 ```{r eval=FALSE}
 subgroup_type %>% 

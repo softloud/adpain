@@ -4,6 +4,8 @@ withr::with_dir(here::here(), {
   tar_load(obs_excluded)
   tar_load(obs_dat)
   tar_load(pw_results)
+  tar_load(mod_dat)
+  tar_load(adpain)
   source("R/hpp_themes.R")
   source("R/msg_mine.R")
 })
@@ -11,6 +13,11 @@ withr::with_dir(here::here(), {
 library(knitr)
 
 conflicted::conflict_prefer("filter", "dplyr")
+
+
+# the flexible way --------------------------------------------------------
+
+
 
 
 # the hard way ------------------------------------------------------------

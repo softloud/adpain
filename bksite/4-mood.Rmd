@@ -1,6 +1,126 @@
 # Mood
 
-# Mood
+```{r}
+# set mood direction
+dir_mood <-
+  outcome_key %>% 
+  filter(outcome == "mood") %>% 
+  pull(direction_of_improvement)
+
+```
+
+
+```{r}
+mod_dat %>% 
+  filter(str_detect(outcome, "mood"),
+         type != "placebo", timepoint != "baseline") %>% 
+  group_by(outcome_label, type_label, timepoint_label) %>% 
+  summarise(
+    n_studies = n_distinct(study),
+    n_obs = length(study),
+    Participants = sum(n)
+  ) %>% 
+  filter(Participants >= 200) %>% 
+  ungroup() %>% 
+  gt(
+    groupname_col = "type_label"
+  ) %>% 
+  tab_header("Number of studies and arms") %>% 
+  cols_label(
+    outcome_label = "Outcome",
+    n_studies = "Studies",
+    n_obs = "Arms",
+    type_label = "Comparison",
+    timepoint_label = "Timepoint"
+  ) %>% 
+  tab_source_note("Comparisons with less than 200 participants excluded") %>% 
+  tab_options(
+    row_group.background.color = hpp_pal(1)
+  )
+
+
+```
+
+## Antidepressant 
+
+### NMA: post-intervention 
+
+```{r eval=FALSE}
+nma_mood <- 
+get_nma_dat(
+  mod_dat,
+  outcome == "mood",
+  timepoint == "post_int",
+  type %in% c("ad", "placebo")
+) %>% 
+  hpp_nma()
+
+write_rds(nma_mood, "exports/mood/nma-mood.rds")
+
+```
+
+
+
+```{r}
+read_rds("exports/mood/nma-mood.rds") %>%  
+hpp_forest(mod_type = "lor", dir = dir_mood) +
+coord_cartesian(xlim = c(-1, 5)) +
+  labs(
+    title = "Mood and antidepressants",
+    subtitle = "Network meta-anlysis"
+  )
+
+```
+
+
+```{r}
+read_rds("exports/mood/nma-mood.rds") %>%  
+hpp_forest(mod_type = "lor", dir = dir_mood, this_class = "tca") +
+    labs(
+    title = "Mood and TCA",
+    subtitle = "Network meta-anlysis detail"
+  ) +
+  coord_cartesian(
+    xlim = c(0, 1.5)
+  )
+
+```
+
+### Antidepressant NMA: change score
+
+```{r eval=FALSE}
+nma_mood_cs <- 
+get_nma_dat(
+  mod_dat,
+  outcome == "mood",
+  timepoint == "change_score",
+  type %in% c("ad", "placebo")
+) %>% 
+  hpp_nma()
+
+write_rds(nma_mood, "exports/mood/nma-mood-cs.rds")
+
+```
+
+
+
+```{r}
+read_rds("exports/mood/nma-mood-cs.rds") %>%  
+hpp_forest(mod_type = "lor", dir = dir_mood) + coord_cartesian(xlim = c(0, 5)) +
+  labs(
+    title = "Mood and antidepressants NMA",
+    subtitle = "Change score"
+  )
+
+```
+
+### Direct evidence
+
+```{r}
+
+
+```
+
 
 
 ***
@@ -8,7 +128,7 @@
 
 ```{r }
 this_key_row <- 
-subgroup_type %>% 
+moodgroup_type %>% 
   filter(
     outcome == "mood",
     timepoint == "change_score",
@@ -27,7 +147,7 @@ write_pres_nma(nma_mood_cs, this_key_row)
 ```
 
 ```{r}
-nma_mood_cs <- read_rds("/home/cantabile/Documents/gh-repos/adpain/data/pres/subgroup_type_mood_ad_change_score_.rds")
+nma_mood_cs <- read_rds("/home/cantabile/Documents/gh-repos/adpain/data/pres/moodgroup_type_mood_ad_change_score_.rds")
 
 ```
 
@@ -49,7 +169,7 @@ nma_mood_cs_plot +
 
 ```{r }
 this_key_row <- 
-subgroup_type %>% 
+moodgroup_type %>% 
   filter(
     outcome == "mood",
     timepoint == "post_int",
@@ -68,7 +188,7 @@ write_pres_nma(nma_mood_pi, this_key_row)
 ```
 
 ```{r}
-nma_mood_pi <- read_rds("/home/cantabile/Documents/gh-repos/adpain/data/pres/subgroup_type_mood_ad_post_int_.rds")
+nma_mood_pi <- read_rds("/home/cantabile/Documents/gh-repos/adpain/data/pres/moodgroup_type_mood_ad_post_int_.rds")
 
 ```
 
@@ -92,7 +212,7 @@ this_pw <-
 pw_results %>% 
   filter(
     outcome == "mood",
-    subgroup == "subgroup_class",
+    moodgroup == "moodgroup_class",
     class == "snri"
   ) %>% 
   group_by(tar_group) %>% 
@@ -104,7 +224,7 @@ this_pw %>%
   select(timepoint, comp, n_studies, participants, int_2, class) %>% 
   rename_with(str_to_sentence, everything()) %>% 
   gt(groupname_col = "Int_2") %>% 
-  tab_header("Pairwise comparisons of substantial pain by dose") %>% 
+  tab_header("Pairwise comparisons of moodstantial pain by dose") %>% 
   cols_label(
     N_studies = "Studies",
     Comp = "Comparison"
@@ -122,7 +242,7 @@ this_pw %>%
 
 ```{r}
 this_key_row <- 
-subgroup_type %>% 
+moodgroup_type %>% 
   filter(
     outcome == "mood",
     timepoint == "change_score",
@@ -139,7 +259,7 @@ make_forest(nma_mood_cs, this_key_row, this_class = "snri")
 
 ```{r}
 this_key_row <- 
-subgroup_type %>% 
+moodgroup_type %>% 
   filter(
     outcome == "mood",
     timepoint == "post_int",

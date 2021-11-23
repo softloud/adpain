@@ -1,4 +1,168 @@
-# Pain intensity | continuous measure
+# Pain intensity (continuous measure)
+
+```{r}
+# set pain_int direction
+dir_pain_int <-
+  outcome_key %>% 
+  filter(outcome == "pain_int") %>% 
+  pull(direction_of_improvement)
+
+```
+
+
+```{r}
+mod_dat %>% 
+  filter(str_detect(outcome, "pain_int"),
+         type != "placebo", timepoint != "baseline") %>% 
+  group_by(outcome_label, type_label, timepoint_label) %>% 
+  summarise(
+    n_studies = n_distinct(study),
+    n_obs = length(study),
+    Participants = sum(n)
+  ) %>% 
+  filter(Participants >= 200) %>% 
+  ungroup() %>% 
+  gt(
+    groupname_col = "type_label"
+  ) %>% 
+  tab_header("Number of studies and arms") %>% 
+  cols_label(
+    outcome_label = "Outcome",
+    n_studies = "Studies",
+    n_obs = "Arms",
+    type_label = "Comparison",
+    timepoint_label = "Timepoint"
+  ) %>% 
+  tab_source_note("Comparisons with less than 200 participants excluded") %>% 
+  tab_options(
+    row_group.background.color = hpp_pal(1)
+  )
+
+
+```
+
+## Summary of findings: post-intervention 
+
+```{r}
+nma_pi <- read_rds("exports/pain_int/nma-pi.rds")
+
+
+```
+
+```{r}
+this_mod <- tar_read(nma_mod_dev)
+
+sof_results <- sof_results_dat(this_mod)
+
+this_int <- sof_results %>%
+  pull(intervention) %>%
+  paste(collapse = "; ") %>%
+  str_to_sentence()
+
+```
+
+```{r}
+meta <-
+  sof_meta_tab(this_mod, this_int) %>%
+  # eventually move to function
+  t() %>%
+  as_tibble(rownames = "category") %>%
+  rename(
+    desc = V1
+  ) %>%
+  mutate(across(everything(), str_to_sentence))
+
+
+
+```
+
+
+
+### PICO
+
+```{r}
+  meta %>% 
+  kable() %>% 
+  kable_styling(
+    full_width = F,
+    font_size = 6
+  ) %>% 
+  column_spec(2, 
+           width = "4cm")
+
+```
+
+
+
+
+
+
+## Antidepressant NMA
+
+```{r eval=FALSE}
+nma_pain_int <- 
+get_nma_dat(
+  mod_dat,
+  outcome == "pain_int",
+  timepoint == "post_int",
+  type %in% c("ad", "placebo")
+) %>% 
+  hpp_nma()
+
+write_rds(nma_pain_int, "exports/pain_int/nma-pi.rds")
+
+```
+
+
+
+```{r}
+read_rds("exports/pain_int/nma-pi.rds") %>%  
+hpp_forest(mod_type = "lor", dir = dir_pain_int) +
+coord_cartesian(xlim = c(-1, 5)) +
+  labs(
+    title = "Pain intensity and antidepressants",
+    subtitle = "Post-intervention network meta-anlysis"
+  )
+
+```
+
+
+
+```{r eval=FALSE}
+nma_pain_int_cs <- 
+get_nma_dat(
+  mod_dat,
+  outcome == "pain_int",
+  timepoint == "change_score",
+  type %in% c("ad", "placebo")
+) %>% 
+  hpp_nma()
+
+write_rds(nma_pain_int_cs, "exports/pain_int/nma-cs.rds")
+
+```
+
+
+
+```{r}
+read_rds("exports/pain_int/nma-cs.rds") %>%  
+hpp_forest(mod_type = "lor", dir = dir_pain_int) +
+coord_cartesian(xlim = c(-1, 5)) +
+  labs(
+    title = "Pain intensity and antidepressants",
+    subtitle = "Change score network meta-anlysis"
+  )
+
+```
+
+### Direct evidence
+
+```{r}
+
+
+```
+
+
 
 
 ***
