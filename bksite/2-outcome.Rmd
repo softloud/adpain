@@ -1,0 +1,169 @@
+
+```{r}
+# functions used in all outcomes here for dev
+source("R/rep_output.R")
+
+library(metafor)
+library(adpain)
+library(kableExtra)
+library(patchwork)
+
+
+tar_load(oti_pw)
+tar_load(oti_results)
+tar_load(oti_sof)
+tar_load(o_nma_key)
+
+
+```
+
+# Substantial pain
+
+```{r}
+# set outcome
+this_outcome <- "pain_sub"
+this_tp <- "post_int"
+
+```
+
+```{r}
+# set mod
+this_mod <- get_o_nma(this_outcome, this_tp)
+
+```
+
+
+## Summary of findings
+
+```{r}
+sof_pico(this_mod)
+
+```
+
+```{r }
+suppressWarnings(this_mod$network %>% plot())
+```
+
+
+```{r}
+rep_sof(this_outcome)
+
+```
+
+
+```{r}
+
+sof_output_acr(this_mod, outcome_acr("pain_sub"))
+
+```
+
+## Pairwise comparisons
+
+```{r }
+
+this_pw <-
+oti_pw %>%
+  filter(outcome == this_outcome)
+
+this_pw_mod <-
+  this_pw$pw_rma %>% map("rma_mv")
+
+
+```
+
+```{r out.width="50%"}
+# fig.width=4,fig.height=4,}
+for(i in 1:nrow(this_pw)) {
+  title <- glue("{this_pw$outcome[[i]]} {this_pw$timepoint[[i]]}: {this_pw$intervention[[i]]}") 
+  forest(this_pw_mod[[i]], main = title) 
+  funnel(this_pw_mod[[i]], main = title)
+}
+
+```
+
+
+
+# Mood
+
+## Change score
+
+```{r}
+# set outcome
+this_outcome <- "mood"
+this_tp <- "change_score"
+
+```
+
+```{r}
+# set mod
+this_mod <- get_o_nma(this_outcome, this_tp)
+
+```
+
+
+## CS: Summary of findings
+
+```{r}
+sof_pico(this_mod)
+
+```
+
+```{r }
+suppressWarnings(this_mod$network %>% plot())
+```
+
+
+```{r}
+rep_sof(this_outcome)
+
+```
+
+## CS: Pairwise comparisons
+
+```{r eval=FALSE}
+oti_pw %>% 
+  filter(outcome == this_outcome,
+         timepoint == this_tp) %>% 
+  pluck("pw_rma") %>% 
+  map("rma_mv") %>% 
+  map(function(mod) {
+    forest(mod) # + funnel(mod)
+  })
+
+
+```
+
+
+## Post-intervention
+
+```{r}
+# set outcome
+this_outcome <- "mood"
+this_tp <- "post_int"
+
+```
+
+```{r}
+# set mod
+this_mod <- get_o_nma(this_outcome, this_tp)
+
+```
+
+
+## Summary of findings
+
+```{r}
+sof_pico(this_mod)
+
+```
+
+```{r }
+suppressWarnings(this_mod$network %>% plot())
+```
+
+
+```{r}
+rep_sof(this_outcome)
+
+```
+

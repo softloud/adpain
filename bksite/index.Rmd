@@ -33,151 +33,41 @@ source("preamble.R")
 
 ```
 
-
 # Overview
 
-```{r make summary data}
+## Subgroups
 
-summary_dat <- obs_dat %>% 
-  filter(timepoint != "baseline")
+### Subgroups by timepoint
+
+We were deliberately broad in the protocol as it wasn't clear how conventional, or feasible, it was to study participants over multiple timepoints. 
+
+In addition, some studies reported change scores, as opposed to post-intervention outcomes. We are currently doing some reading on how to combine these statistics, but are currently dividing change score and post-intervention analyses into separate subgroups. 
+
+
+```{r}
+tps <-
+timepoint_key %>% 
+  drop_na() %>% 
+  pull(timepoint_label) %>% 
+  paste(collapse = "; ")
 
 ```
 
+We collected data at timepoints `r tps`. However, some studies were excluded due to not reporting the statistics required to include in meta-analysis (e.g., sample size). When we look at the timepoints for each outcome, we see that post-intervention is the only timepoint routinely reported:
 
-
-## Observations included
-
-```{r observations tab}
-summary_dat %>%
-  filter(timepoint != "baseline") %>% 
-  group_by(outcome_label, intervention_grouping) %>% 
+```{r}
+mod_dat %>% 
+  group_by(outcome, timepoint) %>% 
   summarise(
-    studies = n_distinct(study_id),
-    n_interventions = n_distinct(intervention),
-    interventions = unique(intervention) %>% paste(collapse = ", "),
-    n_conditions = n_distinct(general_pain_grouping),
-    conditions = unique(general_pain_grouping) %>% paste(collapse = ", "),
-    timepoint = unique(timepoint) %>% paste(collapse = ", "),
-    change_score = sum(change_score, na.rm = TRUE),
-    participants = sum(n, na.rm = TRUE)
+    n_studies = n_distinct(study),
+    n_participants = sum(n)
   ) %>% 
-  arrange(outcome_label, desc(participants), desc(studies)) %>% 
   gt() %>% 
-  tab_header(
-    "Outcome summary of interventions, studies, and conditions"
-  ) %>% 
-  tab_source_note("General pain grouping is currently being used, but this can be switched or duplicated for IASP.") %>% 
-  tab_options(
-    # specify width in or percentage
-    table.width = px(400),
-    table.font.size = 12,
-    row_group.background.color = hpp_pal(1)
-  )
-
-```
-
-## Summary by condition
-
-```{r condition tab}
-
-summary_dat %>% 
-  group_by(
-    outcome_label, general_pain_grouping, time_no_change
-  ) %>% 
-  summarise(
-    studies = n_distinct(study_id),
-    participants = sum(n, na.rm = TRUE),
-    interventions = unique(intervention) %>% paste(collapse = ";")
-  ) %>% 
-  ungroup() %>% 
-  group_by(outcome_label) %>% 
-  arrange(outcome_label, desc(participants), desc(studies)) %>% 
-  gt() %>% 
-  tab_options(
-    table.width = px(400),
-    table.font.size = 12,
-    row_group.background.color = hpp_pal(1)
-  )
+  hpp_tab()
   
-
-
 ```
 
-## Summary by class
+### Interventions
 
-
-```{r class tab}
-
-summary_dat %>% 
-  group_by(
-    outcome_label, time_no_change, ad_class
-  ) %>% 
-  filter(
-    !is.na(ad_class),
-    ad_class != "n/a"
-  ) %>% 
-  summarise(
-    studies = n_distinct(study_id),
-    participants = sum(n, na.rm = TRUE),
-    interventions = unique(intervention) %>% paste(collapse = ";")
-  ) %>% 
-  ungroup() %>% 
-  group_by(outcome_label) %>% 
-  arrange(outcome_label, desc(participants), desc(studies)) %>% 
-  gt() %>% 
-  tab_options(
-    table.font.size = 12,
-    row_group.background.color = hpp_pal(1)
-  )
-  
-
-
-```
-
-## Summmary by intervention
-
-```{r intervention tab}
-summary_dat %>% 
-  filter(
-    intervention_grouping == "antidepressant"
-  ) %>% 
-  group_by(outcome_label, intervention) %>% 
-  summarise(
-    studies = n_distinct(study_id),
-    participants = sum(n, na.rm = TRUE)
-  ) %>% 
-  arrange(outcome_label, desc(participants)) %>%
-  gt()  %>% 
-  tab_options(
-    table.font.size = 12,
-    row_group.background.color = hpp_pal(1)
-  )
-  
-
-
-```
-
-
-
-## Comparisons
-
-```{r pw comp tab, eval=FALSE, message=FALSE}
-# fix later
-
-tar_read(pw_type_group) %>%
-  left_join(tar_read(r_outcome_key)) %>% 
-  group_by(outcome_label, comp_grouping, interventions, timepoint) %>% 
-  summarise(
-    studies = n_distinct(study_id)
-  ) %>% 
-  arrange(outcome_label, desc(studies)) %>% 
-  ungroup() %>%
-  gt(groupname_col ="outcome") %>% 
-  tab_header("Comparison groups used in pairwise models") %>% 
-  tab_options(
-    row_group.background.color = hpp_pal(1)
-  )
-
-```
-
+- more duloxetine than any others
 

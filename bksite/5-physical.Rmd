@@ -1,6 +1,0 @@
-# Physical function
-
-```{r results='asis', warning=FALSE}
-makechapter("physical")  #<- sink
-```
-
