@@ -1,0 +1,129 @@
+---
+title: "smd question"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r pkgs}
+library(tidyverse)
+library(targets)
+library(multinma)
+
+```
+
+
+```{r eval=FALSE}
+# set up data
+dat <- 
+  tar_read(mod_dat) %>% 
+  filter(outcome == "mood", timepoint == "change_score", study != "creed 2003") %>% 
+  select(
+    study, intervention, arm, mean, sd, se, n
+  ) %>% 
+  mutate(
+    intervention = fct_relevel(intervention, "placebo", "cbt", "cbt and milnacipran")
+  ) %>% 
+  arrange(study, intervention) %>% 
+  group_by(study) %>% 
+  # Does it matter which is designated the treatment reference?
+  mutate(ref = first(arm))
+
+write_rds(dat, "example-smd-dat.rds")
+```
+
+```{r}
+# import example dat
+dat <- read_rds("example-smd-dat.rds")
+
+```
+
+
+# How to compute standardised mean difference using multinma?
+
+```{r}
+# go wide
+(control_dat <-  
+dat %>% 
+  filter(arm == ref) %>% 
+  select(-ref, -arm, -intervention) %>% 
+  rename_with(
+    ~glue("{.x}_comp"),
+    c(mean, sd, se, n)
+  )) 
+
+(wide_dat <- 
+right_join(control_dat, dat %>% filter(arm != ref))) 
+
+smd_calc <- 
+wide_dat %>% 
+  escalc(
+    measure = "SMD",
+    m1i = mean,
+    sd1i = sd,
+    n1i = n,
+    m2i = mean_comp,
+    sd2i = sd_comp,
+    n2i = n_comp,
+    data = .,
+    slab = study
+  ) %>% 
+  select(study, 
+         intervention, 
+         smd = yi, 
+         smd_v = vi,
+         n,
+         arm,
+         ref) 
+
+smd_calc %>% head()
+
+(contrast_dat <- 
+smd_calc %>% 
+  bind_rows(
+dat %>% 
+  filter(arm == ref) %>% 
+  select(study, intervention, se, n, ref, arm), .
+      ) %>% 
+  mutate(
+    diff = ifelse(arm == ref, NA, smd),
+    diff_se = ifelse(arm == ref, se, sqrt(smd_v))
+    ) %>% 
+  ungroup() %>% 
+  select(study, intervention, diff, diff_se, n, ref, arm)) 
+
+
+```
+
+
+```{r}
+# set network
+net <- 
+  set_agd_contrast(
+  data = contrast_dat,
+  study = study,
+  trt = intervention,
+  y = diff,
+  se = diff_se,
+  sample_size = n,
+  trt_ref = "placebo"
+) 
+
+
+# network plots fine!
+plot(net)
+
+# model is empty?
+mod <- 
+  nma(
+    net,
+    trt_effects = "random"
+  )
+
+mod
+```
+
+
+
