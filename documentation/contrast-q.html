@@ -191,129 +191,27 @@ write_rds(dat, &quot;example-smd-dat.rds&quot;)</code></pre>
 dat &lt;- read_rds(&quot;example-smd-dat.rds&quot;)</code></pre>
 <div id="how-to-compute-standardised-mean-difference-using-multinma" class="section level1">
 <h1>How to compute standardised mean difference using multinma?</h1>
-<pre class="r"><code># go wide
-(control_dat &lt;-  
-dat %&gt;% 
-  filter(arm == ref) %&gt;% 
-  select(-ref, -arm, -intervention) %&gt;% 
-  rename_with(
-    ~glue(&quot;{.x}_comp&quot;),
-    c(mean, sd, se, n)
-  )) </code></pre>
-<pre><code>## # A tibble: 37 × 5
-## # Groups:   study [37]
-##    study          mean_comp sd_comp se_comp n_comp
-##    &lt;chr&gt;              &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;  &lt;int&gt;
-##  1 ang 2013           -3.19    4.30   1.11      15
-##  2 arnold 2002         1.1     2.5    0.490     26
-##  3 arnold 2004        -0.52   10.1    1.05      92
-##  4 arnold 2005        -2.6    10.5    1        110
-##  5 arnold 2010: 1     -1.81    9.32   0.83     126
-##  6 arnold 2010: 2      0.5    12.2    0.54     509
-##  7 arnold 2010: 3     -1.3    11.4    0.7      267
-##  8 arnold 2012: 1     -3.91    7.06   0.61     134
-##  9 atkinson 1998       0.24    6.35   1.00      40
-## 10 branco 2010         0.23    9.08   0.43     446
-## # … with 27 more rows</code></pre>
-<pre class="r"><code>(wide_dat &lt;- 
-right_join(control_dat, dat %&gt;% filter(arm != ref))) </code></pre>
-<pre><code>## Joining, by = &quot;study&quot;</code></pre>
-<pre><code>## # A tibble: 55 × 12
-## # Groups:   study [37]
-##    study  mean_comp sd_comp se_comp n_comp intervention arm     mean    sd    se
-##    &lt;chr&gt;      &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;  &lt;int&gt; &lt;fct&gt;        &lt;chr&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
-##  1 ang 2…     -3.19    4.30   1.11      15 cbt and mil… cogni… -2.65  4.37  1.06
-##  2 ang 2…     -3.19    4.30   1.11      15 milnacipran  milna… -2.93  4.41  1.07
-##  3 arnol…      1.1     2.5    0.490     26 fluoxetine   fluox… -0.9   2.8   0.56
-##  4 arnol…     -0.52   10.1    1.05      92 duloxetine   dulox… -2.98  9.92  1.04
-##  5 arnol…     -2.6    10.5    1        110 duloxetine   dulox… -7.3  10.5   1   
-##  6 arnol…     -2.6    10.5    1        110 duloxetine   dulox… -6.7  10.3   1   
-##  7 arnol…     -1.81    9.32   0.83     126 esreboxetine esreb… -4.25  9.32  0.83
-##  8 arnol…      0.5    12.2    0.54     509 milnacipran  milna… -1.54 12.3   0.54
-##  9 arnol…     -1.3    11.4    0.7      267 duloxetine   dulox… -5.1  11.4   0.7 
-## 10 arnol…     -3.91    7.06   0.61     134 duloxetine   dulox… -5.47  7.10  0.6 
-## # … with 45 more rows, and 2 more variables: n &lt;int&gt;, ref &lt;chr&gt;</code></pre>
-<pre class="r"><code>smd_calc &lt;- 
-wide_dat %&gt;% 
-  escalc(
-    measure = &quot;SMD&quot;,
-    m1i = mean,
-    sd1i = sd,
-    n1i = n,
-    m2i = mean_comp,
-    sd2i = sd_comp,
-    n2i = n_comp,
-    data = .,
-    slab = study
-  ) %&gt;% 
-  select(study, 
-         intervention, 
-         smd = yi, 
-         smd_v = vi,
-         n,
-         arm,
-         ref) 
-
-smd_calc %&gt;% head()</code></pre>
-<pre><code>##         study        intervention        smd      smd_v   n 
-## 1    ang 2013 cbt and milnacipran  0.1213588 0.12572032  17 
-## 2    ang 2013         milnacipran  0.0581344 0.12554300  17 
-## 3 arnold 2002          fluoxetine -0.7427642 0.08387035  25 
-## 4 arnold 2004          duloxetine -0.2450573 0.02202266  91 
-## 5 arnold 2005          duloxetine -0.4455746 0.01854910 111 
-## 6 arnold 2005          duloxetine -0.3921998 0.01879113 107 
-##                                                  arm 
-## 1 cognitive behavioral therapy and milnacipran 100mg 
-## 2                                  milnacipran 100mg 
-## 3                                 fluoxetine 10-80mg 
-## 4                                   duloxetine 120mg 
-## 5                                    duloxetine 60mg 
-## 6                                   duloxetine 120mg 
-##                            ref 
-## 1 cognitive behavioral therapy 
-## 2 cognitive behavioral therapy 
-## 3                      placebo 
-## 4                      placebo 
-## 5                      placebo 
-## 6                      placebo</code></pre>
-<pre class="r"><code>(contrast_dat &lt;- 
-smd_calc %&gt;% 
-  bind_rows(
-dat %&gt;% 
-  filter(arm == ref) %&gt;% 
-  select(study, intervention, se, n, ref, arm), .
-      ) %&gt;% 
-  mutate(
-    diff = ifelse(arm == ref, NA, smd),
-    diff_se = ifelse(arm == ref, se, sqrt(smd_v))
-    ) %&gt;% 
-  ungroup() %&gt;% 
-  select(study, intervention, diff, diff_se, n, ref, arm)) </code></pre>
-<pre><code>## # A tibble: 92 × 7
-##    study          intervention  diff diff_se     n ref            arm           
-##    &lt;chr&gt;          &lt;fct&gt;        &lt;dbl&gt;   &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;          &lt;chr&gt;         
-##  1 ang 2013       cbt             NA   1.11     15 cognitive beh… cognitive beh…
-##  2 arnold 2002    placebo         NA   0.490    26 placebo        placebo       
-##  3 arnold 2004    placebo         NA   1.05     92 placebo        placebo       
-##  4 arnold 2005    placebo         NA   1       110 placebo        placebo       
-##  5 arnold 2010: 1 placebo         NA   0.83    126 placebo        placebo       
-##  6 arnold 2010: 2 placebo         NA   0.54    509 placebo        placebo       
-##  7 arnold 2010: 3 placebo         NA   0.7     267 placebo        placebo       
-##  8 arnold 2012: 1 placebo         NA   0.61    134 placebo        placebo       
-##  9 atkinson 1998  placebo         NA   1.00     40 placebo        placebo       
-## 10 branco 2010    placebo         NA   0.43    446 placebo        placebo       
-## # … with 82 more rows</code></pre>
+<pre class="r"><code>dat &lt;- dat %&gt;% 
+  mutate(arm = 1:n(),
+         mi = sum(n) - n(),
+         cmi = exp(lgamma(mi/2) - log(sqrt(mi/2)) - lgamma((mi - 1)/2)),
+         sdpool = sqrt(weighted.mean(sd^2, n - 1)),
+         smd = if_else(arm == 1, NA_real_, (mean - first(mean)) / sdpool * cmi),
+         se_smd = if_else(arm == 1,
+                          se / sdpool * cmi,
+                          sqrt((n + first(n))/(n * first(n)) + smd^2 / (2 * (n + first(n))))))</code></pre>
 <pre class="r"><code># set network
 net &lt;- 
   set_agd_contrast(
-  data = contrast_dat,
-  study = study,
-  trt = intervention,
-  y = diff,
-  se = diff_se,
-  sample_size = n,
-  trt_ref = &quot;placebo&quot;
-) 
+    data = dat,
+    study = study,
+    trt = intervention,
+    y = smd,
+    se = se_smd,
+    sample_size = n,
+    trt_ref = &quot;placebo&quot;
+  ) 
+
 
 
 # network plots fine!
@@ -330,12 +228,153 @@ mod &lt;-
 <pre><code>## Warning: Prior distributions were left at default values:
 ## prior_trt = normal(location = 0, scale = 10)
 ## prior_het = half_normal(location = 0, scale = 5)</code></pre>
-<pre><code>## Error in new_CppObject_xp(fields$.module, fields$.pointer, ...) : 
-##   Exception: model_normal_namespace::model_normal: agd_contrast_Sigma is not positive definite.  (in &#39;/include/data_common.stan&#39; at line 26; included from &#39;model_normal&#39; at line 6)</code></pre>
-<pre><code>## failed to create the sampler; sampling not done</code></pre>
+<pre><code>## 
+## SAMPLING FOR MODEL &#39;normal&#39; NOW (CHAIN 1).
+## Chain 1: 
+## Chain 1: Gradient evaluation took 9.6e-05 seconds
+## Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.96 seconds.
+## Chain 1: Adjust your expectations accordingly!
+## Chain 1: 
+## Chain 1: 
+## Chain 1: Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 1: Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 1: Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 1: Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 1: Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 1: Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 1: Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 1: Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 1: Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 1: Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 1: Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 1: Iteration: 2000 / 2000 [100%]  (Sampling)
+## Chain 1: 
+## Chain 1:  Elapsed Time: 2.04976 seconds (Warm-up)
+## Chain 1:                1.34204 seconds (Sampling)
+## Chain 1:                3.3918 seconds (Total)
+## Chain 1: 
+## 
+## SAMPLING FOR MODEL &#39;normal&#39; NOW (CHAIN 2).
+## Chain 2: 
+## Chain 2: Gradient evaluation took 6e-05 seconds
+## Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.6 seconds.
+## Chain 2: Adjust your expectations accordingly!
+## Chain 2: 
+## Chain 2: 
+## Chain 2: Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 2: Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 2: Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 2: Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 2: Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 2: Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 2: Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 2: Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 2: Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 2: Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 2: Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 2: Iteration: 2000 / 2000 [100%]  (Sampling)
+## Chain 2: 
+## Chain 2:  Elapsed Time: 2.33375 seconds (Warm-up)
+## Chain 2:                1.35639 seconds (Sampling)
+## Chain 2:                3.69015 seconds (Total)
+## Chain 2: 
+## 
+## SAMPLING FOR MODEL &#39;normal&#39; NOW (CHAIN 3).
+## Chain 3: 
+## Chain 3: Gradient evaluation took 5e-05 seconds
+## Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.5 seconds.
+## Chain 3: Adjust your expectations accordingly!
+## Chain 3: 
+## Chain 3: 
+## Chain 3: Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 3: Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 3: Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 3: Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 3: Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 3: Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 3: Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 3: Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 3: Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 3: Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 3: Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 3: Iteration: 2000 / 2000 [100%]  (Sampling)
+## Chain 3: 
+## Chain 3:  Elapsed Time: 2.1557 seconds (Warm-up)
+## Chain 3:                1.36171 seconds (Sampling)
+## Chain 3:                3.51741 seconds (Total)
+## Chain 3: 
+## 
+## SAMPLING FOR MODEL &#39;normal&#39; NOW (CHAIN 4).
+## Chain 4: 
+## Chain 4: Gradient evaluation took 6.6e-05 seconds
+## Chain 4: 1000 transitions using 10 leapfrog steps per transition would take 0.66 seconds.
+## Chain 4: Adjust your expectations accordingly!
+## Chain 4: 
+## Chain 4: 
+## Chain 4: Iteration:    1 / 2000 [  0%]  (Warmup)
+## Chain 4: Iteration:  200 / 2000 [ 10%]  (Warmup)
+## Chain 4: Iteration:  400 / 2000 [ 20%]  (Warmup)
+## Chain 4: Iteration:  600 / 2000 [ 30%]  (Warmup)
+## Chain 4: Iteration:  800 / 2000 [ 40%]  (Warmup)
+## Chain 4: Iteration: 1000 / 2000 [ 50%]  (Warmup)
+## Chain 4: Iteration: 1001 / 2000 [ 50%]  (Sampling)
+## Chain 4: Iteration: 1200 / 2000 [ 60%]  (Sampling)
+## Chain 4: Iteration: 1400 / 2000 [ 70%]  (Sampling)
+## Chain 4: Iteration: 1600 / 2000 [ 80%]  (Sampling)
+## Chain 4: Iteration: 1800 / 2000 [ 90%]  (Sampling)
+## Chain 4: Iteration: 2000 / 2000 [100%]  (Sampling)
+## Chain 4: 
+## Chain 4:  Elapsed Time: 2.04354 seconds (Warm-up)
+## Chain 4:                1.37255 seconds (Sampling)
+## Chain 4:                3.41608 seconds (Total)
+## Chain 4:</code></pre>
 <pre class="r"><code>mod</code></pre>
 <pre><code>## A random effects NMA with a normal likelihood (identity link).
-## Stan model &#39;normal&#39; does not contain samples.</code></pre>
+## Inference for Stan model: normal.
+## 4 chains, each with iter=2000; warmup=1000; thin=1; 
+## post-warmup draws per chain=1000, total post-warmup draws=4000.
+## 
+##                              mean se_mean   sd   2.5%    25%    50%    75%
+## d[abt-894]                  -0.12    0.00 0.22  -0.55  -0.27  -0.12   0.03
+## d[cbt]                      -0.19    0.01 0.48  -1.16  -0.51  -0.19   0.11
+## d[cbt and milnacipran]      -0.06    0.01 0.48  -1.01  -0.38  -0.06   0.25
+## d[citalopram]               -0.15    0.01 0.30  -0.71  -0.36  -0.14   0.06
+## d[desipramine]              -0.22    0.01 0.39  -0.98  -0.47  -0.21   0.06
+## d[desipramine + lidocaine]   0.03    0.01 0.38  -0.72  -0.21   0.03   0.28
+## d[duloxetine]               -0.15    0.00 0.06  -0.27  -0.19  -0.15  -0.11
+## d[esreboxetine]             -0.26    0.00 0.29  -0.83  -0.45  -0.26  -0.06
+## d[fluoxetine]               -0.74    0.01 0.40  -1.53  -1.00  -0.73  -0.47
+## d[imipramine]               -1.07    0.01 0.39  -1.84  -1.33  -1.07  -0.81
+## d[lidocaine]                 0.18    0.01 0.39  -0.60  -0.08   0.18   0.44
+## d[milnacipran]              -0.13    0.00 0.15  -0.43  -0.23  -0.13  -0.04
+## d[mirtazapine]              -0.48    0.00 0.28  -1.03  -0.66  -0.48  -0.30
+## d[nortriptyline]             0.63    0.01 0.36  -0.07   0.38   0.64   0.88
+## d[pregabalin]                0.78    0.00 0.21   0.36   0.64   0.77   0.92
+## lp__                       -54.38    0.20 7.12 -69.04 -59.12 -54.14 -49.36
+## tau                          0.27    0.00 0.04   0.20   0.24   0.26   0.29
+##                             97.5% n_eff Rhat
+## d[abt-894]                   0.32  2552    1
+## d[cbt]                       0.73  2801    1
+## d[cbt and milnacipran]       0.88  2343    1
+## d[citalopram]                0.43  3300    1
+## d[desipramine]               0.50  3078    1
+## d[desipramine + lidocaine]   0.79  3062    1
+## d[duloxetine]               -0.03  1051    1
+## d[esreboxetine]              0.30  3520    1
+## d[fluoxetine]                0.03  4580    1
+## d[imipramine]               -0.32  3710    1
+## d[lidocaine]                 0.96  3270    1
+## d[milnacipran]               0.17  1071    1
+## d[mirtazapine]               0.06  3466    1
+## d[nortriptyline]             1.32  4249    1
+## d[pregabalin]                1.21  2328    1
+## lp__                       -41.08  1216    1
+## tau                          0.34  1808    1
+## 
+## Samples were drawn using NUTS(diag_e) at Mon Dec 20 19:23:25 2021.
+## For each parameter, n_eff is a crude measure of effective sample size,
+## and Rhat is the potential scale reduction factor on split chains (at 
+## convergence, Rhat=1).</code></pre>
 </div>
 
 

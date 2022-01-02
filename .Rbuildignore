@@ -8,3 +8,15 @@
 ^docs$
 ^presentations$
 ^exports$
+^images$
+^report$
+^plot-fns\.R$
+^data/get-data\.R$
+^data-raw$
+^outputs$
+^\.*cache\.*$
+^\.*pres\.*$
+^2021-10-21-presentation_cache$
+^2021-10-21-presentation$
+^\.*\\.Rmd$
+^\.*\\.html$

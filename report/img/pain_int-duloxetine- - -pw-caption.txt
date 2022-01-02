@@ -1,0 +1,1 @@
+Outcome: pain intensity (continuous measure). Measure: change score. Intervention (duloxetine) compared with (placebo). Participants: 0. Direction of improvement: lower. Meta-analysis results: Q = 288.11; df = 73; p $<$ .01; $I^2$ = 75.51 per cent; $\tau^2$ = 0.45. Regression test for funnel plot asymmetry was not significant: -0.15 (CI -1.04 to 0.74) with p = 0.89 and z = -0.13.

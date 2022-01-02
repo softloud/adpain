@@ -1,0 +1,1 @@
+Outcome: dropout due to adverse events. Measure: post-intervention. Intervention (amitriptyline) compared with (placebo) Participants: 1115. Direction of improvement: lower. Meta-analysis results: Q = 5.11; df = 12; p = 0.95; $I^2$ = 0 per cent; $\tau^2$ = 0. Regression test for funnel plot asymmetry was not significant: 1.12 (CI -0.24 to 2.48) with p = 0.29 and z = -1.07.

@@ -1,0 +1,1 @@
+Outcome: adverse events. Measure: post-intervention. Intervention (duloxetine) compared with (placebo). Participants: 8791. Direction of improvement: lower. Meta-analysis results: Q = 16.13; df = 31; p = 0.99; $I^2$ = 0 per cent; $\tau^2$ = 0. Regression test for funnel plot asymmetry was significant: 0.42 (CI 0.08 to 0.76) with p = 0.41 and z = 0.82.

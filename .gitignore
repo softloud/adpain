@@ -12,3 +12,5 @@
 /data/archive-labels/*.csv
 /data/archive-labels/labels/*.csv
 data/archive-labels/outcomes-2021-09-09/
+data/pres/*/*.rds
+/outputs

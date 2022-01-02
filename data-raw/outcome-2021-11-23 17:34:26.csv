@@ -1,0 +1,19 @@
+outcome,direction of improvement,outcome nma,outcome label,model type,model text,description
+mood,lower,mood,mood,smd,standardised mean difference,NA
+pain_int,lower,pain_int,pain intensity (continuous measure),smd,standardised mean difference,any continuous measure of pain
+adverse,lower,adverse,adverse events,lor,odds ratio,"Defined by the study researchers, broad definition"
+physical,higher,physical,physical functioning,smd,standardised mean difference,NA
+qol,higher,qol,quality of life,smd,standardised mean difference,NA
+sleep,lower,sleep,sleep,smd,standardised mean difference,NA
+pain_mod,higher,pain_mod,moderate pain relief (30% reduction),lor,odds ratio,"≥30% reduction in pain intensity from baseline (pain intensity only, does not include 'responders' defined by any other measure)"
+withdrawal,lower,withdrawal,withdrawal,lor,odds ratio,NA
+pain_sub,higher,pain_sub,Substantial pain relief  (50% reduction),lor,odds ratio,"≥50% reduction in pain intensity from baseline (pain intensity only, does not include 'responders' defined by any other measure)"
+pgic_cont,lower,pgic_cont,PGIC continuous,smd,standardised mean difference,numerical score on the 1-7 PGIC scale
+pgic_any_imp,higher,pgic_any_improvement,PGIC any improvement,lor,odds ratio,"total % of participants reporting improved, much improved, or very much improved"
+pgic_muchandverymuch_imp,higher,pgic_much_or_very_much_improved,PGIC much or very much improved,lor,odds ratio,"total % of participants reporting much improved, or very much improved"
+mood_depression,lower,mood,mood,smd,standardised mean difference,NA
+mood_anxiety,lower,mood,mood,smd,standardised mean difference,NA
+mood_overall,lower,mood,mood,smd,standardised mean difference,NA
+serious_adverse,lower,serious_adverse,serious adverse events,lor,odds ratio,Specific medical definition
+adverse_dropout,lower,adverse_dropout,dropout due to adverse events,lor,odds ratio,NA
+adverse_number,NA,adverse_number,adverse outcomes excluded from nma,NA,NA,NA

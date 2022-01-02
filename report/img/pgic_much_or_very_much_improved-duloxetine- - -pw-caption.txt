@@ -1,0 +1,1 @@
+Outcome: PGIC much or very much improved. Measure: post-intervention. Intervention (duloxetine) compared with (placebo). Participants: 1541. Direction of improvement: higher. Meta-analysis results: Q = 2.89; df = 4; p = 0.58; $I^2$ = 0 per cent; $\tau^2$ = 0. Regression test for funnel plot asymmetry was not significant: 0.51 (CI -0.03 to 1.05) with p = 0.31 and z = 1.02.

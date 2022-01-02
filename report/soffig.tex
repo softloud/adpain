@@ -1,0 +1,33 @@
+\documentclass{article}
+
+\usepackage{multirow}
+\usepackage{graphicx}
+
+\newcommand\soffignew[5]{
+
+  \begin{table}
+  \caption[SOF: #1]{Summary of findings: #5.}
+             \label{tab:#1}
+                 \begin{tabular}[width = \textwidth]{cc}
+                 \hline
+                 \includegraphics[width=0.4\textwidth]{#2} &
+                                \includegraphics[width=0.6\textwidth]{#3}\\
+                   \hline
+                   % sof
+                   \multicolumn{2}{c}{
+                     \includegraphics[width=0.95\textwidth]{#4}
+                   }\\
+                   \hline
+                   \end{tabular}
+                   \end{table}
+                 }
+
+\begin{document}
+
+\soffignew{pgicmuch}{img/pgic_much_or_very_much_improved- - -post_int-net.png}{img/pgic_much_or_very_much_improved-pico.png}{img/pgic_much_or_very_much_improved-sof.png}{PGIC (Much or very much improved)}
+
+
+\soffignew{pgicany}{img/pgic_any_improvement- - -post_int-net.png}{img/pgic_any_improvement-pico.png}{img/pgic_any_improvement-sof.png}{PGIC (Any improvement)}
+
+
+\end{document}

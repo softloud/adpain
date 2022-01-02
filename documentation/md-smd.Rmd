@@ -1,0 +1,141 @@
+---
+title: "MD vs SMD what does nma spit out?"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  message = FALSE,
+  echo = FALSE)
+```
+
+# next actions
+
+# goals
+
+- [ ] Compare higher and lower results for SMD, OR should be okay... I hope
+
+```{r}
+# find the combinations
+tar_load(oti_results)
+library(adpain)
+
+comp <- 
+oti_results %>% 
+  filter(intervention == "duloxetine", 
+         model_type == "smd"
+         ) %>%
+  mutate(dir = map_chr(outcome, outcome_dir)) %>% 
+  count(outcome, dir) %>% 
+  group_by(dir) %>% 
+  slice(1) %>% 
+  select(-n) %>% 
+  ungroup()
+
+
+```
+
+
+- figure out how direction of improvment changes how g1 etc work
+- consider doing a contrast-based 
+- code one contrast-based nma
+
+pick a subgroup to analyse and compare results
+
+# smd: lower is better dataset
+
+```{r}
+tar_load(oti_pw)
+
+lower_example <- 
+comp %>% 
+  filter(dir == "lower") %>% 
+  left_join(oti_pw) %>% 
+  filter(intervention == "duloxetine",
+         timepoint == "post_int") 
+
+```
+
+
+## meta-analysis results
+
+```{r }
+lower_example$pw_rma[[1]]$rma %>% forest()
+
+lower_example$pw_rma[[1]]$rma
+```
+
+## nma estimates
+
+```{r}
+lower_example %>% 
+  select(contains("nma"))
+
+```
+
+## mean difference estimates
+
+```{r}
+
+lower_md <- 
+escalc(m1i = mean, 
+       m2i = mean_control, 
+       sd1i = sd, 
+       sd2i = sd_control, 
+         n1i = n, n2i = n_control, data = lower_example$pw_dat, measure = "MD", slab = study) %>% 
+  rma(measure = "MD", data = ., yi = yi, vi = vi, slab = study) 
+
+lower_md %>% forest()
+
+lower_md 
+
+```
+
+## arm-based nma
+
+## contrast nma
+
+# higher example
+
+```{r}
+higher_example <- 
+comp %>% 
+  filter(dir == "higher") %>% 
+  left_join(oti_pw) %>% 
+  filter(intervention == "duloxetine",
+         timepoint == "post_int") 
+
+```
+
+
+## meta-analysis results
+
+```{r }
+higher_example$pw_rma[[1]]$rma %>% forest()
+
+higher_example$pw_rma[[1]]$rma
+```
+
+## nma estimates
+
+```{r}
+higher_example %>% 
+  select(contains("nma"))
+
+```
+
+## mean difference estimates
+
+```{r}
+
+higher_md <- 
+escalc(m1i = mean, 
+       m2i = mean_control, 
+       sd1i = sd, 
+       sd2i = sd_control, 
+         n1i = n, n2i = n_control, data = higher_example$pw_dat, measure = "MD", slab = study) %>% 
+  rma(measure = "MD", data = ., yi = yi, vi = vi, slab = study) 
+
+higher_md %>% forest()
+
+```

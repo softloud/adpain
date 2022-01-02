@@ -1,0 +1,1 @@
+Outcome: mood. Measure: post-intervention. Intervention (minacipran) compared with (placebo). Participants: 0. Direction of improvement: lower. Meta-analysis results: Q = 114.08; df = 74; p $<$ .01; $I^2$ = 34.64 per cent; $\tau^2$ = 0.14. Regression test for funnel plot asymmetry was not significant: -0.85 (CI -2.05 to 0.34) with p = 0.31 and z = 1.02.

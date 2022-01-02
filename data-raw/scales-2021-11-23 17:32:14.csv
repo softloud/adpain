@@ -1,0 +1,80 @@
+Scale,direction of improvement,lower bound,upper bound
+0-10 Numerical Rating Scale,Lower,NA,NA
+0-10 Numerical Rating Scale [higher=better],Higher,NA,NA
+0-100 Numerical Rating Scale,Lower,NA,NA
+0-100 VAS,Lower,NA,NA
+0-15 Numerical Rating Scale,Lower,NA,NA
+0-3 Numerical Rating Scale,Lower,NA,NA
+0-4 Numerical Rating Scale,Lower,NA,NA
+AIMS - anxiety,Lower,NA,NA
+AIMS - depression,Lower,NA,NA
+AUSCAN function score,Lower,NA,NA
+Beck Anxiety Inventory,Lower,NA,NA
+Beck Depression Inventory,Lower,NA,NA
+BPI mood,Lower,NA,NA
+BPI Pain Severity,Lower,NA,NA
+BPI sleep,Lower,NA,NA
+CES-D,Lower,NA,NA
+Chest pain index,Lower,NA,NA
+Descriptor Differential Scale,Lower,NA,NA
+EQ-5D,Higher,0,1
+EQ-5D VAS,Higher,0,100
+FACT/GOG-Ntx,Lower,NA,NA
+Fibromyalgia Impact Questionnaire total score,Lower,NA,NA
+FIQ anxiety,Lower,NA,NA
+FIQ depression,Lower,NA,NA
+FIQ pain,Lower,NA,NA
+FIQ physical functioning,Lower,NA,NA
+FIQR,Lower,NA,NA
+Functional Independence Measure,Lower,NA,NA
+Geriatric depression scale,Lower,NA,NA
+HADS-A,Lower,NA,NA
+HADS-D,Lower,NA,NA
+Hamilton Anxiety Rating Scale,Lower,NA,NA
+Hamilton Depression Rating Scale,Lower,NA,NA
+Hamiton Anxiety Rating Scale - somatic subscale,Lower,NA,NA
+Health Assessment Questionnaire,Lower,NA,NA
+IBS-QoL,Higher,0,100
+Jenkins Sleep Scale composite score,Lower,NA,NA
+MADRS,Lower,NA,NA
+Major Depression Inventory,Lower,NA,NA
+McGill Pain Questionnaire Pain Rating Index,Lower,NA,NA
+McGill Pain Questionnaire total score,Lower,NA,NA
+Medical Outcomes Study Pain Measures,Lower,NA,NA
+MOS Sleep Problems Index I,Lower,NA,NA
+MOS Sleep Problems Index II,Lower,NA,NA
+MS-QOL-54,Higher,0,100
+Nottingham Health Profile emotions subscale,Lower,NA,NA
+Nottingham Health Profile mobility subscale,Lower,NA,NA
+Oral Health Impact Profile,Lower,NA,NA
+Oswestry Disability Index,Lower,NA,NA
+Oswestry Disability Index - performance of daily activities,Lower,NA,NA
+Pain Anxiety Symptoms Scale,Lower,NA,NA
+Pain Disability Index,Lower,NA,NA
+Pain Scale Rating System Index Score,Lower,NA,NA
+PGIC,Lower,1,7
+PHQ8,Lower,NA,NA
+Pittsburgh Sleep Quality Index,Lower,NA,NA
+Profile of Mood States - Brief Form,Lower,NA,NA
+Profile of Mood States-Brief Form depression/dejection subscale,Lower,NA,NA
+Profile of Mood States-Brief Form tension/anxiety subscale,Lower,NA,NA
+Quality of Well-Being Scale,Higher,NA,NA
+RMDQ-24,Lower,NA,NA
+SCL-90-R,Lower,NA,NA
+SF-36 bodily pain subscale,Higher,0,100
+SF-36 Mental Component Score,Higher,0,100
+SF-36 Mental Health subscale,Higher,0,100
+SF-36 Physical Component Score,Higher,0,100
+SF-36 Physical Functioning subscale,Higher,0,100
+SF-MPQ total score,Lower,NA,NA
+Sheehan Disability Scale,Lower,NA,NA
+Sickness Impact Profile - physical subscale,Lower,NA,NA
+Sickness Impact Profile - psychosocial subscale,Lower,NA,NA
+STAI-S,Lower,NA,NA
+Verbal pain descriptors index score,Lower,NA,NA
+von Zerssen Befindlichkeitsskala,Lower,NA,NA
+Widespread Pain Index Wolfe 2010,Lower,NA,NA
+WOMAC pain subscale,Lower,NA,NA
+WOMAC physical function subscale,Lower,NA,NA
+WOMAC total score,Lower,NA,NA
+Zung Depression Rating Scale,Lower,NA,NA

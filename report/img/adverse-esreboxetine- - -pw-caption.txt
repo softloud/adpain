@@ -1,0 +1,1 @@
+Outcome: adverse events. Measure: post-intervention. Intervention (esreboxetine) compared with (placebo). Participants: 1761. Direction of improvement: lower. Meta-analysis results: Q = 2.74; df = 3; p = 0.43; $I^2$ = 0 per cent; $\tau^2$ = 0. Regression test for funnel plot asymmetry was significant: 1.69 (CI 0.46 to 2.92) with p = 0.28 and z = -1.08.

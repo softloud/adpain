@@ -1,0 +1,40 @@
+\contentsline {section}{\numberline {0.1}Table of contents}{1}{section.0.1}%
+\contentsline {chapter}{\numberline {1}Details about analyses}{5}{chapter.1}%
+\contentsline {chapter}{\numberline {2}Risk of bias summaries}{6}{chapter.2}%
+\contentsline {chapter}{\numberline {3}Primary outcomes}{9}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Substantial pain relief}{9}{section.3.1}%
+\contentsline {subsection}{\numberline {3.1.1}Head to head comparisons and subgroup sensitivity analyses}{9}{subsection.3.1.1}%
+\contentsline {subsubsection}{Duloxetine}{11}{section*.4}%
+\contentsline {subsubsection}{Milnacipran}{11}{section*.5}%
+\contentsline {section}{\numberline {3.2}Pain intensity (continuous scales)}{16}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Change scores}{16}{subsection.3.2.1}%
+\contentsline {subsection}{\numberline {3.2.2}Post intervention}{16}{subsection.3.2.2}%
+\contentsline {section}{\numberline {3.3}Mood}{16}{section.3.3}%
+\contentsline {subsection}{\numberline {3.3.1}Change score results}{16}{subsection.3.3.1}%
+\contentsline {subsection}{\numberline {3.3.2}Post intervention results}{16}{subsection.3.3.2}%
+\contentsline {subsubsection}{meta-analyses analyses}{21}{section*.6}%
+\contentsline {section}{\numberline {3.4}Adverse events}{21}{section.3.4}%
+\contentsline {subsection}{\numberline {3.4.1}Meta-analyses}{21}{subsection.3.4.1}%
+\contentsline {subsubsection}{Duloxetine}{21}{section*.7}%
+\contentsline {chapter}{\numberline {4}Secondary outcomes}{26}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Serious adverse events (SAE)}{26}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Dropout due to adverse events}{26}{section.4.2}%
+\contentsline {subsection}{\numberline {4.2.1}Meta-analysis results}{26}{subsection.4.2.1}%
+\contentsline {subsubsection}{Duloxetine}{26}{section*.8}%
+\contentsline {subsubsection}{Amitriptyline}{29}{section*.9}%
+\contentsline {subsubsection}{Milnacipran}{29}{section*.10}%
+\contentsline {section}{\numberline {4.3}Moderate pain (30 per cent reduction)}{29}{section.4.3}%
+\contentsline {subsection}{\numberline {4.3.1}headtohead}{29}{subsection.4.3.1}%
+\contentsline {section}{\numberline {4.4}PGIC (Much or very much improved)}{29}{section.4.4}%
+\contentsline {section}{\numberline {4.5}PGIC (Any improvement)}{29}{section.4.5}%
+\contentsline {section}{\numberline {4.6}PGIC (Continuous measures)}{33}{section.4.6}%
+\contentsline {section}{\numberline {4.7}Withdrawal}{33}{section.4.7}%
+\contentsline {section}{\numberline {4.8}Physical functioning}{33}{section.4.8}%
+\contentsline {section}{\numberline {4.9}Sleep quality (change score)}{33}{section.4.9}%
+\contentsline {section}{\numberline {4.10}Sleep quality (post intervention)}{35}{section.4.10}%
+\contentsline {section}{\numberline {4.11}Sleep quality (summary)}{37}{section.4.11}%
+\contentsline {subsection}{\numberline {4.11.1}headtohead}{37}{subsection.4.11.1}%
+\contentsline {subsubsection}{Duloxtine}{37}{section*.11}%
+\contentsline {section}{\numberline {4.12}Quality of life}{37}{section.4.12}%
+\contentsline {subsection}{\numberline {4.12.1}Change scores}{37}{subsection.4.12.1}%
+\contentsline {chapter}{\numberline {5}Duloxetine}{39}{chapter.5}%

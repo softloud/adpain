@@ -1,0 +1,1203 @@
+This is pdfTeX, Version 3.14159265-2.6-1.40.20 (TeX Live 2019/Debian) (preloaded format=pdflatex 2021.7.12)  2 JAN 2022 13:08
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**rep.tex
+(./rep.tex
+LaTeX2e <2020-02-02> patch level 2
+L3 programming layer <2020-02-14>
+(/usr/share/texlive/texmf-dist/tex/latex/base/report.cls
+Document Class: report 2019/12/20 v1.4l Standard LaTeX document class
+(/usr/share/texlive/texmf-dist/tex/latex/base/size10.clo
+File: size10.clo 2019/12/20 v1.4l Standard LaTeX file (size option)
+)
+\c@part=\count167
+\c@chapter=\count168
+\c@section=\count169
+\c@subsection=\count170
+\c@subsubsection=\count171
+\c@paragraph=\count172
+\c@subparagraph=\count173
+\c@figure=\count174
+\c@table=\count175
+\abovecaptionskip=\skip47
+\belowcaptionskip=\skip48
+\bibindent=\dimen134
+)
+(/usr/share/texlive/texmf-dist/tex/latex/graphics/graphicx.sty
+Package: graphicx 2019/11/30 v1.2a Enhanced LaTeX Graphics (DPC,SPQR)
+
+(/usr/share/texlive/texmf-dist/tex/latex/graphics/keyval.sty
+Package: keyval 2014/10/28 v1.15 key=value parser (DPC)
+\KV@toks@=\toks14
+)
+(/usr/share/texlive/texmf-dist/tex/latex/graphics/graphics.sty
+Package: graphics 2019/11/30 v1.4a Standard LaTeX Graphics (DPC,SPQR)
+
+(/usr/share/texlive/texmf-dist/tex/latex/graphics/trig.sty
+Package: trig 2016/01/03 v1.10 sin cos tan (DPC)
+)
+(/usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/graphics.cfg
+File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
+)
+Package graphics Info: Driver file: pdftex.def on input line 105.
+
+(/usr/share/texlive/texmf-dist/tex/latex/graphics-def/pdftex.def
+File: pdftex.def 2018/01/08 v1.0l Graphics/color driver for pdftex
+))
+\Gin@req@height=\dimen135
+\Gin@req@width=\dimen136
+)
+(/usr/share/texlive/texmf-dist/tex/latex/graphics/color.sty
+Package: color 2019/11/23 v1.2a Standard LaTeX Color (DPC)
+
+(/usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/color.cfg
+File: color.cfg 2016/01/02 v1.6 sample color configuration
+)
+Package color Info: Driver file: pdftex.def on input line 147.
+)
+(/usr/share/texlive/texmf-dist/tex/latex/framed/framed.sty
+Package: framed 2011/10/22 v 0.96: framed or shaded text with page breaks
+\OuterFrameSep=\skip49
+\fb@frw=\dimen137
+\fb@frh=\dimen138
+\FrameRule=\dimen139
+\FrameSep=\dimen140
+)
+(/usr/share/texlive/texmf-dist/tex/latex/base/alltt.sty
+Package: alltt 1997/06/16 v2.0g defines alltt environment
+) (./preamble.tex
+(/usr/share/texlive/texmf-dist/tex/latex/xcolor/xcolor.sty
+Package: xcolor 2016/05/11 v2.12 LaTeX color extensions (UK)
+
+(/usr/share/texlive/texmf-dist/tex/latex/graphics-cfg/color.cfg
+File: color.cfg 2016/01/02 v1.6 sample color configuration
+)
+Package xcolor Info: Package option `usenames' ignored on input line 216.
+Package xcolor Info: Driver file: pdftex.def on input line 225.
+
+(/usr/share/texlive/texmf-dist/tex/latex/colortbl/colortbl.sty
+Package: colortbl 2020/01/04 v1.0e Color table columns (DPC)
+
+(/usr/share/texlive/texmf-dist/tex/latex/tools/array.sty
+Package: array 2019/08/31 v2.4l Tabular extension package (FMi)
+\col@sep=\dimen141
+\ar@mcellbox=\box45
+\extrarowheight=\dimen142
+\NC@list=\toks15
+\extratabsurround=\skip50
+\backup@length=\skip51
+\ar@cellbox=\box46
+)
+\everycr=\toks16
+\minrowclearance=\skip52
+)
+LaTeX Info: Redefining \color on input line 709.
+\rownum=\count176
+Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1348.
+Package xcolor Info: Model `hsb' substituted by `rgb' on input line 1352.
+Package xcolor Info: Model `RGB' extended on input line 1364.
+Package xcolor Info: Model `HTML' substituted by `rgb' on input line 1366.
+Package xcolor Info: Model `Hsb' substituted by `hsb' on input line 1367.
+Package xcolor Info: Model `tHsb' substituted by `hsb' on input line 1368.
+Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1369.
+Package xcolor Info: Model `Gray' substituted by `gray' on input line 1370.
+Package xcolor Info: Model `wave' substituted by `hsb' on input line 1371.
+
+(/usr/share/texlive/texmf-dist/tex/latex/graphics/dvipsnam.def
+File: dvipsnam.def 2016/06/17 v3.0m Driver-dependent file (DPC,SPQR)
+)
+(/usr/share/texlive/texmf-dist/tex/latex/xcolor/svgnam.def
+File: svgnam.def 2016/05/11 v2.12 Predefined colors according to SVG 1.1 (UK)
+))
+(/usr/share/texlive/texmf-dist/tex/latex/hyperref/hyperref.sty
+Package: hyperref 2020/01/14 v7.00d Hypertext links for LaTeX
+
+(/usr/share/texlive/texmf-dist/tex/generic/ltxcmds/ltxcmds.sty
+Package: ltxcmds 2019/12/15 v1.24 LaTeX kernel commands for general use (HO)
+)
+(/usr/share/texlive/texmf-dist/tex/generic/iftex/iftex.sty
+Package: iftex 2019/11/07 v1.0c TeX engine tests
+)
+(/usr/share/texlive/texmf-dist/tex/latex/pdftexcmds/pdftexcmds.sty
+Package: pdftexcmds 2019/11/24 v0.31 Utility functions of pdfTeX for LuaTeX (HO
+)
+
+(/usr/share/texlive/texmf-dist/tex/generic/infwarerr/infwarerr.sty
+Package: infwarerr 2019/12/03 v1.5 Providing info/warning/error messages (HO)
+)
+Package pdftexcmds Info: \pdf@primitive is available.
+Package pdftexcmds Info: \pdf@ifprimitive is available.
+Package pdftexcmds Info: \pdfdraftmode found.
+)
+(/usr/share/texlive/texmf-dist/tex/generic/kvsetkeys/kvsetkeys.sty
+Package: kvsetkeys 2019/12/15 v1.18 Key value parser (HO)
+)
+(/usr/share/texlive/texmf-dist/tex/generic/kvdefinekeys/kvdefinekeys.sty
+Package: kvdefinekeys 2019-12-19 v1.6 Define keys (HO)
+)
+(/usr/share/texlive/texmf-dist/tex/generic/pdfescape/pdfescape.sty
+Package: pdfescape 2019/12/09 v1.15 Implements pdfTeX's escape features (HO)
+)
+(/usr/share/texlive/texmf-dist/tex/latex/hycolor/hycolor.sty
+Package: hycolor 2020-01-27 v1.10 Color options for hyperref/bookmark (HO)
+)
+(/usr/share/texlive/texmf-dist/tex/latex/letltxmacro/letltxmacro.sty
+Package: letltxmacro 2019/12/03 v1.6 Let assignment for LaTeX macros (HO)
+)
+(/usr/share/texlive/texmf-dist/tex/latex/auxhook/auxhook.sty
+Package: auxhook 2019-12-17 v1.6 Hooks for auxiliary files (HO)
+)
+(/usr/share/texlive/texmf-dist/tex/latex/kvoptions/kvoptions.sty
+Package: kvoptions 2019/11/29 v3.13 Key value format for package options (HO)
+)
+\@linkdim=\dimen143
+\Hy@linkcounter=\count177
+\Hy@pagecounter=\count178
+
+(/usr/share/texlive/texmf-dist/tex/latex/hyperref/pd1enc.def
+File: pd1enc.def 2020/01/14 v7.00d Hyperref: PDFDocEncoding definition (HO)
+Now handling font encoding PD1 ...
+... no UTF-8 mapping file for font encoding PD1
+)
+(/usr/share/texlive/texmf-dist/tex/generic/intcalc/intcalc.sty
+Package: intcalc 2019/12/15 v1.3 Expandable calculations with integers (HO)
+)
+(/usr/share/texlive/texmf-dist/tex/generic/etexcmds/etexcmds.sty
+Package: etexcmds 2019/12/15 v1.7 Avoid name clashes with e-TeX commands (HO)
+)
+\Hy@SavedSpaceFactor=\count179
+\pdfmajorversion=\count180
+Package hyperref Info: Option `colorlinks' set `true' on input line 4421.
+Package hyperref Info: Hyper figures OFF on input line 4547.
+Package hyperref Info: Link nesting OFF on input line 4552.
+Package hyperref Info: Hyper index ON on input line 4555.
+Package hyperref Info: Plain pages OFF on input line 4562.
+Package hyperref Info: Backreferencing OFF on input line 4567.
+Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
+Package hyperref Info: Bookmarks ON on input line 4800.
+\c@Hy@tempcnt=\count181
+
+(/usr/share/texlive/texmf-dist/tex/latex/url/url.sty
+\Urlmuskip=\muskip16
+Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
+)
+LaTeX Info: Redefining \url on input line 5159.
+\XeTeXLinkMargin=\dimen144
+
+(/usr/share/texlive/texmf-dist/tex/generic/bitset/bitset.sty
+Package: bitset 2019/12/09 v1.3 Handle bit-vector datatype (HO)
+
+(/usr/share/texlive/texmf-dist/tex/generic/bigintcalc/bigintcalc.sty
+Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO
+)
+))
+\Fld@menulength=\count182
+\Field@Width=\dimen145
+\Fld@charsize=\dimen146
+Package hyperref Info: Hyper figures OFF on input line 6430.
+Package hyperref Info: Link nesting OFF on input line 6435.
+Package hyperref Info: Hyper index ON on input line 6438.
+Package hyperref Info: backreferencing OFF on input line 6445.
+Package hyperref Info: Link coloring ON on input line 6448.
+Package hyperref Info: Link coloring with OCG OFF on input line 6455.
+Package hyperref Info: PDF/A mode OFF on input line 6460.
+LaTeX Info: Redefining \ref on input line 6500.
+LaTeX Info: Redefining \pageref on input line 6504.
+
+(/usr/share/texlive/texmf-dist/tex/generic/atbegshi/atbegshi.sty
+Package: atbegshi 2019/12/05 v1.19 At begin shipout hook (HO)
+)
+\Hy@abspage=\count183
+\c@Item=\count184
+\c@Hfootnote=\count185
+)
+Package hyperref Info: Driver (autodetected): hpdftex.
+
+(/usr/share/texlive/texmf-dist/tex/latex/hyperref/hpdftex.def
+File: hpdftex.def 2020/01/14 v7.00d Hyperref driver for pdfTeX
+
+(/usr/share/texlive/texmf-dist/tex/latex/atveryend/atveryend.sty
+Package: atveryend 2019-12-11 v1.11 Hooks at the very end of document (HO)
+Package atveryend Info: \enddocument detected (standard20110627).
+)
+\Fld@listcount=\count186
+\c@bookmark@seq@number=\count187
+
+(/usr/share/texlive/texmf-dist/tex/latex/rerunfilecheck/rerunfilecheck.sty
+Package: rerunfilecheck 2019/12/05 v1.9 Rerun checks for auxiliary files (HO)
+
+(/usr/share/texlive/texmf-dist/tex/generic/uniquecounter/uniquecounter.sty
+Package: uniquecounter 2019/12/15 v1.4 Provide unlimited unique counter (HO)
+)
+Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
+86.
+)
+\Hy@SectionHShift=\skip53
+)
+(/usr/share/texlive/texmf-dist/tex/latex/geometry/geometry.sty
+Package: geometry 2020/01/02 v5.9 Page Geometry
+
+(/usr/share/texlive/texmf-dist/tex/generic/iftex/ifvtex.sty
+Package: ifvtex 2019/10/25 v1.7 ifvtex legacy package. Use iftex instead.
+)
+\Gm@cnth=\count188
+\Gm@cntv=\count189
+\c@Gm@tempcnt=\count190
+\Gm@bindingoffset=\dimen147
+\Gm@wd@mp=\dimen148
+\Gm@odd@mp=\dimen149
+\Gm@even@mp=\dimen150
+\Gm@layoutwidth=\dimen151
+\Gm@layoutheight=\dimen152
+\Gm@layouthoffset=\dimen153
+\Gm@layoutvoffset=\dimen154
+\Gm@dimlist=\toks17
+)
+(/usr/share/texlive/texmf-dist/tex/latex/booktabs/booktabs.sty
+Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
+\heavyrulewidth=\dimen155
+\lightrulewidth=\dimen156
+\cmidrulewidth=\dimen157
+\belowrulesep=\dimen158
+\belowbottomsep=\dimen159
+\aboverulesep=\dimen160
+\abovetopsep=\dimen161
+\cmidrulesep=\dimen162
+\cmidrulekern=\dimen163
+\defaultaddspace=\dimen164
+\@cmidla=\count191
+\@cmidlb=\count192
+\@aboverulesep=\dimen165
+\@belowrulesep=\dimen166
+\@thisruleclass=\count193
+\@lastruleclass=\count194
+\@thisrulewidth=\dimen167
+)
+(/usr/share/texlive/texmf-dist/tex/latex/tools/tabularx.sty
+Package: tabularx 2020/01/15 v2.11c `tabularx' package (DPC)
+\TX@col@width=\dimen168
+\TX@old@table=\dimen169
+\TX@old@col=\dimen170
+\TX@target=\dimen171
+\TX@delta=\dimen172
+\TX@cols=\count195
+\TX@ftn=\toks18
+))
+(/usr/share/texlive/texmf-dist/tex/latex/upquote/upquote.sty
+Package: upquote 2012/04/19 v1.3 upright-quote and grave-accent glyphs in verba
+tim
+)
+(/usr/share/texlive/texmf-dist/tex/latex/l3backend/l3backend-pdfmode.def
+File: l3backend-pdfmode.def 2020-02-03 L3 backend support: PDF mode
+\l__kernel_color_stack_int=\count196
+\l__pdf_internal_box=\box47
+)
+(./rep.aux
+
+LaTeX Warning: Label `tab:painint' multiply defined.
+
+
+LaTeX Warning: Label `fig:adverse-amitrip' multiply defined.
+
+)
+\openout1 = `rep.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 77.
+LaTeX Font Info:    ... okay on input line 77.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 77.
+LaTeX Font Info:    ... okay on input line 77.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 77.
+LaTeX Font Info:    ... okay on input line 77.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 77.
+LaTeX Font Info:    ... okay on input line 77.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 77.
+LaTeX Font Info:    ... okay on input line 77.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 77.
+LaTeX Font Info:    ... okay on input line 77.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 77.
+LaTeX Font Info:    ... okay on input line 77.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 77.
+LaTeX Font Info:    ... okay on input line 77.
+ (/usr/share/texlive/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+\scratchcounter=\count197
+\scratchdimen=\dimen173
+\scratchbox=\box48
+\nofMPsegments=\count198
+\nofMParguments=\count199
+\everyMPshowfont=\toks19
+\MPscratchCnt=\count266
+\MPscratchDim=\dimen174
+\MPnumerator=\count267
+\makeMPintoPDFobject=\count268
+\everyMPtoPDFconversion=\toks20
+) (/usr/share/texlive/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
+Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
+Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
+85.
+
+(/usr/share/texlive/texmf-dist/tex/latex/latexconfig/epstopdf-sys.cfg
+File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
+e
+))
+\AtBeginShipoutBox=\box49
+Package hyperref Info: Link coloring ON on input line 77.
+
+(/usr/share/texlive/texmf-dist/tex/latex/hyperref/nameref.sty
+Package: nameref 2019/09/16 v2.46 Cross-referencing by name of section
+
+(/usr/share/texlive/texmf-dist/tex/latex/refcount/refcount.sty
+Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
+)
+(/usr/share/texlive/texmf-dist/tex/generic/gettitlestring/gettitlestring.sty
+Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
+)
+\c@section@level=\count269
+)
+LaTeX Info: Redefining \ref on input line 77.
+LaTeX Info: Redefining \pageref on input line 77.
+LaTeX Info: Redefining \nameref on input line 77.
+
+(./rep.out) (./rep.out)
+\@outlinefile=\write3
+\openout3 = `rep.out'.
+
+
+*geometry* driver: auto-detecting
+*geometry* detected driver: pdftex
+*geometry* verbose mode - [ preamble ] result:
+* driver: pdftex
+* paper: <default>
+* layout: <same size as paper>
+* layoutoffset:(h,v)=(0.0pt,0.0pt)
+* modes: 
+* h-part:(L,W,R)=(72.26999pt, 469.75502pt, 72.26999pt)
+* v-part:(T,H,B)=(72.26999pt, 650.43001pt, 72.26999pt)
+* \paperwidth=614.295pt
+* \paperheight=794.96999pt
+* \textwidth=469.75502pt
+* \textheight=650.43001pt
+* \oddsidemargin=0.0pt
+* \evensidemargin=0.0pt
+* \topmargin=-28.0pt
+* \headheight=3.0pt
+* \headsep=25.0pt
+* \topskip=10.0pt
+* \footskip=30.0pt
+* \marginparwidth=65.0pt
+* \marginparsep=11.0pt
+* \columnsep=10.0pt
+* \skip\footins=9.0pt plus 4.0pt minus 2.0pt
+* \hoffset=0.0pt
+* \voffset=0.0pt
+* \mag=1000
+* \@twocolumnfalse
+* \@twosidefalse
+* \@mparswitchfalse
+* \@reversemarginfalse
+* (1in=72.27pt=25.4mm, 1cm=28.453pt)
+
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <12> on input line 80.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <8> on input line 80.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <6> on input line 80.
+
+LaTeX Warning: No \author given.
+
+[1
+
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}]pdfTeX warning (ext4): dest
+ination with the same identifier (name{page.1}) has been already used, duplicat
+e ignored
+<to be read again> 
+                   \relax 
+l.83 \tableofcontents
+                      [1] (./rep.toc
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <7> on input line 1.
+LaTeX Font Info:    External font `cmex10' loaded for size
+(Font)              <5> on input line 1.
+)
+\tf@toc=\write4
+\openout4 = `rep.toc'.
+
+ [2
+
+] (./rep.lot)
+\tf@lot=\write5
+\openout5 = `rep.lot'.
+
+ [3
+
+] (./rep.lof)
+\tf@lof=\write6
+\openout6 = `rep.lof'.
+
+ [4
+
+]
+Chapter 1.
+[5
+
+]
+Chapter 2.
+<img/rob-grid.png, id=266, 170.5572pt x 654.2844pt>
+File: img/rob-grid.png Graphic file (type png)
+<use img/rob-grid.png>
+Package pdftex.def Info: img/rob-grid.png  used on input line 103.
+(pdftex.def)             Requested size: 170.55678pt x 654.28279pt.
+
+LaTeX Warning: Float too large for page by 27.79723pt on input line 106.
+
+<img/rob-bar.png, id=268, 255.8358pt x 113.7048pt>
+File: img/rob-bar.png Graphic file (type png)
+<use img/rob-bar.png>
+Package pdftex.def Info: img/rob-bar.png  used on input line 111.
+(pdftex.def)             Requested size: 255.83517pt x 113.70451pt.
+[6
+
+] [7 <./img/rob-grid.png>] [8 <./img/rob-bar.png>]
+Chapter 3.
+<img/pain_sub-post_int-net.png, id=285, 505.89pt x 505.89pt>
+File: img/pain_sub-post_int-net.png Graphic file (type png)
+<use img/pain_sub-post_int-net.png>
+Package pdftex.def Info: img/pain_sub-post_int-net.png  used on input line 134.
+
+(pdftex.def)             Requested size: 187.89914pt x 187.90196pt.
+<img/pain_sub-pico.png, id=286, 1425.325pt x 1137.24875pt>
+File: img/pain_sub-pico.png Graphic file (type png)
+<use img/pain_sub-pico.png>
+Package pdftex.def Info: img/pain_sub-pico.png  used on input line 134.
+(pdftex.def)             Requested size: 234.8775pt x 187.395pt.
+<img/pain_sub-sof.png, id=287, 1626.075pt x 1366.10374pt>
+File: img/pain_sub-sof.png Graphic file (type png)
+<use img/pain_sub-sof.png>
+Package pdftex.def Info: img/pain_sub-sof.png  used on input line 134.
+(pdftex.def)             Requested size: 446.26582pt x 374.91885pt.
+
+Package xcolor Warning: Incompatible color definition on input line 157.
+
+<img/pain_sub-duloxetine-placebo-forest.png, id=290, 602.25pt x 481.8pt>
+File: img/pain_sub-duloxetine-placebo-forest.png Graphic file (type png)
+<use img/pain_sub-duloxetine-placebo-forest.png>
+Package pdftex.def Info: img/pain_sub-duloxetine-placebo-forest.png  used on in
+put line 158.
+(pdftex.def)             Requested size: 234.87654pt x 227.6517pt.
+<img/pain_sub-duloxetine-placebo-funnel.png, id=291, 481.8pt x 481.8pt>
+File: img/pain_sub-duloxetine-placebo-funnel.png Graphic file (type png)
+<use img/pain_sub-duloxetine-placebo-funnel.png>
+Package pdftex.def Info: img/pain_sub-duloxetine-placebo-funnel.png  used on in
+put line 159.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+
+Overfull \hbox (2.22212pt too wide) in paragraph at lines 158--161
+[][] []
+ []
+
+[9
+
+] [10 <./img/pain_sub-post_int-net.png (PNG copy)> <./img/pain_sub-pico.png> <.
+/img/pain_sub-sof.png>]
+
+LaTeX Warning: Reference `fig:subpain-milna' on page 11 undefined on input line
+ 174.
+
+
+LaTeX Warning: Reference `fig:subpain-esrebox' on page 11 undefined on input li
+ne 174.
+
+
+Package xcolor Warning: Incompatible color definition on input line 184.
+
+<img/pain_sub-duloxetine-condition-neuropathic-forest.png, id=306, 481.8pt x 48
+1.8pt>
+File: img/pain_sub-duloxetine-condition-neuropathic-forest.png Graphic file (ty
+pe png)
+<use img/pain_sub-duloxetine-condition-neuropathic-forest.png>
+Package pdftex.def Info: img/pain_sub-duloxetine-condition-neuropathic-forest.p
+ng  used on input line 185.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+<img/pain_sub-duloxetine-condition-neuropathic-funnel.png, id=307, 481.8pt x 48
+1.8pt>
+File: img/pain_sub-duloxetine-condition-neuropathic-funnel.png Graphic file (ty
+pe png)
+<use img/pain_sub-duloxetine-condition-neuropathic-funnel.png>
+Package pdftex.def Info: img/pain_sub-duloxetine-condition-neuropathic-funnel.p
+ng  used on input line 186.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+
+Overfull \hbox (2.22397pt too wide) in paragraph at lines 185--188
+[][] []
+ []
+
+
+Package xcolor Warning: Incompatible color definition on input line 199.
+
+<img/pain_sub-duloxetine-condition-fibromyalgia-forest.png, id=308, 481.8pt x 4
+81.8pt>
+File: img/pain_sub-duloxetine-condition-fibromyalgia-forest.png Graphic file (t
+ype png)
+<use img/pain_sub-duloxetine-condition-fibromyalgia-forest.png>
+Package pdftex.def Info: img/pain_sub-duloxetine-condition-fibromyalgia-forest.
+png  used on input line 200.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+<img/pain_sub-duloxetine-condition-fibromyalgia-funnel.png, id=309, 481.8pt x 4
+81.8pt>
+File: img/pain_sub-duloxetine-condition-fibromyalgia-funnel.png Graphic file (t
+ype png)
+<use img/pain_sub-duloxetine-condition-fibromyalgia-funnel.png>
+Package pdftex.def Info: img/pain_sub-duloxetine-condition-fibromyalgia-funnel.
+png  used on input line 201.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+
+Overfull \hbox (2.22397pt too wide) in paragraph at lines 200--203
+[][] []
+ []
+
+
+Package xcolor Warning: Incompatible color definition on input line 212.
+
+<img/pain_sub-milnacipran-condition-fibromyalgia-forest.png, id=310, 481.8pt x 
+481.8pt>
+File: img/pain_sub-milnacipran-condition-fibromyalgia-forest.png Graphic file (
+type png)
+<use img/pain_sub-milnacipran-condition-fibromyalgia-forest.png>
+Package pdftex.def Info: img/pain_sub-milnacipran-condition-fibromyalgia-forest
+.png  used on input line 213.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+<img/pain_sub-milnacipran-condition-fibromyalgia-funnel.png, id=311, 481.8pt x 
+481.8pt>
+File: img/pain_sub-milnacipran-condition-fibromyalgia-funnel.png Graphic file (
+type png)
+<use img/pain_sub-milnacipran-condition-fibromyalgia-funnel.png>
+Package pdftex.def Info: img/pain_sub-milnacipran-condition-fibromyalgia-funnel
+.png  used on input line 214.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+
+Overfull \hbox (2.22397pt too wide) in paragraph at lines 213--216
+[][] []
+ []
+
+
+Package xcolor Warning: Incompatible color definition on input line 227.
+
+<img/pain_sub-duloxetine-dose-high-forest.png, id=315, 481.8pt x 481.8pt>
+File: img/pain_sub-duloxetine-dose-high-forest.png Graphic file (type png)
+<use img/pain_sub-duloxetine-dose-high-forest.png>
+Package pdftex.def Info: img/pain_sub-duloxetine-dose-high-forest.png  used on 
+input line 228.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+<img/pain_sub-duloxetine-dose-high-funnel.png, id=316, 481.8pt x 481.8pt>
+File: img/pain_sub-duloxetine-dose-high-funnel.png Graphic file (type png)
+<use img/pain_sub-duloxetine-dose-high-funnel.png>
+Package pdftex.def Info: img/pain_sub-duloxetine-dose-high-funnel.png  used on 
+input line 229.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+
+Overfull \hbox (2.22397pt too wide) in paragraph at lines 228--231
+[][] []
+ []
+
+
+Package xcolor Warning: Incompatible color definition on input line 240.
+
+<img/pain_sub-duloxetine-dose-standard-forest.png, id=317, 481.8pt x 481.8pt>
+File: img/pain_sub-duloxetine-dose-standard-forest.png Graphic file (type png)
+<use img/pain_sub-duloxetine-dose-standard-forest.png>
+Package pdftex.def Info: img/pain_sub-duloxetine-dose-standard-forest.png  used
+ on input line 241.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+<img/pain_sub-duloxetine-dose-standard-funnel.png, id=318, 481.8pt x 481.8pt>
+File: img/pain_sub-duloxetine-dose-standard-funnel.png Graphic file (type png)
+<use img/pain_sub-duloxetine-dose-standard-funnel.png>
+Package pdftex.def Info: img/pain_sub-duloxetine-dose-standard-funnel.png  used
+ on input line 242.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+
+Overfull \hbox (2.22397pt too wide) in paragraph at lines 241--244
+[][] []
+ []
+
+
+Package xcolor Warning: Incompatible color definition on input line 253.
+
+<img/pain_sub-duloxetine-dose-low-forest.png, id=319, 481.8pt x 481.8pt>
+File: img/pain_sub-duloxetine-dose-low-forest.png Graphic file (type png)
+<use img/pain_sub-duloxetine-dose-low-forest.png>
+Package pdftex.def Info: img/pain_sub-duloxetine-dose-low-forest.png  used on i
+nput line 254.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+<img/pain_sub-duloxetine-dose-low-funnel.png, id=320, 481.8pt x 481.8pt>
+File: img/pain_sub-duloxetine-dose-low-funnel.png Graphic file (type png)
+<use img/pain_sub-duloxetine-dose-low-funnel.png>
+Package pdftex.def Info: img/pain_sub-duloxetine-dose-low-funnel.png  used on i
+nput line 255.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+
+Overfull \hbox (2.22397pt too wide) in paragraph at lines 254--257
+[][] []
+ []
+
+
+Package xcolor Warning: Incompatible color definition on input line 269.
+
+<img/pain_sub-duloxetine-rob-high-forest.png, id=323, 481.8pt x 481.8pt>
+File: img/pain_sub-duloxetine-rob-high-forest.png Graphic file (type png)
+<use img/pain_sub-duloxetine-rob-high-forest.png>
+Package pdftex.def Info: img/pain_sub-duloxetine-rob-high-forest.png  used on i
+nput line 270.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+<img/pain_sub-duloxetine-rob-high-funnel.png, id=324, 481.8pt x 481.8pt>
+File: img/pain_sub-duloxetine-rob-high-funnel.png Graphic file (type png)
+<use img/pain_sub-duloxetine-rob-high-funnel.png>
+Package pdftex.def Info: img/pain_sub-duloxetine-rob-high-funnel.png  used on i
+nput line 271.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+
+Overfull \hbox (2.22397pt too wide) in paragraph at lines 270--273
+[][] []
+ []
+
+
+Package xcolor Warning: Incompatible color definition on input line 282.
+
+<img/pain_sub-duloxetine-rob-low-forest.png, id=325, 481.8pt x 481.8pt>
+File: img/pain_sub-duloxetine-rob-low-forest.png Graphic file (type png)
+<use img/pain_sub-duloxetine-rob-low-forest.png>
+Package pdftex.def Info: img/pain_sub-duloxetine-rob-low-forest.png  used on in
+put line 283.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+<img/pain_sub-duloxetine-rob-low-funnel.png, id=326, 481.8pt x 481.8pt>
+File: img/pain_sub-duloxetine-rob-low-funnel.png Graphic file (type png)
+<use img/pain_sub-duloxetine-rob-low-funnel.png>
+Package pdftex.def Info: img/pain_sub-duloxetine-rob-low-funnel.png  used on in
+put line 284.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+
+Overfull \hbox (2.22397pt too wide) in paragraph at lines 283--286
+[][] []
+ []
+
+[11 <./img/pain_sub-duloxetine-placebo-forest.png> <./img/pain_sub-duloxetine-p
+lacebo-funnel.png>] [12 <./img/pain_sub-duloxetine-condition-neuropathic-forest
+.png> <./img/pain_sub-duloxetine-condition-neuropathic-funnel.png> <./img/pain_
+sub-duloxetine-condition-fibromyalgia-forest.png> <./img/pain_sub-duloxetine-co
+ndition-fibromyalgia-funnel.png>] [13 <./img/pain_sub-milnacipran-condition-fib
+romyalgia-forest.png> <./img/pain_sub-milnacipran-condition-fibromyalgia-funnel
+.png> <./img/pain_sub-duloxetine-dose-high-forest.png> <./img/pain_sub-duloxeti
+ne-dose-high-funnel.png>] [14 <./img/pain_sub-duloxetine-dose-standard-forest.p
+ng> <./img/pain_sub-duloxetine-dose-standard-funnel.png> <./img/pain_sub-duloxe
+tine-dose-low-forest.png> <./img/pain_sub-duloxetine-dose-low-funnel.png>]
+[15 <./img/pain_sub-duloxetine-rob-high-forest.png> <./img/pain_sub-duloxetine-
+rob-high-funnel.png> <./img/pain_sub-duloxetine-rob-low-forest.png> <./img/pain
+_sub-duloxetine-rob-low-funnel.png>]
+<img/pain_int-change_score-net.png, id=371, 505.89pt x 505.89pt>
+File: img/pain_int-change_score-net.png Graphic file (type png)
+<use img/pain_int-change_score-net.png>
+Package pdftex.def Info: img/pain_int-change_score-net.png  used on input line 
+308.
+(pdftex.def)             Requested size: 187.89914pt x 187.90196pt.
+<img/pain_int-change_score-pico.png, id=372, 1425.325pt x 1185.42876pt>
+File: img/pain_int-change_score-pico.png Graphic file (type png)
+<use img/pain_int-change_score-pico.png>
+Package pdftex.def Info: img/pain_int-change_score-pico.png  used on input line
+ 308.
+(pdftex.def)             Requested size: 234.8775pt x 195.33406pt.
+<img/pain_int-change_score-sof.png, id=373, 1626.075pt x 1598.97375pt>
+File: img/pain_int-change_score-sof.png Graphic file (type png)
+<use img/pain_int-change_score-sof.png>
+Package pdftex.def Info: img/pain_int-change_score-sof.png  used on input line 
+308.
+(pdftex.def)             Requested size: 446.26582pt x 438.8286pt.
+
+
+LaTeX Warning: Float too large for page by 13.1327pt on input line 308.
+
+<img/pain_int-post_int-net.png, id=374, 505.89pt x 505.89pt>
+File: img/pain_int-post_int-net.png Graphic file (type png)
+<use img/pain_int-post_int-net.png>
+Package pdftex.def Info: img/pain_int-post_int-net.png  used on input line 322.
+
+(pdftex.def)             Requested size: 187.89914pt x 187.90196pt.
+<img/pain_int-post_int-pico.png, id=375, 1425.325pt x 1281.78876pt>
+File: img/pain_int-post_int-pico.png Graphic file (type png)
+<use img/pain_int-post_int-pico.png>
+Package pdftex.def Info: img/pain_int-post_int-pico.png  used on input line 322
+.
+(pdftex.def)             Requested size: 234.8775pt x 211.2122pt.
+<img/pain_int-post_int-sof.png, id=376, 1626.075pt x 4697.55pt>
+File: img/pain_int-post_int-sof.png Graphic file (type png)
+<use img/pain_int-post_int-sof.png>
+Package pdftex.def Info: img/pain_int-post_int-sof.png  used on input line 322.
+
+(pdftex.def)             Requested size: 446.26582pt x 1289.214pt.
+
+LaTeX Warning: Float too large for page by 879.39626pt on input line 322.
+
+<img/mood-change_score-net.png, id=379, 505.89pt x 505.89pt>
+File: img/mood-change_score-net.png Graphic file (type png)
+<use img/mood-change_score-net.png>
+Package pdftex.def Info: img/mood-change_score-net.png  used on input line 340.
+
+(pdftex.def)             Requested size: 187.89914pt x 187.90196pt.
+<img/mood-change_score-pico.png, id=380, 1425.325pt x 1137.24875pt>
+File: img/mood-change_score-pico.png Graphic file (type png)
+<use img/mood-change_score-pico.png>
+Package pdftex.def Info: img/mood-change_score-pico.png  used on input line 340
+.
+(pdftex.def)             Requested size: 234.8775pt x 187.395pt.
+<img/mood-change_score-sof.png, id=381, 1626.075pt x 1409.265pt>
+File: img/mood-change_score-sof.png Graphic file (type png)
+<use img/mood-change_score-sof.png>
+Package pdftex.def Info: img/mood-change_score-sof.png  used on input line 340.
+
+(pdftex.def)             Requested size: 446.26582pt x 386.76419pt.
+
+Overfull \hbox (3.44023pt too wide) in paragraph at lines 353--354
+\OT1/cmr/m/n/10 For post-intervention mea-sures, sev-eral other com-para-tors w
+ere con-sid-ered in the lit-er-a-ture, no-tably amitripty-
+ []
+
+<img/mood-post_int-net.png, id=383, 505.89pt x 505.89pt>
+File: img/mood-post_int-net.png Graphic file (type png)
+<use img/mood-post_int-net.png>
+Package pdftex.def Info: img/mood-post_int-net.png  used on input line 360.
+(pdftex.def)             Requested size: 187.89914pt x 187.90196pt.
+<img/mood-post_int-pico.png, id=384, 1425.325pt x 1281.78876pt>
+File: img/mood-post_int-pico.png Graphic file (type png)
+<use img/mood-post_int-pico.png>
+Package pdftex.def Info: img/mood-post_int-pico.png  used on input line 360.
+(pdftex.def)             Requested size: 234.8775pt x 211.2122pt.
+<img/mood-post_int-sof.png, id=385, 1626.075pt x 3432.825pt>
+File: img/mood-post_int-sof.png Graphic file (type png)
+<use img/mood-post_int-sof.png>
+Package pdftex.def Info: img/mood-post_int-sof.png  used on input line 360.
+(pdftex.def)             Requested size: 446.26582pt x 942.11792pt.
+
+LaTeX Warning: Float too large for page by 532.30017pt on input line 360.
+
+[16] [17 <./img/pain_int-change_score-net.png (PNG copy)> <./img/pain_int-chang
+e_score-pico.png> <./img/pain_int-change_score-sof.png>] [18 <./img/pain_int-po
+st_int-net.png (PNG copy)> <./img/pain_int-post_int-pico.png> <./img/pain_int-p
+ost_int-sof.png>] [19 <./img/mood-change_score-net.png (PNG copy)> <./img/mood-
+change_score-pico.png> <./img/mood-change_score-sof.png>] [20 <./img/mood-post_
+int-net.png (PNG copy)> <./img/mood-post_int-pico.png> <./img/mood-post_int-sof
+.png>]
+
+Package xcolor Warning: Incompatible color definition on input line 377.
+
+<img/mood-change_score-duloxetine- - -forest.png, id=417, 481.8pt x 481.8pt>
+File: img/mood-change_score-duloxetine- - -forest.png Graphic file (type png)
+<use img/mood-change_score-duloxetine- - -forest.png>
+Package pdftex.def Info: img/mood-change_score-duloxetine- - -forest.png  used 
+on input line 378.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+<img/mood-change_score-duloxetine- - -funnel.png, id=418, 481.8pt x 481.8pt>
+File: img/mood-change_score-duloxetine- - -funnel.png Graphic file (type png)
+<use img/mood-change_score-duloxetine- - -funnel.png>
+Package pdftex.def Info: img/mood-change_score-duloxetine- - -funnel.png  used 
+on input line 379.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+
+Overfull \hbox (2.22397pt too wide) in paragraph at lines 378--381
+[][] []
+ []
+
+<img/adverse- - -post_int-net.png, id=419, 505.89pt x 505.89pt>
+File: img/adverse- - -post_int-net.png Graphic file (type png)
+<use img/adverse- - -post_int-net.png>
+Package pdftex.def Info: img/adverse- - -post_int-net.png  used on input line 3
+92.
+(pdftex.def)             Requested size: 187.89914pt x 187.90196pt.
+<img/adverse-pico.png, id=420, 1425.325pt x 1185.42876pt>
+File: img/adverse-pico.png Graphic file (type png)
+<use img/adverse-pico.png>
+Package pdftex.def Info: img/adverse-pico.png  used on input line 392.
+(pdftex.def)             Requested size: 234.8775pt x 195.33406pt.
+<img/adverse-sof.png, id=421, 1626.075pt x 3136.71875pt>
+File: img/adverse-sof.png Graphic file (type png)
+<use img/adverse-sof.png>
+Package pdftex.def Info: img/adverse-sof.png  used on input line 392.
+(pdftex.def)             Requested size: 446.26582pt x 860.85336pt.
+
+LaTeX Warning: Float too large for page by 434.04636pt on input line 392.
+
+
+Package xcolor Warning: Incompatible color definition on input line 403.
+
+<img/adverse-duloxetine-placebo-forest.png, id=424, 481.8pt x 481.8pt>
+File: img/adverse-duloxetine-placebo-forest.png Graphic file (type png)
+<use img/adverse-duloxetine-placebo-forest.png>
+Package pdftex.def Info: img/adverse-duloxetine-placebo-forest.png  used on inp
+ut line 404.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+<img/adverse-duloxetine-placebo-funnel.png, id=425, 481.8pt x 481.8pt>
+File: img/adverse-duloxetine-placebo-funnel.png Graphic file (type png)
+<use img/adverse-duloxetine-placebo-funnel.png>
+Package pdftex.def Info: img/adverse-duloxetine-placebo-funnel.png  used on inp
+ut line 405.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+
+Overfull \hbox (2.22397pt too wide) in paragraph at lines 404--407
+[][] []
+ []
+
+(./img/adverse-duloxetine-placebo-rma-caption.txt)
+(./img/adverse-duloxetine-placebo-rma-caption.txt)
+
+Package xcolor Warning: Incompatible color definition on input line 417.
+
+<img/adverse-duloxetine-pregabalin-forest.png, id=426, 481.8pt x 481.8pt>
+File: img/adverse-duloxetine-pregabalin-forest.png Graphic file (type png)
+<use img/adverse-duloxetine-pregabalin-forest.png>
+Package pdftex.def Info: img/adverse-duloxetine-pregabalin-forest.png  used on 
+input line 418.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+<img/adverse-duloxetine-pregabalin-funnel.png, id=427, 481.8pt x 481.8pt>
+File: img/adverse-duloxetine-pregabalin-funnel.png Graphic file (type png)
+<use img/adverse-duloxetine-pregabalin-funnel.png>
+Package pdftex.def Info: img/adverse-duloxetine-pregabalin-funnel.png  used on 
+input line 419.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+
+Overfull \hbox (2.22397pt too wide) in paragraph at lines 418--421
+[][] []
+ []
+
+(./img/adverse-duloxetine-pregabalin-rma-caption.txt)
+(./img/adverse-duloxetine-pregabalin-rma-caption.txt)
+
+Package xcolor Warning: Incompatible color definition on input line 431.
+
+<img/adverse-duloxetine- - -forest.png, id=428, 481.8pt x 481.8pt>
+File: img/adverse-duloxetine- - -forest.png Graphic file (type png)
+<use img/adverse-duloxetine- - -forest.png>
+Package pdftex.def Info: img/adverse-duloxetine- - -forest.png  used on input l
+ine 432.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+<img/adverse-duloxetine- - -funnel.png, id=429, 481.8pt x 481.8pt>
+File: img/adverse-duloxetine- - -funnel.png Graphic file (type png)
+<use img/adverse-duloxetine- - -funnel.png>
+Package pdftex.def Info: img/adverse-duloxetine- - -funnel.png  used on input l
+ine 433.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+
+Overfull \hbox (2.22397pt too wide) in paragraph at lines 432--435
+[][] []
+ []
+
+
+Package xcolor Warning: Incompatible color definition on input line 443.
+
+<img/adverse-amitriptyline- - -forest.png, id=430, 481.8pt x 481.8pt>
+File: img/adverse-amitriptyline- - -forest.png Graphic file (type png)
+<use img/adverse-amitriptyline- - -forest.png>
+Package pdftex.def Info: img/adverse-amitriptyline- - -forest.png  used on inpu
+t line 444.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+<img/adverse-amitriptyline- - -funnel.png, id=431, 481.8pt x 481.8pt>
+File: img/adverse-amitriptyline- - -funnel.png Graphic file (type png)
+<use img/adverse-amitriptyline- - -funnel.png>
+Package pdftex.def Info: img/adverse-amitriptyline- - -funnel.png  used on inpu
+t line 445.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+
+Overfull \hbox (2.22397pt too wide) in paragraph at lines 444--447
+[][] []
+ []
+
+
+Package xcolor Warning: Incompatible color definition on input line 457.
+
+<img/adverse-milnacipran- - -forest.png, id=432, 481.8pt x 481.8pt>
+File: img/adverse-milnacipran- - -forest.png Graphic file (type png)
+<use img/adverse-milnacipran- - -forest.png>
+Package pdftex.def Info: img/adverse-milnacipran- - -forest.png  used on input 
+line 458.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+<img/adverse-milnacipran- - -funnel.png, id=433, 481.8pt x 481.8pt>
+File: img/adverse-milnacipran- - -funnel.png Graphic file (type png)
+<use img/adverse-milnacipran- - -funnel.png>
+Package pdftex.def Info: img/adverse-milnacipran- - -funnel.png  used on input 
+line 459.
+(pdftex.def)             Requested size: 234.87839pt x 227.6517pt.
+
+Overfull \hbox (2.22397pt too wide) in paragraph at lines 458--461
+[][] []
+ []
+
+[21 <./img/mood-change_score-duloxetine- - -forest.png> <./img/mood-change_scor
+e-duloxetine- - -funnel.png>] [22 <./img/adverse- - -post_int-net.png (PNG copy
+)> <./img/adverse-pico.png> <./img/adverse-sof.png>] [23 <./img/adverse-duloxet
+ine-placebo-forest.png> <./img/adverse-duloxetine-placebo-funnel.png> <./img/ad
+verse-duloxetine-pregabalin-forest.png> <./img/adverse-duloxetine-pregabalin-fu
+nnel.png>] [24 <./img/adverse-duloxetine- - -forest.png> <./img/adverse-duloxet
+ine- - -funnel.png> <./img/adverse-amitriptyline- - -forest.png> <./img/adverse
+-amitriptyline- - -funnel.png>] [25 <./img/adverse-milnacipran- - -forest.png> 
+<./img/adverse-milnacipran- - -funnel.png>]
+Chapter 4.
+<img/serious_adverse- - -post_int-net.png, id=472, 505.89pt x 505.89pt>
+File: img/serious_adverse- - -post_int-net.png Graphic file (type png)
+<use img/serious_adverse- - -post_int-net.png>
+Package pdftex.def Info: img/serious_adverse- - -post_int-net.png  used on inpu
+t line 473.
+(pdftex.def)             Requested size: 187.89914pt x 187.90196pt.
+<img/serious_adverse-pico.png, id=473, 1425.325pt x 1681.28125pt>
+File: img/serious_adverse-pico.png Graphic file (type png)
+<use img/serious_adverse-pico.png>
+Package pdftex.def Info: img/serious_adverse-pico.png  used on input line 473.
+(pdftex.def)             Requested size: 234.8775pt x 277.04028pt.
+<img/serious_adverse-sof.png, id=474, 1626.075pt x 2124.93875pt>
+File: img/serious_adverse-sof.png Graphic file (type png)
+<use img/serious_adverse-sof.png>
+Package pdftex.def Info: img/serious_adverse-sof.png  used on input line 473.
+(pdftex.def)             Requested size: 446.26582pt x 583.1765pt.
+
+LaTeX Warning: Float too large for page by 239.18683pt on input line 473.
+
+<img/adverse_dropout- - -post_int-net.png, id=476, 505.89pt x 505.89pt>
+File: img/adverse_dropout- - -post_int-net.png Graphic file (type png)
+<use img/adverse_dropout- - -post_int-net.png>
+Package pdftex.def Info: img/adverse_dropout- - -post_int-net.png  used on inpu
+t line 484.
+(pdftex.def)             Requested size: 187.89914pt x 187.90196pt.
+<img/adverse_dropout-pico.png, id=477, 1425.325pt x 1378.14874pt>
+File: img/adverse_dropout-pico.png Graphic file (type png)
+<use img/adverse_dropout-pico.png>
+Package pdftex.def Info: img/adverse_dropout-pico.png  used on input line 484.
+(pdftex.def)             Requested size: 234.8775pt x 227.09033pt.
+<img/adverse_dropout-sof.png, id=478, 1626.075pt x 3958.79pt>
+File: img/adverse_dropout-sof.png Graphic file (type png)
+<use img/adverse_dropout-sof.png>
+Package pdftex.def Info: img/adverse_dropout-sof.png  used on input line 484.
+(pdftex.def)             Requested size: 446.26582pt x 1086.46582pt.
+
+LaTeX Warning: Float too large for page by 691.41508pt on input line 484.
+
+[26
+
+] [27 <./img/serious_adverse- - -post_int-net.png (PNG copy)> <./img/serious_ad
+verse-pico.png> <./img/serious_adverse-sof.png>] [28 <./img/adverse_dropout- - 
+-post_int-net.png (PNG copy)> <./img/adverse_dropout-pico.png> <./img/adverse_d
+ropout-sof.png>]
+
+LaTeX Warning: Reference `fig:painmod' on page 29 undefined on input line 506.
+
+<img/pain_mod- - -post_int-net.png, id=496, 505.89pt x 505.89pt>
+File: img/pain_mod- - -post_int-net.png Graphic file (type png)
+<use img/pain_mod- - -post_int-net.png>
+Package pdftex.def Info: img/pain_mod- - -post_int-net.png  used on input line 
+512.
+(pdftex.def)             Requested size: 187.89914pt x 187.90196pt.
+<img/pain_mod-pico.png, id=497, 1425.325pt x 1089.06876pt>
+File: img/pain_mod-pico.png Graphic file (type png)
+<use img/pain_mod-pico.png>
+Package pdftex.def Info: img/pain_mod-pico.png  used on input line 512.
+(pdftex.def)             Requested size: 234.8775pt x 179.45593pt.
+<img/pain_mod-sof.png, id=498, 1626.075pt x 1696.3375pt>
+File: img/pain_mod-sof.png Graphic file (type png)
+<use img/pain_mod-sof.png>
+Package pdftex.def Info: img/pain_mod-sof.png  used on input line 512.
+(pdftex.def)             Requested size: 446.26582pt x 465.5495pt.
+
+LaTeX Warning: Float too large for page by 32.42151pt on input line 512.
+
+<img/pgic_much_or_very_much_improved- - -post_int-net.png, id=501, 505.89pt x 5
+05.89pt>
+File: img/pgic_much_or_very_much_improved- - -post_int-net.png Graphic file (ty
+pe png)
+<use img/pgic_much_or_very_much_improved- - -post_int-net.png>
+Package pdftex.def Info: img/pgic_much_or_very_much_improved- - -post_int-net.p
+ng  used on input line 527.
+(pdftex.def)             Requested size: 187.89914pt x 187.90196pt.
+<img/pgic_much_or_very_much_improved-pico.png, id=502, 1425.325pt x 939.51pt>
+File: img/pgic_much_or_very_much_improved-pico.png Graphic file (type png)
+<use img/pgic_much_or_very_much_improved-pico.png>
+Package pdftex.def Info: img/pgic_much_or_very_much_improved-pico.png  used on 
+input line 527.
+(pdftex.def)             Requested size: 234.8775pt x 154.81175pt.
+<img/pgic_much_or_very_much_improved-sof.png, id=503, 1626.075pt x 619.31375pt>
+
+File: img/pgic_much_or_very_much_improved-sof.png Graphic file (type png)
+<use img/pgic_much_or_very_much_improved-sof.png>
+Package pdftex.def Info: img/pgic_much_or_very_much_improved-sof.png  used on i
+nput line 527.
+(pdftex.def)             Requested size: 446.26582pt x 169.96687pt.
+<img/pgic_any_improvement-post_int-net.png, id=505, 505.89pt x 505.89pt>
+File: img/pgic_any_improvement-post_int-net.png Graphic file (type png)
+<use img/pgic_any_improvement-post_int-net.png>
+Package pdftex.def Info: img/pgic_any_improvement-post_int-net.png  used on inp
+ut line 540.
+(pdftex.def)             Requested size: 187.89914pt x 187.90196pt.
+<img/pgic_any_improvement-pico.png, id=506, 1425.325pt x 1041.8925pt>
+File: img/pgic_any_improvement-pico.png Graphic file (type png)
+<use img/pgic_any_improvement-pico.png>
+Package pdftex.def Info: img/pgic_any_improvement-pico.png  used on input line 
+540.
+(pdftex.def)             Requested size: 234.8775pt x 171.68227pt.
+<img/pgic_any_improvement-sof.png, id=507, 1626.075pt x 607.26875pt>
+File: img/pgic_any_improvement-sof.png Graphic file (type png)
+<use img/pgic_any_improvement-sof.png>
+Package pdftex.def Info: img/pgic_any_improvement-sof.png  used on input line 5
+40.
+(pdftex.def)             Requested size: 446.26582pt x 166.66121pt.
+<img/pgic_cont- - -post_int-net.png, id=508, 505.89pt x 505.89pt>
+File: img/pgic_cont- - -post_int-net.png Graphic file (type png)
+<use img/pgic_cont- - -post_int-net.png>
+Package pdftex.def Info: img/pgic_cont- - -post_int-net.png  used on input line
+ 550.
+(pdftex.def)             Requested size: 187.89914pt x 187.90196pt.
+<img/pgic_cont-pico.png, id=509, 1425.325pt x 1152.305pt>
+File: img/pgic_cont-pico.png Graphic file (type png)
+<use img/pgic_cont-pico.png>
+Package pdftex.def Info: img/pgic_cont-pico.png  used on input line 550.
+(pdftex.def)             Requested size: 234.8775pt x 189.87596pt.
+<img/pgic_cont-sof.png, id=510, 1626.075pt x 523.9575pt>
+File: img/pgic_cont-sof.png Graphic file (type png)
+<use img/pgic_cont-sof.png>
+Package pdftex.def Info: img/pgic_cont-sof.png  used on input line 550.
+(pdftex.def)             Requested size: 446.26582pt x 143.79694pt.
+[29] [30 <./img/pain_mod- - -post_int-net.png (PNG copy)> <./img/pain_mod-pico.
+png> <./img/pain_mod-sof.png>] [31 <./img/pgic_much_or_very_much_improved- - -p
+ost_int-net.png (PNG copy)> <./img/pgic_much_or_very_much_improved-pico.png> <.
+/img/pgic_much_or_very_much_improved-sof.png>] [32 <./img/pgic_any_improvement-
+post_int-net.png (PNG copy)> <./img/pgic_any_improvement-pico.png> <./img/pgic_
+any_improvement-sof.png>]
+<img/withdrawal- - -post_int-net.png, id=538, 505.89pt x 505.89pt>
+File: img/withdrawal- - -post_int-net.png Graphic file (type png)
+<use img/withdrawal- - -post_int-net.png>
+Package pdftex.def Info: img/withdrawal- - -post_int-net.png  used on input lin
+e 559.
+(pdftex.def)             Requested size: 187.89914pt x 187.90196pt.
+<img/withdrawal-pico.png, id=539, 1425.325pt x 2693.06125pt>
+File: img/withdrawal-pico.png Graphic file (type png)
+<use img/withdrawal-pico.png>
+Package pdftex.def Info: img/withdrawal-pico.png  used on input line 559.
+(pdftex.def)             Requested size: 234.8775pt x 443.76064pt.
+<img/withdrawal-sof.png, id=540, 1626.075pt x 5413.22375pt>
+File: img/withdrawal-sof.png Graphic file (type png)
+<use img/withdrawal-sof.png>
+Package pdftex.def Info: img/withdrawal-sof.png  used on input line 559.
+(pdftex.def)             Requested size: 446.26582pt x 1485.62631pt.
+
+
+LaTeX Warning: Float too large for page by 1307.24588pt on input line 559.
+
+
+LaTeX Warning: Reference `sleepcs' on page 33 undefined on input line 569.
+
+[33 <./img/pgic_cont- - -post_int-net.png (PNG copy)> <./img/pgic_cont-pico.png
+> <./img/pgic_cont-sof.png>] [34 <./img/withdrawal- - -post_int-net.png (PNG co
+py)> <./img/withdrawal-pico.png> <./img/withdrawal-sof.png>]
+<img/sleep-change_score-net.png, id=553, 505.89pt x 505.89pt>
+File: img/sleep-change_score-net.png Graphic file (type png)
+<use img/sleep-change_score-net.png>
+Package pdftex.def Info: img/sleep-change_score-net.png  used on input line 576
+.
+(pdftex.def)             Requested size: 187.89914pt x 187.90196pt.
+<img/sleep-change_score-pico.png, id=554, 1425.325pt x 1089.06876pt>
+File: img/sleep-change_score-pico.png Graphic file (type png)
+<use img/sleep-change_score-pico.png>
+Package pdftex.def Info: img/sleep-change_score-pico.png  used on input line 57
+6.
+(pdftex.def)             Requested size: 234.8775pt x 179.45593pt.
+<img/sleep-change_score-sof.png, id=555, 1626.075pt x 523.9575pt>
+File: img/sleep-change_score-sof.png Graphic file (type png)
+<use img/sleep-change_score-sof.png>
+Package pdftex.def Info: img/sleep-change_score-sof.png  used on input line 576
+.
+(pdftex.def)             Requested size: 446.26582pt x 143.79694pt.
+
+
+LaTeX Warning: Reference `sleeppi' on page 35 undefined on input line 586.
+
+<img/sleep-post_int-net.png, id=556, 505.89pt x 505.89pt>
+File: img/sleep-post_int-net.png Graphic file (type png)
+<use img/sleep-post_int-net.png>
+Package pdftex.def Info: img/sleep-post_int-net.png  used on input line 593.
+(pdftex.def)             Requested size: 187.89914pt x 187.90196pt.
+<img/sleep-post_int-pico.png, id=557, 1425.325pt x 1089.06876pt>
+File: img/sleep-post_int-pico.png Graphic file (type png)
+<use img/sleep-post_int-pico.png>
+Package pdftex.def Info: img/sleep-post_int-pico.png  used on input line 593.
+(pdftex.def)             Requested size: 234.8775pt x 179.45593pt.
+<img/sleep-post_int-sof.png, id=558, 1626.075pt x 1725.44624pt>
+File: img/sleep-post_int-sof.png Graphic file (type png)
+<use img/sleep-post_int-sof.png>
+Package pdftex.def Info: img/sleep-post_int-sof.png  used on input line 593.
+(pdftex.def)             Requested size: 446.26582pt x 473.53821pt.
+
+LaTeX Warning: Float too large for page by 40.41022pt on input line 593.
+
+[35 <./img/sleep-change_score-net.png (PNG copy)> <./img/sleep-change_score-pic
+o.png> <./img/sleep-change_score-sof.png>] [36 <./img/sleep-post_int-net.png (P
+NG copy)> <./img/sleep-post_int-pico.png> <./img/sleep-post_int-sof.png>]
+<img/qol- - -change_score-net.png, id=573, 505.89pt x 505.89pt>
+File: img/qol- - -change_score-net.png Graphic file (type png)
+<use img/qol- - -change_score-net.png>
+Package pdftex.def Info: img/qol- - -change_score-net.png  used on input line 6
+12.
+(pdftex.def)             Requested size: 187.89914pt x 187.90196pt.
+<img/qol-pico.png, id=574, 1425.325pt x 1089.06876pt>
+File: img/qol-pico.png Graphic file (type png)
+<use img/qol-pico.png>
+Package pdftex.def Info: img/qol-pico.png  used on input line 612.
+(pdftex.def)             Requested size: 234.8775pt x 179.45593pt.
+<img/qol-sof.png, id=575, 1626.075pt x 1598.97375pt>
+File: img/qol-sof.png Graphic file (type png)
+<use img/qol-sof.png>
+Package pdftex.def Info: img/qol-sof.png  used on input line 612.
+(pdftex.def)             Requested size: 446.26582pt x 438.8286pt.
+
+
+LaTeX Warning: Float too large for page by 4.5895pt on input line 612.
+
+[37] [38 <./img/qol- - -change_score-net.png (PNG copy)> <./img/qol-pico.png> <
+./img/qol-sof.png>]
+Chapter 5.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 619.
+[39
+
+]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 619.
+ (./rep.aux)
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 619.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 619.
+Package rerunfilecheck Info: File `rep.out' has not changed.
+(rerunfilecheck)             Checksum: D1A09545E500F3FBA126727FF3DEBF01;2210.
+
+
+LaTeX Warning: There were undefined references.
+
+
+LaTeX Warning: There were multiply-defined labels.
+
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 619.
+ ) 
+Here is how much of TeX's memory you used:
+ 7363 strings out of 481239
+ 123038 string characters out of 5920377
+ 389928 words of memory out of 5000000
+ 22294 multiletter control sequences out of 15000+600000
+ 538486 words of font info for 44 fonts, out of 8000000 for 9000
+ 1141 hyphenation exceptions out of 8191
+ 37i,13n,41p,1295b,341s stack positions out of 5000i,500n,10000p,200000b,80000s
+{/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-ts1.enc}</usr/share/texli
+ve/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb></usr/share/texlive/tex
+mf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb></usr/share/texlive/texmf-dis
+t/fonts/type1/public/amsfonts/cm/cmmi10.pfb></usr/share/texlive/texmf-dist/font
+s/type1/public/amsfonts/cm/cmr10.pfb></usr/share/texlive/texmf-dist/fonts/type1
+/public/amsfonts/cm/cmr12.pfb></usr/share/texlive/texmf-dist/fonts/type1/public
+/amsfonts/cm/cmr17.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfon
+ts/cm/cmr7.pfb></usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cm
+ti10.pfb></usr/share/texmf/fonts/type1/public/cm-super/sfrm1000.pfb>
+Output written on rep.pdf (40 pages, 15437898 bytes).
+PDF statistics:
+ 652 PDF objects out of 1000 (max. 8388607)
+ 452 compressed objects within 5 object streams
+ 116 named destinations out of 1000 (max. 500000)
+ 657 words of extra memory for PDF output out of 10000 (max. 10000000)
+
