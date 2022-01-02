@@ -1,5 +1,6 @@
 #' Multinma forest plot
 #'
+#'
 #' @param mod A [multinma] model.
 #'
 #' @return
@@ -9,7 +10,9 @@
 
 
 forest_multinma <- function(mod,
-                            key,
+                            model_type,
+                            dir,
+                            font_size = 15,
                             this_class = "no class filter",
                             or = TRUE) {
 
@@ -30,7 +33,7 @@ forest_multinma <- function(mod,
 
   active_pal <- dirty_xmas_pal
 
-  active_pal <- if (key$direction_of_improvement == "lower") c(active_pal[2], active_pal[1]) else active_pal
+  active_pal <- if (dir == "lower") c(active_pal[2], active_pal[1]) else active_pal
 
 
 # class filter ------------------------------------------------------------
@@ -87,7 +90,7 @@ forest_multinma <- function(mod,
   stan_dat <- if(or == TRUE) {
     stan_dat %>%
       mutate(
-        model_type = key$model_type,
+        model_type = model_type,
         mod_ref = 0,
         mod_ref = if_else(model_type == "lor", exp(mod_ref), mod_ref),
         mean = if_else(model_type == "lor", exp(mean), mean),
@@ -96,9 +99,26 @@ forest_multinma <- function(mod,
   } else stan_dat
 
   tau <- stan_dat %>%
-    filter(intervention == "tau") %>% pull(mean)
+    filter(intervention == "tau") %>% pull(mean) %>%
+    round(4)
 
-  dir_lgl <- key$direction_of_improvement == "lower"
+  total_n <- sum(mod$network$agd_arm$n)
+
+  this_caption <- glue("Participants {total_n}. Tau {tau}.")
+
+  dir_lgl <- dir == "lower"
+
+
+
+# plot text ---------------------------------------------------------------
+
+x_title <- if_else(
+  model_type == "lor",
+  "Odds ratio",
+  "Standardised mean difference"
+)
+
+# plot --------------------------------------------------------------------
 
 
   plot_dat <-
@@ -106,8 +126,17 @@ forest_multinma <- function(mod,
     filter(intervention != "tau") %>%
     left_join(int_n, by = "intervention") %>%
     mutate(
-      intervention = fct_reorder(intervention, mean, .desc = dir_lgl)
+      intervention = fct_reorder(intervention, mean, .desc = dir_lgl),
+      # set ci
+      estimates_text = glue::glue("{round(mean, 2)} [{round(ci_lb, 2)}, {round(ci_ub, 2)}]")
     )
+
+  y_levels <-
+    plot_dat %>%
+    arrange(intervention) %>%
+    select(intervention, estimates_text) %>%
+    distinct()
+
 
   ref_line <- plot_dat$mod_ref %>% unique()
 
@@ -137,20 +166,35 @@ forest_multinma <- function(mod,
     # set to square
     shape = 18 # http://www.sthda.com/english/wiki/ggplot2-point-shapes
     ) +
-
-    # geom_text(
-    #   aes(x = max(ci_ub) + abs(max(ci_ub) - min(ci_lb))/8,
-    #       y = intervention,
-    #       label =  glue::glue("{round(mean, 2)} [{round(ci_lb, 2)}, {round(ci_ub, 2)}]")
-    #       ),
-    #   size = 4,
-    #   hjust = 1
+    # scale_y_discrete(
+    #   name = "intervention",
+    #   sec.axis = sec_axis(
+    #     ~.*estimates_text,
+    #     name = "estimates_text")
     # ) +
-
-
+    guides(
+      y.sec = ggh4x::guide_axis_manual(
+        labels = y_levels$intervention,
+        breaks = y_levels$estimates_text
+      )
+    ) +
+    theme_minimal(
+     base_family = "serif",
+     base_size = font_size
+    ) +
     theme(
-      legend.position = "bottom",
-      legend.direction = "horizontal"
+      strip.text.y.left = element_text(angle = 0),
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank()
+    ) +
+    labs(
+      x = "",
+      x = x_title,
+      y = "",
+      size = "Intervention sample size",
+      linetype = "Class",
+      caption = this_caption
     )
+
 
 }

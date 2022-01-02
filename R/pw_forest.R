@@ -1,4 +1,272 @@
-pw_forest <- function(mod_key, font_size = 16) {
+#' Label a forest plot
+#'
+#' @param dat that goes into [pw_forest_plot]
+#'
+#' @return
+#' @export
+
+pw_forest_labs <- function(
+  outcome,
+  timepoint,
+  intervention,
+  dat,
+  mod # must have both returns in
+) {
+
+  i_sq <- round(mod$rma$I2, 2)
+
+  tau_sq <- round(mod$rma_mv$tau2, 4)
+
+  total_n <- sum(dat$n) + sum(dat$n_control)
+
+  labs(
+    title = glue("{intervention} MA {outcome_label(outcome)}") %>% str_to_sentence(),
+    subtitle = glue("{timepoint_label(timepoint)}") %>% str_to_sentence(),
+    caption = glue("Participants: {total_n}. Tau-squared: {tau_sq}, I-sq {i_sq}%.")
+  )
+}
+
+#' Meta-analysis forest plot
+#'
+#' First group is treatment group, second control.
+#'
+#' @param mod
+#' @param m_type
+#' @param dir
+#' @param alpha
+#'
+#' @return
+#' @export
+#'
+#' @examples
+
+pw_forest_plot <- function(mod,
+                           dat,
+                           m_type,
+                           dir,
+                           alpha = 0.05
+) {
+
+
+  # fix x axes
+  xlims_set <-
+    if (m_type == 'lor') c(0, 5) else if (m_type == "smd") c(-2, 5)
+
+  xlims <-
+    if (dir == "lower") rev(-1 * xlims_set) else xlims_set
+  # remove this later
+
+  aug_ma <-
+    mod %>%
+    augment() %>%
+    clean_names() %>%
+    mutate(estimate_type = "study",) %>%
+    rename(study = rownames, effect = observed) %>%
+    mutate(
+      var = mod$vi,
+      std_error = sqrt(var),
+      weight = 1 / (var + mod$tau2),
+      rel_weight = weight / sum(weight)
+    )
+
+
+  tidy_ma <-
+    mod %>% tidy() %>%
+    clean_names() %>%
+    rename(effect = estimate) %>%
+    mutate(estimate_type = "synthesised",
+           study = "RE model",
+           rel_weight = 1
+           )
+
+  ci_dat <-
+    tidy_ma %>%
+    bind_rows(aug_ma) %>%
+    mutate(
+      lower = effect - qnorm(1 - alpha / 2) * std_error,
+      upper = effect + qnorm(1 - alpha / 2) * std_error,
+      estimate_type = fct_relevel(estimate_type, "study"),
+      m_type = m_type,
+      effect_ref = 0
+    ) %>%
+    arrange(estimate_type)
+
+  transf_dat <- if (m_type == "lor") {
+    ci_dat %>% mutate(across(c(effect, lower, upper, effect_ref), exp))
+  } else if (m_type == "smd") {
+    ci_dat
+  }
+
+  # add text labels
+  label_dat <-
+    transf_dat %>%
+    mutate(text_label =
+             glue("{round(effect, 2)} [{round(lower,2)}, {round(upper,2)}]")) %>%
+    mutate(
+      study = if_else(study == "RE model",
+                      glue("{as.character(study)} {text_label}"),
+                      study
+      ),
+      study = reorder(study, desc(effect))
+    )
+
+  dir_lgl <- dir == "lower"
+
+  # add in class, condition, and ...? dose
+  plot_dat <-
+    label_dat %>%
+    mutate(
+      study_mod = study,
+      study = str_remove(study, "\\.\\d")
+    ) %>%
+    left_join(
+      dat %>%
+        select(study, intervention, condition) %>%
+        distinct()
+    ) %>%
+    mutate(
+      condition = if_else(
+        str_detect(study, "RE model"),
+        "all conditions",
+        condition
+      ),
+      condition = fct_relevel(
+        condition,
+        "all conditions",
+        after = Inf
+      ),
+      study = fct_reorder(study, effect, .desc = dir_lgl)
+    )
+
+
+
+  # configure colour palette
+  # shift this to argument when I want to customise colours
+  dirty_xmas_pal <- list(red = "#b12a1b",
+                         green = "#67852e")
+
+
+  active_pal <- dirty_xmas_pal
+
+  active_pal <-
+    if (dir == "lower")
+      c(active_pal[2], active_pal[1])
+  else
+    active_pal
+
+
+  vlines <- if (m_type == "smd") {
+    tibble(
+      value = c(0, 0.2,-0.2, 0.5,-0.5, 0.8,-0.8),
+      effect = c(
+        "no effect",
+        rep("small", 2),
+        rep("moderate", 2),
+        rep("large", 2)
+      )
+    ) %>%
+      filter(value >  min(plot_dat$lower) & value < max(plot_dat$upper)) %>%
+      mutate(effect =
+               fct_relevel(effect, "no effect", "small", "moderate", "large"))
+  } else if (m_type == "lor") {
+    tibble(value = 1,
+           effect = "no effect")
+  }
+
+y_axis_first <-
+ levels(plot_dat$study)
+
+y_axis_second <-
+  plot_dat %>% arrange(study) %>% pluck("text_label")
+
+
+  # make plot ---------------------------------------------------------------
+
+
+  plot_dat %>%
+    ggplot() +
+    geom_vline(
+      aes(xintercept = value,
+          linetype = effect),
+      data = vlines,
+      alpha = 0.6,
+      colour = "#13294a",
+      size = 0.2
+    ) +
+    geom_segment(
+      aes(
+        x = lower,
+        xend = upper,
+        y = study,
+        yend = study,
+        colour = I(
+          if_else(lower < effect_ref &
+                    upper > effect_ref, "darkgrey", "black")
+        )
+      ),
+      alpha = 0.7,
+      size = 1
+    ) +
+    geom_point(show.legend = FALSE,
+               shape = 15,
+               aes(
+                 x = effect,
+                 y = study,
+                 size = rel_weight,
+                 colour = I(if_else(
+                   effect < effect_ref, active_pal[[1]], active_pal[[2]]
+                 ))
+               )) +
+
+    # add diamond
+    geom_point(show.legend = FALSE,
+               data = plot_dat %>%
+                 filter(str_detect(study, "RE model")),
+               shape = 18,
+               size = 8,
+               aes(
+                 x = effect,
+                 y = study,
+                 colour = I(if_else(
+                   effect < effect_ref, active_pal[[1]], active_pal[[2]]
+                 ))
+               )) +
+    facet_grid(estimate_type ~ .,
+               scales = "free_y",
+               space = "free_y") +
+    theme_minimal(
+      base_size = 15,
+      base_family = "serif"
+    ) +
+    labs(y = "",
+         x = "",
+         linetype = "Effect reference") +
+    theme(
+      panel.grid.major.x = element_blank(),
+      panel.grid.minor.x = element_blank(),
+      strip.text.y = element_text(angle = 0),
+      axis.ticks.y = element_blank(),
+      panel.spacing.y = unit(1, "cm"),
+      legend.position = "bottom",
+      legend.direction = "horizontal"
+    ) +
+  # coord_cartesian(xlim = xlims) +
+scale_size_continuous(range = c(1, 4))
+# +
+#     guides(
+#       y.sec = ggh4x::guide_axis_manual(
+#         breaks = y_axis_first,
+#         labels = y_axis_second
+#       )
+#     )
+
+}
+
+
+
+
+pw_forest_archive <- function(mod_key,
+                      font_size = 16) {
   dirty_xmas_pal <- list(red = "#b12a1b",
                          green = "#67852e")
 
@@ -64,7 +332,7 @@ if (mod_key$rma_class == "rma.uni") {"
     rename(study = rownames, effect = observed) %>%
     mutate(
       var = ma$vi,
-      std_error = var %>% sqrt(),
+      std_error = sqrt(var),
       weight = 1 / (var + mod_key$tau_squared),
       rel_weight = weight / sum(weight)
     )
@@ -87,7 +355,7 @@ if (mod_key$rma_class == "rma.uni") {"
     bind_rows(aug_ma) %>%
     mutate(
       lower = effect - qnorm(1 - 0.05 / 2) * std_error,
-      higher = effect + qnorm(1 - 0.05 / 2) * std_error,
+      upper = effect + qnorm(1 - 0.05 / 2) * std_error,
       estimate_type = fct_relevel(estimate_type, "study"),
       m_type = m_type,
       effect_ref = 0
@@ -95,7 +363,7 @@ if (mod_key$rma_class == "rma.uni") {"
     arrange(estimate_type)
 
   plot_dat <- if (m_type == "lor") {
-    plot_dat %>% mutate(across(c(effect, lower, higher, effect_ref), exp))
+    plot_dat %>% mutate(across(c(effect, lower, upper, effect_ref), exp))
   } else if (m_type == "smd") {
     plot_dat
   }
@@ -104,7 +372,7 @@ if (mod_key$rma_class == "rma.uni") {"
   plot_dat <-
     plot_dat %>%
     mutate(text_label =
-             glue("{round(effect, 2)} [{round(lower,2)}, {round(higher,2)}]")) %>%
+             glue("{round(effect, 2)} [{round(lower,2)}, {round(upper,2)}]")) %>%
     mutate(
       study = if_else(study == "RE model",
                       glue("{as.character(study)} {text_label}"),
@@ -118,11 +386,7 @@ if (mod_key$rma_class == "rma.uni") {"
 
   # set xlims
  ci_lims <-
-# c(
-#   quantile(plot_dat$lower, 0.25) - quantile(plot_dat$effect, 0.5),
-#   quantile(plot_dat$higher, 0.75) + quantile(plot_dat$effect, 0.5) / 2
-# ) %>% as.numeric()
-    c(min(plot_dat$lower), max(plot_dat$higher))
+    c(min(plot_dat$lower), max(plot_dat$upper))
 
 
   text_x <-
@@ -183,12 +447,12 @@ if (mod_key$rma_class == "rma.uni") {"
     geom_segment(
       aes(
         x = lower,
-        xend = higher,
+        xend = upper,
         y = study,
         yend = study,
         colour = I(
           if_else(lower < effect_ref &
-                    higher > effect_ref, "darkgrey", "black")
+                    upper > effect_ref, "darkgrey", "black")
         )
       ),
       alpha = 0.7,
@@ -219,16 +483,12 @@ if (mod_key$rma_class == "rma.uni") {"
                  ))
                )) +
 
-    # geom_text(aes(x = text_x,
-    #               y = study,
-    #               label = text_label),
-    #          size = 3.5) +
     facet_grid(estimate_type ~ .,
                scales = "free_y",
                space = "free_y") +
     ggthemes::theme_tufte(base_size = font_size) +
     labs(y = "",
-         x = mod_key$model_text,
+         x = "",
          linetype = "Effect reference") +
     theme(
       strip.text.y = element_blank(),

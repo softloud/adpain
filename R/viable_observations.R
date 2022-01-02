@@ -12,11 +12,11 @@ viable_observations <- function(hpp_df) {
   hpp_df %>%
     group_by(study) %>%
     mutate(
-      study_obs_count = length(study)
+      int_count = n_distinct(intervention)
     ) %>%
-    select(study_obs_count, everything()) %>%
-    arrange(study_obs_count, study) %>%
-    filter(study_obs_count > 1)  %>%
+    select(int_count, everything()) %>%
+    arrange(int_count, study) %>%
+    filter(int_count > 1)  %>%
     ungroup()
 
   n_studies <- viable %>% pull(study) %>% unique() %>% length()

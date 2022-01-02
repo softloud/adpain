@@ -1,5 +1,7 @@
 #' Pairwise set
 #'
+#' First group is treatment group, second control.
+#'
 #' @param dat Dataframe
 #'
 #' @export
@@ -16,21 +18,21 @@ hpp_rma <- function(dat) {
     metafor::escalc(
       measure = hpp_measure,
       m1i = mean,
-      m2i = mean_comp,
+      m2i = mean_control,
       sd1i = sd,
-      sd2i = sd_comp,
+      sd2i = sd_control,
       n1i = n,
-      n2i = n_comp,
+      n2i = n_control,
       slab = study,
       data = dat
     )
   } else if (m_type == "lor") {
     metafor::escalc(
       measure = hpp_measure,
-      ai = r,
-      n1i = n,
-      ci = r_comp,
-      n2i = n_comp,
+      ai = r_control,
+      n1i = n_control,
+      ci = r,
+      n2i = n,
       slab = study,
       data = dat
     )
