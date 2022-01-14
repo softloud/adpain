@@ -11,8 +11,13 @@ rep_forgroup(
   rep_comparator,
   rep_subgroup,
   rep_rma_prefix,
-  rep_pw_mod,
-  rep_pw_escalc
+  rep_pw_escalc,
+  a_levels,
+  b_levels,
+  c_levels,
+  a_label = "A group",
+  b_label = "B group",
+  c_label = "C group"
 )
 }
 \arguments{

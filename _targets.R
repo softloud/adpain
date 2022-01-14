@@ -22,9 +22,10 @@ suppressMessages({
   library(patchwork)
   library(kableExtra)
   library(scales)
+  library(conflicted)
 
   conflicted::conflict_prefer("filter", "dplyr")
-
+  conflict_prefer("discard", "scales")
 })
 
 installed_pkg <- installed.packages()[, 1]
@@ -204,13 +205,13 @@ list(
         mean_dir =           model_type == "smd" &
           direction_of_improvement == "higher" &
           scale_dir == "lower" & !is.na(scale_dir),
-        mean = if_else(mean_dir, -mean,
+        mean = if_else(mean_dir,-mean,
                        mean),
 
         mean_calc = model_type == "smd" &
           direction_of_improvement == "lower" &
           scale_dir == "higher" & !is.na(scale_dir),
-        mean = if_else(mean_calc, -mean,
+        mean = if_else(mean_calc,-mean,
                        mean)
       )
   ),
@@ -292,7 +293,7 @@ list(
         values_fill = 0
       ) %>%
       mutate(high_risk_p = high / (high + low)) %>%
-      select(-high,-low)
+      select(-high, -low)
   ),
 
   tar_target(write_rob,
@@ -305,7 +306,7 @@ list(
   tar_target(
     outcome_key,
     w_outcome_key %>%
-      filter(outcome != "adverse_number", !str_detect(outcome,  "mood_")) %>%
+      filter(outcome != "adverse_number",!str_detect(outcome,  "mood_")) %>%
       # remove for pgic calcs tomorrow!str_detect(outcome, "pgic")) %>%
       select(-outcome) %>%
       rename(outcome = outcome_nma)
@@ -501,60 +502,6 @@ list(
   ),
 
 
-  # check pw ----------------------------------------------------------------
-
-  tar_target(
-    pw_dat_dev,
-    get_pw_dat(
-      dat = mod_dat,
-      outcome = "pain_sub",
-      timepoint = "post_int",
-      g1 = "duloxetine",
-      g2 = "placebo"
-    )
-
-  ),
-
-  tar_target(pw_rma_dev,
-             pw_dat_dev %>%
-               hpp_rma()),
-
-  tar_target(
-    pw_for_dev,
-    pw_forest_plot(
-      pw_rma_dev$rma_mv,
-      pw_dat_dev,
-      m_type = "smd",
-      dir = "lower"
-    )
-  ),
-
-  tar_target(
-    pw_for_caption,
-    pw_forest_plot(
-      pw_rma_dev$rma_mv,
-      pw_dat_dev,
-      m_type = "smd",
-      dir = "lower"
-    ) +
-      labs(caption = "test")
-  ),
-
-  tar_target(
-    pw_for_condition,
-    pw_for_dev +
-      facet_grid(condition ~ .,
-                 scales = "free",
-                 space = "free")
-  ),
-
-  tar_target(
-    pw_for_dose,
-    pw_for_dev +
-      facet_grid(dose ~ .,
-                 scales = "free",
-                 space = "free")
-  ),
 
   # rob reporting -----------------------------------------------------------
 
@@ -691,10 +638,11 @@ list(
 
   # dich outcome ----------------------------------------------------------
   tar_target(dich_outcome,
-             "pain_mod"),
+             "pain_mod"
+             #"serious_adverse"
+             # "pain_mod"
+             ),
 
-  tar_target(dich_timepoint,
-             "post_int"),
 
   tar_target(dich_intervention,
              "duloxetine"),
@@ -703,8 +651,10 @@ list(
              "placebo"),
 
   tar_target(dich_subgroup,
-             "condition"),
+             "dose"),
 
+  tar_target(dich_timepoint,
+             "post_int"),
 
   # dich dat ----------------------------------------------------------------
 
@@ -719,10 +669,6 @@ list(
   ),
 
   tar_target(dich_all_int_dat,
-             # dich_all_dat %>%
-             #   filter(# rob == dich_subgroup_category
-             # dose %in% c("n/a", dich_subgroup_category)
-             # condition == dich_subgroup_category)
              dich_all_dat),
 
   tar_target(dich_dat,
@@ -827,13 +773,13 @@ list(
   tar_target(
     dich_rma_prefix,
     sprintf(
-      "report/img/%s-%s-%s-%s-",
+      "report/img/%s-%s-%s-%s",
       dich_outcome,
+      dich_subgroup,
       dich_intervention,
-      dich_comparator,
-      dich_subgroup
+      dich_comparator
     ) %>%
-      str_remove("-\\s-")
+      str_remove("\\s-")
   ),
 
   tar_target(dich_for, {
@@ -869,13 +815,12 @@ list(
     to <- dich_outcome %>% str_remove("\\s\\(.+\\)")
     ti <- dich_intervention
     ts <- dich_subgroup
-    tsc <- dich_subgroup_category
     ci_lb <- round(dich_regtest$ci.lb, 2)
     ci_ub <- round(dich_regtest$ci.ub, 2)
 
     this_title <-
-      glue("{ti}, {ts}:{tsc}") %>%
-      str_remove(",\\s+:\\s+") %>%
+      glue("{ti}, {ts}") %>%
+      str_remove(",\\s+") %>%
       str_to_sentence() %>%
       str_wrap()
 
@@ -901,9 +846,8 @@ list(
 
   # dich nma ----------------------------------------------------------------
 
-
   tar_target(
-    dich_nma_mod,
+    dich_nma_agd,
     dich_all_dat %>%
       mutate(intervention = str_to_sentence(intervention)) %>%
       viable_observations() %>%
@@ -916,15 +860,22 @@ list(
         study = study,
         trt_class = class,
         trt_ref = "Placebo"
-      ) %>%
-      nma(trt_effects = "random")
+      )
+  ),
+
+  tar_target(
+    dich_nma_mod,
+    # nma(dich_nma_agd, trt_effects = "random")
+    sprintf("exports/%s-nma.rds", dich_outcome) %>%
+      read_rds()
   ),
 
   tar_target(dich_nma_write,
-             write_rds(
-               dich_nma_mod,
-               sprintf("exports/%s-nma.rds", dich_outcome)
-             )),
+             if (FALSE) {
+               write_rds(dich_nma_mod,
+                         sprintf("exports/%s-nma.rds", dich_outcome))
+             } else
+               NULL),
 
 
 
@@ -1145,7 +1096,7 @@ list(
       tab_footnote(footnote = "Table is ordered by interventions with greatest number of studies.",
                    locations = cells_column_labels(columns = c(Studies, Participants))) %>%
       tab_source_note(
-        "This table use this work as a guide: Yepes-Nuñez, J. J., Li, S.-A., Guyatt, G., Jack, S. M., Brozek, J. L., Beyene, J., Murad, M. H., Rochwerg, B., Mbuagbaw, L., Zhang, Y., Flórez, I. D., Siemieniuk, R. A., Sadeghirad, B., Mustafa, R., Santesso, N., & Schünemann, H. J. (2019). Development of the summary of findings table for network meta-analysis. Journal of Clinical Epidemiology, 115, 1–13. https://doi.org/10.1016/j.jclinepi.2019.04.018"
+        "This table follows the recommendations of Yepes-Nuñez, J. J., Li, S.-A., Guyatt, G., Jack, S. M., Brozek, J. L., Beyene, J., Murad, M. H., Rochwerg, B., Mbuagbaw, L., Zhang, Y., Flórez, I. D., Siemieniuk, R. A., Sadeghirad, B., Mustafa, R., Santesso, N., & Schünemann, H. J. (2019). Development of the summary of findings table for network meta-analysis. Journal of Clinical Epidemiology, 115, 1–13. https://doi.org/10.1016/j.jclinepi.2019.04.018"
       ) %>%
       tab_style(
         style = cell_borders(
@@ -1293,28 +1244,22 @@ list(
   }),
 
   # postint and change score ------------------------------------------------
-
-
   # set cspi ----------------------------------------------------------------
 
-
-
   tar_target(cspi_outcome,
-             "sleep"),
+             "mood"),
 
   tar_target(cspi_timepoint,
-             "post_int"),
+             "change_score"),
 
-  tar_target(cspi_comparator,
-             "placebo"),
-
+  tar_target(cspi_subgroup,
+             "duration"),
 
   tar_target(cspi_intervention,
              "duloxetine"),
 
-  tar_target(cspi_subgroup, " "),
-
-  tar_target(cspi_subgroup_category, " "),
+  tar_target(cspi_comparator,
+             "placebo"),
 
 
   # cspi nma ---------------------------------------------------------------
@@ -1362,7 +1307,9 @@ list(
   tar_target(
     cspi_net_cs,
     set_agd_contrast(
-      data = cspi_dat %>% filter(timepoint == "change_score"),
+      data = cspi_dat %>%
+        filter(timepoint == "change_score") %>%
+        viable_observations(),
       study = study,
       trt = intervention,
       y = smd,
@@ -1372,15 +1319,13 @@ list(
       trt_ref = "Placebo"
     )
   ),
-
-  tar_target(cspi_nma_cs,
-             # nma(cspi_net_cs, trt_effects = "random")
-             read_rds("exports/sleep-change_score-nma.rds")),
 
   tar_target(
     cspi_net_pi,
     set_agd_contrast(
-      data = cspi_dat %>% filter(timepoint == "post_int"),
+      data = cspi_dat %>%
+        filter(timepoint == "post_int")  %>%
+        viable_observations(),
       study = study,
       trt = intervention,
       y = smd,
@@ -1391,16 +1336,32 @@ list(
     )
   ),
 
-
   # read nma ---------------------------------------------------------------
 
+  tar_target(
+    cspi_nma_cs,
+    # nma(cspi_net_cs, trt_effects = "random")
+    sprintf("exports/%s-change_score-nma.rds", cspi_outcome) %>% read_rds()
+  ),
+
+  tar_target(
+    cspi_nma_pi,
+    # nma(cspi_net_pi, trt_effects = "random")
+    sprintf("exports/%s-post_int-nma.rds", cspi_outcome) %>% read_rds()
+  ),
 
 
-  tar_target(cspi_nma_pi,
-             # nma(cspi_net_pi, trt_effects = "random")
-             read_rds("exports/sleep-post_int-nma.rds")),
-
-
+  tar_target(cspi_nma_write,
+             if (FALSE) {
+               write_rds(cspi_nma_pi,
+                         sprintf("exports/%s-post_int-nma.rds",
+                                 cspi_outcome))
+               write_rds(cspi_nma_cs,
+                         sprintf("exports/%s-change_score-nma.rds",
+                                 cspi_outcome))
+             } else {
+               NULL
+             }),
 
   # get totals --------------------------------------------------------------
 
@@ -1500,16 +1461,12 @@ list(
 
 
   tar_target(cspi_nma_mod,
-             if (cspi_timepoint == "change_score") cspi_nma_cs else cspi_nma_pi
-             ),
+             if (cspi_timepoint == "change_score")
+               cspi_nma_cs
+             else
+               cspi_nma_pi),
 
-  tar_target(cspi_nma_write,
-             write_rds(
-               cspi_nma_mod,
-               sprintf("exports/%s-%s-nma.rds",
-                       cspi_outcome,
-                       cspi_timepoint)
-             )),
+
 
   # cspi sof ----------------------------------------------------------------
 
@@ -1637,6 +1594,9 @@ list(
                    locations = cells_column_labels(columns = Rob)) %>%
       tab_footnote(footnote = "Table is ordered by interventions with greatest number of studies.",
                    locations = cells_column_labels(columns = c(Studies, Participants))) %>%
+      tab_source_note(
+        "This table follows the recommendations of Yepes-Nuñez, J. J., Li, S.-A., Guyatt, G., Jack, S. M., Brozek, J. L., Beyene, J., Murad, M. H., Rochwerg, B., Mbuagbaw, L., Zhang, Y., Flórez, I. D., Siemieniuk, R. A., Sadeghirad, B., Mustafa, R., Santesso, N., & Schünemann, H. J. (2019). Development of the summary of findings table for network meta-analysis. Journal of Clinical Epidemiology, 115, 1–13. https://doi.org/10.1016/j.jclinepi.2019.04.018"
+      ) %>%
       tab_style(
         style = cell_borders(
           sides = "all",
@@ -1674,11 +1634,20 @@ list(
 
   # cspi meta-analysis ------------------------------------------------------
 
+  tar_target(
+    cspi_pw_escalc,
+    cspi_dat %>%
+      filter(
+        timepoint == cspi_timepoint,
+        !is.na(smd),
+        intervention %in% str_to_sentence(c(cspi_intervention, cspi_comparator))
+      ) %>%
+      ungroup()
+  ),
 
   tar_target(
     cspi_pw_mod,
-    cspi_dat %>%
-      filter(timepoint == cspi_timepoint, !is.na(smd)) %>%
+    cspi_pw_escalc %>%
       rma(
         yi = smd,
         vi = se_smd,
@@ -1691,77 +1660,16 @@ list(
   tar_target(
     cspi_rma_prefix,
     sprintf(
-      "report/img/%s-%s-%s-%s-%s-%s-",
+      "report/img/%s-%s-%s-%s-%s",
       cspi_outcome,
       cspi_timepoint,
-      cspi_intervention,
-      cspi_comparator,
       cspi_subgroup,
-      cspi_subgroup_category
+      cspi_intervention,
+      cspi_comparator
     ) %>%
-      str_remove("-\\s-\\s-")
+      str_remove("\\s-")
   ),
 
-  tar_target(cspi_for, {
-    to <- cspi_outcome %>% str_remove("\\s\\(.+\\)")
-    ti <- cspi_intervention
-    tp <- cspi_timepoint
-    ts <- cspi_subgroup
-    tsc <- cspi_subgroup_category
-
-    this_title <-
-      glue("{outcome_label(to)}")  %>%
-      str_remove(",\\s+:\\s+") %>%
-      str_to_sentence() %>%
-      str_wrap()
-
-    imgpath <-
-      sprintf("%s-forest-png", cspi_rma_prefix)
-
-    dontpanic::msg(imgpath)
-    png(imgpath)
-    forest(cspi_pw_mod,
-           main = this_title,
-           mlab = mlabfun("",
-                          cspi_pw_mod))
-
-    dev.off()
-  }),
-
-  tar_target(cspi_regtest,
-             regtest(cspi_pw_mod)),
-
-  tar_target(cspi_fun, {
-    to <- cspi_outcome %>% str_remove("\\s\\(.+\\)")
-    ti <- cspi_intervention
-    tp <- cspi_timepoint
-    ts <- cspi_subgroup
-    tsc <- cspi_subgroup_category
-    ci_lb <- round(cspi_regtest$ci.lb, 2)
-    ci_ub <- round(cspi_regtest$ci.ub, 2)
-
-    this_title <-
-      glue("{ti}, {ts}:{tsc}") %>%
-      str_remove(",\\s+:\\s+") %>%
-      str_to_sentence() %>%
-      str_wrap()
-
-    imgpath <-
-      imgpath <-
-      sprintf("%s-funnel-png", cspi_rma_prefix)
-
-    dontpanic::msg(imgpath)
-    png(imgpath)
-    funnel(
-      cspi_pw_mod,
-      main = this_title,
-      level = c(90, 95, 99),
-      # refline = 0,
-      shade = c("white", "gray55", "gray75")
-    )
-
-    dev.off()
-  }),
 
 
   # cspi pico --------------------------------------------------------------------
@@ -1912,39 +1820,68 @@ list(
 
   # set reporting things ----------------------------------------------------
 
-  tar_target(rep_outcome,
-             dich_outcome),
-
-  tar_target(rep_intervention,
-
-             dich_intervention),
-
-  tar_target(rep_comparator,
-             dich_comparator),
-
-  tar_target(rep_timepoint,
-             dich_timepoint),
-
-  tar_target(rep_subgroup,
-             dich_subgroup),
-
-  tar_target(rep_nma,
-             dich_nma_mod),
-
-  tar_target(rep_regtest,
-             dich_regtest),
-
-  tar_target(rep_pw_mod,
-             dich_pw_mod),
-
-
+  tar_target(rep_mod,
+             "dich"),
 
   # dependencies ------------------------------------------------------------
+
+  tar_target(rep_outcome,
+             if (rep_mod == "dich")
+               dich_outcome
+             else
+               cspi_outcome),
+
+  tar_target(rep_intervention,
+             if (rep_mod == "dich")
+               dich_intervention
+             else
+               cspi_intervention),
+
+  tar_target(rep_comparator,
+             if (rep_mod == "dich")
+               dich_comparator
+             else
+               cspi_comparator),
+
+  tar_target(rep_timepoint,
+             if (rep_mod == "dich")
+               dich_timepoint
+             else
+               cspi_timepoint),
+
+  tar_target(rep_subgroup,
+             if (rep_mod == "dich")
+               dich_subgroup
+             else
+               cspi_subgroup),
+
+  tar_target(rep_nma,
+             if (rep_mod == "dich")
+               dich_nma_mod
+             else
+               cspi_nma_mod),
+
+  tar_target(rep_regtest,
+             if (rep_mod == "dich")
+               dich_regtest
+             else
+               cspi_regtest),
+
+  tar_target(rep_pw_mod,
+             if (rep_mod == "dich")
+               dich_pw_mod
+             else
+               cspi_pw_mod),
+
+
+
 
 
   tar_target(rep_pw_escalc,
              if (outcome_mod(rep_outcome) == "lor")
-               dich_pw_escalc else cspi_pw_escalc),
+               dich_pw_escalc
+             else
+               cspi_pw_escalc),
 
 
   tar_target(rep_rma_prefix,
@@ -2097,7 +2034,8 @@ list(
               forest_text,
               regtext)
 
-    pth <- sprintf("%s-rma-caption.txt", rep_rma_prefix)
+    pth <-
+      sprintf("%s-rma-caption.txt", rep_rma_prefix)
 
     dontpanic::msg(pth)
 
@@ -2106,21 +2044,181 @@ list(
 
   # pw forests ------------------------------------------------------------
 
+
+  # funnel ------------------------------------------------------------------
+
+  tar_target(rep_funnel, {
+    if (str_length(rep_subgroup) < 2) {
+
+      this_title <- sprintf("%s: %s vs %s",
+                            outcome_label(rep_outcome),
+                            rep_intervention,
+                            rep_comparator)
+
+    dontpanic::msg(this_title)
+
+    img_path <- sprintf("%s-funnel.png", rep_rma_prefix)
+
+    dontpanic::msg(img_path)
+
+    png(img_path)
+
+
+    # don't forget totransform for exp
+    funnel(
+      rep_pw_mod,
+      main = this_title,
+      level = c(90, 95, 99),
+      # transf = exp,
+      # refline = 0,
+      shade = c("white", "gray55", "gray75")
+    )
+
+    dev.off()
+  }}),
+
+  tar_target(rep_pw_forest, {
+    if (str_length(rep_subgroup) < 2) {
+
+      this_title <- sprintf("%s: %s vs %s",
+                            outcome_label(rep_outcome),
+                            rep_intervention,
+                            rep_comparator)
+
+      dontpanic::msg(this_title)
+
+      img_path <- sprintf("%s-forest.png", rep_rma_prefix)
+
+      dontpanic::msg(img_path)
+
+      png(img_path)
+
+
+      # don't forget totransform for exp
+      forest(
+        rep_pw_mod,
+        main = this_title,
+        # transf = exp,
+        # refline = 02
+      )
+
+      dev.off()
+    }}),
+
+
+  # pw subgroups ------------------------------------------------------------
+
+
+
+  tar_target(rep_pw_cspi, {
+    # need to make a dataset for labels
+
+    # get bits for forest
+
+    # get intervention as went into model
+    all_dat <-
+      cspi_dat %>%
+      filter(timepoint == cspi_timepoint) %>%
+      select(
+        timepoint,
+        study,
+        intervention,
+        mean,
+        sd,
+        n,
+        contains('smd'),
+        dose,
+        duration,
+        rob,
+        condition
+      ) %>%
+      mutate(intervention = tolower(intervention))
+
+
+    all_dat %>%
+      filter(intervention == cspi_comparator) %>%
+      rename(
+        control = intervention,
+        mean_control = mean,
+        sd_control = sd,
+        n_control = n
+      ) %>%
+      select(study, contains("control")) %>%
+      left_join(
+        all_dat %>%
+          filter(
+            intervention != cspi_comparator,
+            intervention == cspi_intervention
+          ),
+        by = c("study", "timepoint")
+      ) %>%
+      filter(!is.na(mean)) %>%
+      ungroup()
+  }),
+
+  tar_target(rep_pw_input_dat, {
+    if (outcome_mod(rep_outcome) == "smd") {
+      rep_pw_cspi
+
+    } else {
+      rep_pw_escalc
+    }
+  }),
+
+
+
+  # levels and subgroups ----------------------------------------------------
+
+
+  tar_target(rep_pw_levels,
+             rep_pw_input_dat %>%
+               count(dose)),
+
+
+  tar_target(rep_pw_subgroups, {
+    if (outcome_mod(rep_outcome) == "lor") {
+      # get subgroups for all
+      rep_nma %>%
+        pluck("network", "agd_arm") %>%
+        group_by(.trt) %>%
+        count(dose) %>%
+        filter(n > 1, .trt != "Placebo") %>%
+        group_split(.trt) %>%
+        purrr::discard(~ nrow(.x) < 2) %>%
+        purrr::discard(~ sum(.x$n) < 4)
+    } else {
+      cspi_dat %>%
+        group_by(timepoint, intervention) %>%
+        count(duration) %>%
+        filter(n > 1,
+               intervention != "Placebo") %>%
+        group_split() %>%
+        purrr::discard(~ nrow(.x) < 2) %>%
+        purrr::discard(~ sum(.x$n) < 4)
+
+    }
+  }),
+
+
+
+  # make write forest plot --------------------------------------------------
+
+
   tar_target(rep_pw_forgroup_write, {
     if (str_length(rep_subgroup) > 2) {
       ### a little helper function to add Q-test, I^2, and tau^2 estimate info
       imgpath <-
-        sprintf("%s-%s-forest.png",
-                rep_rma_prefix,
-                rep_subgroup)
+        sprintf("%s-forest.png",
+                rep_rma_prefix)
 
-      dontpanic::msg(imgpath)
+      dontpanic::msg("Make subgroup plot go!")
 
 
       # need to adjust this width
       png(imgpath,
           width = 800,
-          height = 1200)
+          height = 1000)
+
 
 
       rep_forgroup(
@@ -2130,15 +2228,104 @@ list(
         rep_comparator,
         rep_subgroup,
         rep_rma_prefix,
-        rep_pw_mod,
-        rep_pw_escalc
+        rep_pw_input_dat,
+        a_levels = 11,
+        b_levels = 15,
+        c_levels =3,
+        a_label =
+          # "fibromyalgia",
+          # "PI < 12",
+          "high",
+        b_label =
+          # "PI > 12",
+          # "musculoskeletal",
+          "standard",
+        c_label =
+          # "other"
+          # NA
+          # "neuropathic",
+        "low"
+        # "unable to be categorised"
       )
 
+
       dev.off()
+
+      dontpanic::msg(imgpath)
     } else {
       NULL
     }
   }),
+
+
+# baseline densities ------------------------------------------------------
+
+tar_target(
+  cspi_baseline_dat,
+  mod_dat %>%
+    filter(
+      model_type == "smd"
+    ) %>%
+    mutate(
+      intervention = fct_relevel(intervention, "placebo",
+                                 "cbt",
+                                 "cbt and milnacipran"),
+      class = toupper(class)
+    ) %>%
+    arrange(outcome, timepoint, study, intervention) %>%
+    group_by(outcome, timepoint, study) %>%
+    mutate(
+      arm = 1:n(),
+      mi = sum(n) - n(),
+      cmi = exp(lgamma(mi / 2) - log(sqrt(mi / 2)) - lgamma((mi - 1) /
+                                                              2)),
+      sdpool = sqrt(weighted.mean(sd ^ 2, n - 1)),
+      smd = if_else(arm == 1, NA_real_, (mean - first(mean)) / sdpool * cmi),
+      se_smd = if_else(arm == 1,
+                       se / sdpool * cmi,
+                       sqrt((n + first(
+                         n
+                       )) / (n * first(
+                         n
+                       )) + smd ^ 2 / (2 * (
+                         n + first(n)
+                       ))))
+    ) %>%
+    select(study, intervention, smd, se_smd, n, everything()) %>%
+    mutate(intervention = str_to_sentence(intervention)) %>%
+  filter(intervention %in% c(
+    "Amitriptyline", "Milnacipran", "Duloxetine"))
+    # %>%
+  #   select(outcome, timepoint, study, smd, se_smd, n)
+),
+
+
+tar_target(
+  cspi_baseline_plot, {
+    cspi_baseline_dat %>%
+      ungroup() %>%
+      ggplot(
+        aes(
+          x = smd,
+          fill = intervention
+          )
+      ) +
+      geom_density(alpha = 0.3) +
+      # theme_minimal() +
+      facet_grid(timepoint_label ~ str_to_sentence(outcome_label),
+                 scales = "free",
+                 labeller = label_wrap_gen(width = 15)) +
+      labs(
+        title = "Density of SMD at baseline",
+        subtitle = "Continuous outcomes",
+        x = "Standardised mean difference",
+        y = "Density"
+      ) +
+      scale_fill_discrete("Intervention") +
+      ggthemes::theme_tufte(base_size = 18)
+  }
+),
+
 
   # null --------------------------------------------------------------------
 
