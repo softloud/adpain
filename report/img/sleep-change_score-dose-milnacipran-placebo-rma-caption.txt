@@ -1,0 +1,1 @@
+Outcome: sleep. Measure: change score. Intervention (milnacipran) compared with (placebo) Participants: 0. Direction of improvement: lower. Meta-analysis results: Q = 0.3; df = 3; p = 0.96; $I^2$ = 0 per cent; $\tau^2$ = 0. Regression test for funnel plot asymmetry was not significant: 0.21 (CI -0.93 to 1.36) with p = 0.58 and z = -0.55.

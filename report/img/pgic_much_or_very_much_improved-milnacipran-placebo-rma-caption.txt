@@ -1,0 +1,1 @@
+Outcome: PGIC much or very much improved. Measure: post-intervention. Intervention (milnacipran) compared with (placebo) Participants: 4255. Direction of improvement: higher. Meta-analysis results: Q = 1.17; df = 6; p = 0.98; $I^2$ = 0 per cent; $\tau^2$ = 0. Regression test for funnel plot asymmetry was significant: 0.68 (CI 0.28 to 1.07) with p = 0.95 and z = -0.06.

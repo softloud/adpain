@@ -1,0 +1,1 @@
+Outcome: withdrawal. Measure: post-intervention. Intervention (amitriptyline) compared with (placebo) Participants: 1221. Direction of improvement: lower. Meta-analysis results: Q = 7.54; df = 15; p = 0.94; $I^2$ = 0 per cent; $\tau^2$ = 0. Regression test for funnel plot asymmetry was not significant: 0.25 (CI -0.47 to 0.97) with p = 0.55 and z = -0.59.

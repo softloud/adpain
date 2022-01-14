@@ -1,0 +1,1 @@
+Outcome: pain intensity (continuous measure). Measure: post-intervention. Intervention (milnacipran) compared with (placebo) Participants: 0. Direction of improvement: lower. Meta-analysis results: Q = 5.63; df = 8; p = 0.69; $I^2$ = 0 per cent; $\tau^2$ = 0. Regression test for funnel plot asymmetry was not significant: 0.11 (CI -1.23 to 1.46) with p = 0.48 and z = -0.7.

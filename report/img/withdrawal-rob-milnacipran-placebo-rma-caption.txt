@@ -1,0 +1,1 @@
+Outcome: withdrawal. Measure: post-intervention. Intervention (milnacipran) compared with (placebo) Participants: 5725. Direction of improvement: lower. Meta-analysis results: Q = 22.34; df = 18; p = 0.22; $I^2$ = 21.29 per cent; $\tau^2$ = 0.02. Regression test for funnel plot asymmetry was significant: 0.28 (CI 0.02 to 0.53) with p = 0.79 and z = 0.27.

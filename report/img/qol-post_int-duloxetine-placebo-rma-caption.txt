@@ -1,0 +1,1 @@
+Outcome: quality of life. Measure: post-intervention. Intervention (duloxetine) compared with (placebo) Participants: 0. Direction of improvement: higher. Meta-analysis results: Q = 0.54; df = 3; p = 0.91; $I^2$ = 0 per cent; $\tau^2$ = 0. Regression test for funnel plot asymmetry was not significant: 0.62 (CI -2.42 to 3.67) with p = 0.81 and z = -0.24.

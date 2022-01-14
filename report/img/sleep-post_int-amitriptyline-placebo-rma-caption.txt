@@ -1,0 +1,1 @@
+Outcome: sleep. Measure: post-intervention. Intervention (amitriptyline) compared with (placebo) Participants: 0. Direction of improvement: lower. Meta-analysis results: Q = 206.77; df = 30; p $<$ .01; $I^2$ = 95.81 per cent; $\tau^2$ = 5.78. Regression test for funnel plot asymmetry was significant: 7.44 (CI 5.1 to 9.78) with p = 0 and z = -6.75.

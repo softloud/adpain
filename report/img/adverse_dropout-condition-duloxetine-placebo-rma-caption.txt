@@ -1,0 +1,1 @@
+Outcome: dropout due to adverse events. Measure: post-intervention. Intervention (duloxetine) compared with (placebo) Participants: 9623. Direction of improvement: lower. Meta-analysis results: Q = 32.95; df = 35; p = 0.57; $I^2$ = 0 per cent; $\tau^2$ = 0. Regression test for funnel plot asymmetry was not significant: 0.39 (CI -0.08 to 0.87) with p = 0.15 and z = 1.43.

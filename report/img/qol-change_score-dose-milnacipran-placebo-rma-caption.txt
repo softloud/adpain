@@ -1,0 +1,1 @@
+Outcome: quality of life. Measure: change score. Intervention (milnacipran) compared with (placebo) Participants: 0. Direction of improvement: higher. Meta-analysis results: Q = 194.99; df = 7; p $<$ .01; $I^2$ = 95.97 per cent; $\tau^2$ = 3.13. Regression test for funnel plot asymmetry was not significant: 0.96 (CI -3.53 to 5.45) with p = 0.85 and z = -0.19.

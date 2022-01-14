@@ -1,0 +1,1 @@
+Outcome: serious adverse events. Measure: post-intervention. Intervention (milnacipran) compared with (placebo) Participants: 5476. Direction of improvement: lower. Meta-analysis results: Q = 3.61; df = 16; p = 1.00; $I^2$ = 0 per cent; $\tau^2$ = 0. Regression test for funnel plot asymmetry was not significant: 0.08 (CI -0.7 to 0.86) with p = 0.65 and z = -0.46.

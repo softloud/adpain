@@ -1,0 +1,1 @@
+Outcome: mood. Measure: post-intervention. Intervention (duloxetine) compared with (placebo) Participants: 0. Direction of improvement: lower. Meta-analysis results: Q = 21.92; df = 5; p $<$ .01; $I^2$ = 72.74 per cent; $\tau^2$ = 0.68. Regression test for funnel plot asymmetry was significant: -6.87 (CI -9.65 to -4.1) with p = 0 and z = 4.36.

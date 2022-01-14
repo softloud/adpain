@@ -1,0 +1,1 @@
+Outcome: serious adverse events. Measure: post-intervention. Intervention (amitriptyline) compared with (placebo) Participants: 278. Direction of improvement: lower. Meta-analysis results: Q = 0; df = 3; p = 1.00; $I^2$ = 0 per cent; $\tau^2$ = 0. Regression test for funnel plot asymmetry was not significant: 0 (CI -445.11 to 445.11) with p = 1 and z = 0.

@@ -1,0 +1,1 @@
+Outcome: sleep. Measure: change score. Intervention (duloxetine) compared with (placebo) Participants: 0. Direction of improvement: lower. Meta-analysis results: Q = 3.56; df = 16; p = 1.00; $I^2$ = 0 per cent; $\tau^2$ = 0. Regression test for funnel plot asymmetry was not significant: -0.01 (CI -1.09 to 1.08) with p = 0.78 and z = -0.28.

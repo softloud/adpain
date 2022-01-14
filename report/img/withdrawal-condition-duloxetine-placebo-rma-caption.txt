@@ -1,0 +1,1 @@
+Outcome: withdrawal. Measure: post-intervention. Intervention (duloxetine) compared with (placebo) Participants: 10155. Direction of improvement: lower. Meta-analysis results: Q = 48.91; df = 40; p = 0.16; $I^2$ = 20.71 per cent; $\tau^2$ = 0.03. Regression test for funnel plot asymmetry was not significant: -0.29 (CI -0.61 to 0.02) with p = 0 and z = 2.88.

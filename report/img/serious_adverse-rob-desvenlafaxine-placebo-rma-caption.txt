@@ -1,0 +1,1 @@
+Outcome: serious adverse events. Measure: post-intervention. Intervention (desvenlafaxine) compared with (placebo) Participants: 1773. Direction of improvement: lower. Meta-analysis results: Q = 4.93; df = 7; p = 0.67; $I^2$ = 0 per cent; $\tau^2$ = 0. Regression test for funnel plot asymmetry was not significant: 1.73 (CI -0.5 to 3.96) with p = 0.03 and z = -2.15.

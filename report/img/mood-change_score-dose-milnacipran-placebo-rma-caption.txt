@@ -1,0 +1,1 @@
+Outcome: mood. Measure: change score. Intervention (milnacipran) compared with (placebo) Participants: 0. Direction of improvement: lower. Meta-analysis results: Q = 0.4; df = 4; p = 0.98; $I^2$ = 0 per cent; $\tau^2$ = 0. Regression test for funnel plot asymmetry was not significant: -0.27 (CI -1.28 to 0.74) with p = 0.75 and z = 0.32.
