@@ -2394,9 +2394,8 @@ list(
                colour = intervention,
                fill = intervention)) +
       geom_density(alpha = 0.3) +
-      # theme_minimal() +
-      facet_grid(
-        intervention ~ str_to_sentence(outcome_label),
+      facet_wrap(
+        ~ str_to_sentence(outcome_label),
         scales = "free",
         labeller = label_wrap_gen(width = 15)
       ) +
@@ -2404,11 +2403,17 @@ list(
         title = "Density of OR measures",
         subtitle = "Count outcomes",
         x = "Odds ratio",
-        y = "Density"
+        y = "Density",
+        caption = "There were only post-intervention measures for these outcomes."
       ) +
       scale_color_discrete("Intervention") +
       scale_fill_discrete("Intervention") +
-      ggthemes::theme_tufte(base_size = 18)
+      ggthemes::theme_tufte(base_size = 8) +
+      theme(
+        strip.text.y = element_text(angle = 0),
+        legend.position = "bottom",
+        legend.direction = "horizontal"
+      )
   ),
 
   tar_target(
@@ -2426,7 +2431,7 @@ list(
       geom_density(alpha = 0.3) +
       # theme_minimal() +
       facet_grid(
-        timepoint ~ str_to_sentence(outcome_label),
+        str_to_sentence(outcome_label) ~ str_to_sentence(timepoint_label),
         scales = "free",
         labeller = label_wrap_gen(width = 15)
       ) +
@@ -2434,12 +2439,16 @@ list(
         title = "Density of SMD measures",
         subtitle = "Continuous outcomes",
         x = "Standardised mean difference",
-        y = "Density",
-        caption = "There were only post-intervention measures for these outcomes."
+        y = "Density"
       ) +
       scale_color_discrete("Intervention") +
       scale_fill_discrete("Intervention") +
-      ggthemes::theme_tufte(base_size = 18)
+      ggthemes::theme_tufte(base_size = 10) +
+      theme(
+        strip.text.y = element_text(angle = 0),
+        legend.position = "bottom",
+        legend.direction = "horizontal"
+      )
   }),
 
   tar_target(

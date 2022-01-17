@@ -49,6 +49,7 @@ library(knitr)
 \item Duration subgroup studies separate studies lasting less than or equal to 12 weeks, and those greater than 12 weeks.
 \item Many head to head analyses were not possible given the disconnected nature of the networks; where data was available head to head analyses were undertaken.
 \item Funnel plots are shaded to show 90, 95, and 99 significance regions.
+\item The summary of findings tables are formatted to be viewed on Cochrane Revman Web, where the table does not need to fit onto a page.
 
 \end{itemize}
 
@@ -896,7 +897,9 @@ Subgroup anlaysis by dose.
 \label{fig:qolcs-dose-milna-plac}
 \end{figure}
 
-\chapter{Risk of bias summaries}
+\chapter{Analyses across outcomes}
+
+\section{Risk of bias summaries}
 
 Figure \ref{fig:rob-bar} shows the distribution of risk of bias for each of the criteria and Figure \ref{fig:rob-grid} shows each study's risk of bias criteria.
 
@@ -913,7 +916,26 @@ Figure \ref{fig:rob-bar} shows the distribution of risk of bias for each of the 
 \caption{Risk of bias criteria for studies.}
 \label{fig:rob-grid}
 \end{figure}
-s
+
+\section{Measure densities}
+
+In Figure \ref{fig:cspi-baseline} densities for standardised mean differences. Figure \ref{fig:dich-baseline} shows odds-ratios for count outcomes.
+
+\begin{figure}
+\includegraphics[width=\textwidth]{img/cspi-baseline.png}
+\caption[Measure densities: continuous]{Densities of continuous measures for amitritpyline, milnacipran, and duloxetine by outcome.}
+\label{fig:cspi-baseline}
+\end{figure}
+
+
+\begin{figure}
+\includegraphics[width=\textwidth]{img/dich-baseline.png}
+\caption[Measure densities: count]{Densities of post-intervention count measures for amitritpyline, milnacipran, and duloxetine by outcome.}
+\label{fig:dich-baseline}
+\end{figure}
+
+
+
 
 
 \end{document}

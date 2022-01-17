@@ -38,8 +38,8 @@
 \contentsline {section}{\numberline {3.2}Dropout due to adverse events}{26}{section.3.2}%
 \contentsline {subsection}{\numberline {3.2.1}Meta-analysis results}{29}{subsection.3.2.1}%
 \contentsline {subsubsection}{Duloxetine}{29}{section*.22}%
-\contentsline {subsubsection}{Amitriptyline}{29}{section*.23}%
-\contentsline {subsubsection}{Milnacipran}{29}{section*.24}%
+\contentsline {subsubsection}{Milnacipran}{29}{section*.23}%
+\contentsline {subsubsection}{Amitriptyline}{29}{section*.24}%
 \contentsline {section}{\numberline {3.3}Moderate pain relief (30 per cent reduction)}{29}{section.3.3}%
 \contentsline {subsubsection}{Summary of head to head comparisons}{35}{section*.25}%
 \contentsline {subsection}{\numberline {3.3.1}Meta-analyses}{35}{subsection.3.3.1}%
@@ -76,4 +76,6 @@
 \contentsline {subsection}{\numberline {3.12.1}Meta-analyses}{53}{subsection.3.12.1}%
 \contentsline {subsubsection}{Duloxetine}{56}{section*.40}%
 \contentsline {subsubsection}{Milnacipran}{56}{section*.41}%
-\contentsline {chapter}{\numberline {4}Risk of bias summaries}{60}{chapter.4}%
+\contentsline {chapter}{\numberline {4}Analyses across outcomes}{60}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Risk of bias summaries}{60}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Measure densities}{60}{section.4.2}%
