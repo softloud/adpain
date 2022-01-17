@@ -50,10 +50,7 @@ library(knitr)
 \item Many head to head analyses were not possible given the disconnected nature of the networks; where data was available head to head analyses were undertaken.
 \item Funnel plots are shaded to show 90, 95, and 99 significance regions.
 
-
 \end{itemize}
-
-
 
 
 \chapter{Primary outcomes}
@@ -177,11 +174,11 @@ Subgroup analysis by dose was not possible with these data.
 
 \subsubsection{Duloxetine}
 
-No significant imprecision or inconsistency was detected in duloxetine results. Publication bias was not detected, however there is serious risk of bias in these observations. Heterogeneity of observations for duloxetine was not explained by condition, dose, risk of bias, or duration of study (for example, ).
+No significant imprecision or inconsistency was detected in duloxetine results. Publication bias was not detected, however there is serious risk of bias in these observations. Heterogeneity of observations for duloxetine was not explained by condition, dose, risk of bias, design, or duration of study.
 
 \subsubsection{Milnacipran}
 
-No serious inconsistency or imprecision was detected. Risk of bias is serious but publication bias was not detected. Heterogeneity of observations for milnacipran was not explained by condition, dose, or duration of study .
+No serious inconsistency or imprecision was detected. Risk of bias is serious but publication bias was not detected. Heterogeneity of observations for milnacipran was not explained by condition, dose, design, or duration of study .
 
 \subsubsection{Amitriptyline}
 
@@ -241,7 +238,7 @@ In Summary of Findings Table \ref{tab:moodpi}, there are 10 studies that evaluat
 
 \subsubsection{Duloxetine}
 
-Heterogeneity was not explained by dose. Possibly some heterogeneity is explained by duration of study (Figure \ref{fig:moodpi-duration-dulox-plac}).
+Heterogeneity was not explained by dose or study design. Possibly some heterogeneity is explained by duration of study (Figure \ref{fig:moodpi-duration-dulox-plac}).
 
 \begin{figure}
 \includegraphics[width=\textwidth]{img/mood-post_int-duration-duloxetine-placebo-forest.png}
@@ -289,7 +286,6 @@ include_graphics("img/adverse-duloxetine-placebo-funnel.png")
 \end{figure}
 
 
-
 \begin{figure}
 <<>>=
 include_graphics("img/adverse-duloxetine-pregabalin-forest.png")
@@ -300,9 +296,6 @@ include_graphics("img/adverse-duloxetine-pregabalin-funnel.png")
 \caption[Adverse: duloxetine vs pregabalin]{\input{img/adverse-duloxetine-pregabalin-rma-caption.txt}}
 \label{fig:adverse-dulox-pregab}
 \end{figure}
-
-
-
 
 
 \subsubsection{Milnacipran}
@@ -322,7 +315,7 @@ include_graphics("img/adverse-milnacipran- - -funnel.png")
 \end{figure}
 
 
-Heterogeneity observed in adverse events for milnacipran compared to placebo showed some difference (Figure \ref{fig:adverse-condition-milna-plac}) between fibromyalgia and musculoskeletal patients. Heterogeneity of milnacipran observations was not explained by duration of studies.
+Heterogeneity observed in adverse events for milnacipran compared to placebo showed some difference (Figure \ref{fig:adverse-condition-milna-plac}) between fibromyalgia and musculoskeletal patients. Heterogeneity of milnacipran observations was not explained by duration, design, or main aim of studies.
 
 \begin{figure}
 
@@ -347,7 +340,7 @@ Subgroup analysis by dose. \input{img/adverse-dose-milnacipran-placebo-rma-capti
 
 \subsubsection{Amitriptyline}
 
-Amitriptyline results were inconsistent, with serious risk of bias, and there is some indication of publication bias (Figure \ref{fig:adverse-amitrip}).
+Amitriptyline results were inconsistent, with serious risk of bias, and there is some indication of publication bias (Figure \ref{fig:adverse-amitrip}). Heterogeneity was not explained by study design.
 
 \begin{figure}
 
@@ -413,7 +406,7 @@ Duloxetine observations did not display inconsistency or imprecision, however th
 
 \subsubsection{Milnacipran}
 
-Heterogeneity of milnacipran compared to placebo was not explained by duration of study or risk of bias. Imprecision is present in these observations(Figure \ref{fig:sae-milna-plac}). There is no strong indication of risk of bias, however these observation have very serious risk of bias.
+Heterogeneity of milnacipran compared to placebo was not explained by duration of study, main aim, or risk of bias. Imprecision is present in these observations(Figure \ref{fig:sae-milna-plac}). There is no strong indication of risk of bias, however these observation have very serious risk of bias.
 
 \begin{figure}
 
@@ -484,13 +477,10 @@ Subgroup analysis by dose.
 
 
 
-\subsubsection{Amitriptyline}
-
-As with duloxetine, above, amitriptyline trials were consistent within themselves, and with the network meta-anlaysis estimates. 0.5 of studies were raked as high risk of bias. Subgroup analysis by duration of study did not explain any heterogeneity observed.
 
 \subsubsection{Milnacipran}
 
-Meta-analysis results for milnacipran were consistent with network meta-analysis findings. 0.8 of studies were high risk of bias, and publication bias was also detected. Some heterogeneity explained by duration of study (Figure \ref{fig:dropout-duration-milna-plac}), with participants in trials lasting more than 12 weeks signficantly more likely to drop out due to adverse events.
+Meta-analysis results for milnacipran were consistent with network meta-analysis findings. 0.8 of studies were high risk of bias, and publication bias was also detected. Some heterogeneity explained by duration of study (Figure \ref{fig:dropout-duration-milna-plac}), with participants in trials lasting more than 12 weeks signficantly more likely to drop out due to adverse events. Heterogeneity was not explained by main aim of study.
 
 \begin{figure}
 \includegraphics[width = \textwidth]{img/adverse_dropout-duration-milnacipran-placebo-forest.png}
@@ -500,6 +490,9 @@ Subgroup analysis by duration.
 \label{fig:dropout-duration-milna-plac}
 \end{figure}
 
+\subsubsection{Amitriptyline}
+
+As with duloxetine, above, amitriptyline trials were consistent within themselves, and with the network meta-anlaysis estimates. 0.5 of studies were raked as high risk of bias. Subgroup analysis by duration or design of study did not explain any heterogeneity observed.
 
 
 \section{Moderate pain relief (30 per cent reduction)}
@@ -682,7 +675,7 @@ Subgroup analysis by condition. \input{img/withdrawal-condition-duloxetine-place
 \label{fig:withdrawal-condition-dulox-plac}
 \end{figure}
 
-Heterogeneity of duloxetine compared with placebo was not explained by risk of bias. However, some heterogeneity is explained by dose, whereby those given high dose more likely to experience withdrawal (Figure \ref{fig:withdrawal-dose-dulox-plac}). Heterogeneity was not explained by duration of study.
+Heterogeneity of duloxetine compared with placebo was not explained by risk of bias. However, some heterogeneity is explained by dose, whereby those given high dose more likely to experience withdrawal (Figure \ref{fig:withdrawal-dose-dulox-plac}). Heterogeneity was not explained by duration or design of study.
 
 \begin{figure}
 \includegraphics[width=\textwidth]{img/withdrawal-dose-duloxetine-placebo-forest.png}
@@ -725,7 +718,7 @@ Subgroup analysis by rob.
 \label{fig:withdrawal-rob-dulox-plac}
 \end{figure}
 
-Length of study also explains some of the heterogeneity in withdrawal, with studies lasting more than 12 weeks more likely to report withdrawal (Figure \ref{fig:withdrawal-duration-milna-plac}).
+Length of study also explains some of the heterogeneity in withdrawal, with studies lasting more than 12 weeks more likely to report withdrawal (Figure \ref{fig:withdrawal-duration-milna-plac}). Heterogeneity was not explained by main aim of study.
 
 \begin{figure}
 \includegraphics[width=\textwidth]{img/withdrawal-duration-milnacipran-placebo-forest.png}
@@ -737,7 +730,7 @@ Subgroup analysis by duration.
 
 \subsubsection{Amitriptyline}
 
-Amitriptyline showed serious inconsistency and imprecision (Figure \ref{fig:with-amitr-plac}), however little indication of publication bias. Heterogeneity was not explained by risk of bias or duration of study. These observations have very serious risk of bias.
+Amitriptyline showed serious inconsistency and imprecision (Figure \ref{fig:with-amitr-plac}), however little indication of publication bias. Heterogeneity was not explained by risk of bias, nor by design, main aim, or duration of study. These observations have very serious risk of bias.
 
 
 \begin{figure}
@@ -787,6 +780,12 @@ Results were not inconsistent or imprecise. Heterogeneity was not explained by c
 
 \textbf{Interventions} (number of studies): Placebo (18); amitriptyline (6); duloxetine (6); benzotropine mesylate (5); fluoxetine (3); pregabalin (3); milnacipran (2); nortriptyline (2); acupuncture (1); benzotropine mesylate + cbt (1); cst (1); cst + sertraline (1); cyclobenzaprine (1); desipramine (1); desipramine + cbt (1); dothiepin (1); epidural injection (1); epidural injection + amitriptyline (1); escitalopram (1); esreboxetine (1); fluoxetine + melatonin (1); gabapentin (1); gabapentin + nortriptyline (1); melatonin (1); mirtazapine (1); moclobemide (1); morphine (1); morphine + nortriptyline (1); paroxetine (1); pregabalin + duloxetine (1); sertraline (1); trazodone (1); venlafaxine (1).
 
+\subsection{Meta-analyses}
+
+\subsubsection{Duloxetine}
+
+Heterogeneity was not explained by study design.
+
 
 \section{Sleep quality (Change score)}
 
@@ -801,7 +800,6 @@ Sleep was reported as a change-score measure in 17 parallel studies evaluating 4
 {Sleep quality (change score)}
 
 \textbf{Interventions} (number of studies): Placebo (16); duloxetine (13); milnacipran (2); citalopram (1); esreboxetine (1).
-
 
 \subsection{Meta-analyses}
 
@@ -895,7 +893,7 @@ There is some heterogeneity in milnacipran compared to placebo measuring quality
 Subgroup anlaysis by dose.
 \input{img/qol-change_score-dose-milnacipran-placebo-rma-caption.txt}
 }
-\labe{fig:qolcs-dose-milna-plac}
+\label{fig:qolcs-dose-milna-plac}
 \end{figure}
 
 \chapter{Risk of bias summaries}

@@ -109,7 +109,7 @@ rep_forgroup <- function(rep_outcome,
   }
 
 
-  subgroup_order <- rep_pw_escalc %>% pull(dose)
+  subgroup_order <- rep_pw_escalc %>% pull(main_aim)
   # deal with differences between smd and lor -------------------------------
 
   ilab_matrix <-
@@ -295,16 +295,16 @@ rep_forgroup <- function(rep_outcome,
   ### fit random-effects model in the three subgroups
   res.a <- rma(yi,
                vi,
-               subset = (dose == a_label),
+               subset = (main_aim == a_label),
                data = rep_pw_escalc)
   res.b <- rma(yi,
                vi,
-               subset = (dose == b_label),
+               subset = (main_aim == b_label),
                data = rep_pw_escalc)
   if (c_levels != 0) {
     res.c <- rma(yi,
                  vi,
-                 subset = (dose == c_label),
+                 subset = (main_aim == c_label),
                  data = rep_pw_escalc)
 
   }
@@ -337,7 +337,7 @@ rep_forgroup <- function(rep_outcome,
   res <- rma(yi, vi,
 
              # set subgroup
-             mods = ~ dose,
+             mods = ~ main_aim,
 
 
              data = rep_pw_escalc)

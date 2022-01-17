@@ -638,20 +638,19 @@ list(
 
   # dich outcome ----------------------------------------------------------
   tar_target(dich_outcome,
-             "pain_mod"
-             #"serious_adverse"
              # "pain_mod"
-             ),
+             # "pain_mod"
+             "pain_mod"),
 
 
   tar_target(dich_intervention,
-             "duloxetine"),
+             "milnacipran"),
 
   tar_target(dich_comparator,
              "placebo"),
 
   tar_target(dich_subgroup,
-             "dose"),
+             "main_aim"),
 
   tar_target(dich_timepoint,
              "post_int"),
@@ -1247,16 +1246,16 @@ list(
   # set cspi ----------------------------------------------------------------
 
   tar_target(cspi_outcome,
-             "mood"),
+             "physical"),
 
   tar_target(cspi_timepoint,
-             "change_score"),
+             "post_int"),
 
   tar_target(cspi_subgroup,
-             "duration"),
+             " "),
 
   tar_target(cspi_intervention,
-             "duloxetine"),
+             "amitriptyline"),
 
   tar_target(cspi_comparator,
              "placebo"),
@@ -1340,19 +1339,24 @@ list(
 
   tar_target(
     cspi_nma_cs,
-    # nma(cspi_net_cs, trt_effects = "random")
-    sprintf("exports/%s-change_score-nma.rds", cspi_outcome) %>% read_rds()
+    # NULL
+    nma(cspi_net_cs, trt_effects = "random")
+    # sprintf("exports/%s-change_score-nma.rds", cspi_outcome) %>% read_rds()
   ),
 
   tar_target(
     cspi_nma_pi,
-    # nma(cspi_net_pi, trt_effects = "random")
-    sprintf("exports/%s-post_int-nma.rds", cspi_outcome) %>% read_rds()
+    nma(cspi_net_pi, trt_effects = "random")
+    # sprintf("exports/%s-post_int-nma.rds", cspi_outcome) %>% read_rds()
   ),
 
+  tar_target(
+    cspi_update_mod,
+    TRUE
+  ),
 
   tar_target(cspi_nma_write,
-             if (FALSE) {
+             if (cspi_update_mod) {
                write_rds(cspi_nma_pi,
                          sprintf("exports/%s-post_int-nma.rds",
                                  cspi_outcome))
@@ -1815,13 +1819,41 @@ list(
   }),
 
 
-  # postint no change score -------------------------------------------------
 
+  # cspi combine ------------------------------------------------------------
+
+  tar_target(cspi_cs_dat, {
+    relative_effects(cspi_nma_cs, probs = c(0.025, 0.975)) %>%
+      as_tibble() %>%
+      clean_names() %>%
+      mutate(intervention = str_remove(parameter, "d\\[") %>%
+               str_remove("\\]"),
+             tp = "cs") %>%
+      select(intervention, mean, sd, tp)
+  }),
+
+  tar_target(cspi_pi_dat, {
+    relative_effects(cspi_nma_pi, probs = c(0.025, 0.975)) %>%
+      as_tibble() %>%
+      clean_names() %>%
+      mutate(intervention = str_remove(parameter, "d\\[") %>%
+               str_remove("\\]"),
+             tp = "pi") %>%
+      select(intervention, mean, sd, tp)
+  }),
+
+  tar_target(
+    cspi_cspi_dat,
+    bind_rows(cspi_cs_dat, cspi_pi_dat) %>%
+      group_by(intervention) %>%
+      group_split() %>%
+      purrr::discard( ~ nrow(.x) < 2)
+  ),
 
   # set reporting things ----------------------------------------------------
 
   tar_target(rep_mod,
-             "dich"),
+             "cspi"),
 
   # dependencies ------------------------------------------------------------
 
@@ -1875,13 +1907,28 @@ list(
 
 
 
+  tar_target(
+    rep_main_aim,
+    mod_dat %>%
+      select(
+        outcome, study, main_aim = main_aim_of_study
+      ) %>%
+      distinct()
+  ),
 
 
-  tar_target(rep_pw_escalc,
+  tar_target(rep_pw_escalc, {
+
+
+    this_dat <-
              if (outcome_mod(rep_outcome) == "lor")
                dich_pw_escalc
              else
-               cspi_pw_escalc),
+               cspi_pw_escalc
+
+    this_dat %>%
+      left_join(rep_main_aim)
+    }),
 
 
   tar_target(rep_rma_prefix,
@@ -2049,37 +2096,6 @@ list(
 
   tar_target(rep_funnel, {
     if (str_length(rep_subgroup) < 2) {
-
-      this_title <- sprintf("%s: %s vs %s",
-                            outcome_label(rep_outcome),
-                            rep_intervention,
-                            rep_comparator)
-
-    dontpanic::msg(this_title)
-
-    img_path <- sprintf("%s-funnel.png", rep_rma_prefix)
-
-    dontpanic::msg(img_path)
-
-    png(img_path)
-
-
-    # don't forget totransform for exp
-    funnel(
-      rep_pw_mod,
-      main = this_title,
-      level = c(90, 95, 99),
-      # transf = exp,
-      # refline = 0,
-      shade = c("white", "gray55", "gray75")
-    )
-
-    dev.off()
-  }}),
-
-  tar_target(rep_pw_forest, {
-    if (str_length(rep_subgroup) < 2) {
-
       this_title <- sprintf("%s: %s vs %s",
                             outcome_label(rep_outcome),
                             rep_intervention,
@@ -2087,7 +2103,8 @@ list(
 
       dontpanic::msg(this_title)
 
-      img_path <- sprintf("%s-forest.png", rep_rma_prefix)
+      img_path <-
+        sprintf("%s-funnel.png", rep_rma_prefix)
 
       dontpanic::msg(img_path)
 
@@ -2095,15 +2112,45 @@ list(
 
 
       # don't forget totransform for exp
-      forest(
+      funnel(
         rep_pw_mod,
         main = this_title,
+        level = c(90, 95, 99),
         # transf = exp,
-        # refline = 02
+        # refline = 0,
+        shade = c("white", "gray55", "gray75")
       )
 
       dev.off()
-    }}),
+    }
+  }),
+
+  tar_target(rep_pw_forest, {
+    if (str_length(rep_subgroup) < 2) {
+      this_title <- sprintf("%s: %s vs %s",
+                            outcome_label(rep_outcome),
+                            rep_intervention,
+                            rep_comparator)
+
+      dontpanic::msg(this_title)
+
+      img_path <-
+        sprintf("%s-forest.png", rep_rma_prefix)
+
+      dontpanic::msg(img_path)
+
+      png(img_path)
+
+
+      # don't forget totransform for exp
+      forest(rep_pw_mod,
+             # transf = exp,
+             # refline = 02
+             main = this_title)
+
+      dev.off()
+    }
+  }),
 
 
   # pw subgroups ------------------------------------------------------------
@@ -2130,7 +2177,8 @@ list(
         dose,
         duration,
         rob,
-        condition
+        condition,
+        design
       ) %>%
       mutate(intervention = tolower(intervention))
 
@@ -2158,7 +2206,8 @@ list(
 
   tar_target(rep_pw_input_dat, {
     if (outcome_mod(rep_outcome) == "smd") {
-      rep_pw_cspi
+      rep_pw_cspi %>%
+        left_join(rep_main_aim %>% rename(main_aim_of_study = main_aim))
 
     } else {
       rep_pw_escalc
@@ -2172,7 +2221,7 @@ list(
 
   tar_target(rep_pw_levels,
              rep_pw_input_dat %>%
-               count(dose)),
+               count(main_aim)),
 
 
   tar_target(rep_pw_subgroups, {
@@ -2181,7 +2230,7 @@ list(
       rep_nma %>%
         pluck("network", "agd_arm") %>%
         group_by(.trt) %>%
-        count(dose) %>%
+        count(main_aim_of_study) %>%
         filter(n > 1, .trt != "Placebo") %>%
         group_split(.trt) %>%
         purrr::discard(~ nrow(.x) < 2) %>%
@@ -2189,7 +2238,7 @@ list(
     } else {
       cspi_dat %>%
         group_by(timepoint, intervention) %>%
-        count(duration) %>%
+        count(main_aim_of_study) %>%
         filter(n > 1,
                intervention != "Placebo") %>%
         group_split() %>%
@@ -2198,8 +2247,6 @@ list(
 
     }
   }),
-
-
 
   # make write forest plot --------------------------------------------------
 
@@ -2228,23 +2275,26 @@ list(
         rep_comparator,
         rep_subgroup,
         rep_rma_prefix,
-        rep_pw_input_dat,
+        rep_pw_input_dat %>% mutate(
+          main_aim = if_else(main_aim == "pain", main_aim, "other")),
         a_levels = 11,
-        b_levels = 15,
-        c_levels =3,
+        b_levels = 4,
+        c_levels = NA,
         a_label =
           # "fibromyalgia",
           # "PI < 12",
-          "high",
+          # "high",
+          "pain",
         b_label =
           # "PI > 12",
           # "musculoskeletal",
-          "standard",
+          # "standard",
+          "other",
         c_label =
           # "other"
-          # NA
+          NA
           # "neuropathic",
-        "low"
+          # "low"
         # "unable to be categorised"
       )
 
@@ -2258,73 +2308,145 @@ list(
   }),
 
 
-# baseline densities ------------------------------------------------------
+  # baseline densities ------------------------------------------------------
 
-tar_target(
-  cspi_baseline_dat,
-  mod_dat %>%
-    filter(
-      model_type == "smd"
-    ) %>%
-    mutate(
-      intervention = fct_relevel(intervention, "placebo",
-                                 "cbt",
-                                 "cbt and milnacipran"),
-      class = toupper(class)
-    ) %>%
-    arrange(outcome, timepoint, study, intervention) %>%
-    group_by(outcome, timepoint, study) %>%
-    mutate(
-      arm = 1:n(),
-      mi = sum(n) - n(),
-      cmi = exp(lgamma(mi / 2) - log(sqrt(mi / 2)) - lgamma((mi - 1) /
-                                                              2)),
-      sdpool = sqrt(weighted.mean(sd ^ 2, n - 1)),
-      smd = if_else(arm == 1, NA_real_, (mean - first(mean)) / sdpool * cmi),
-      se_smd = if_else(arm == 1,
-                       se / sdpool * cmi,
-                       sqrt((n + first(
-                         n
-                       )) / (n * first(
-                         n
-                       )) + smd ^ 2 / (2 * (
-                         n + first(n)
-                       ))))
-    ) %>%
-    select(study, intervention, smd, se_smd, n, everything()) %>%
-    mutate(intervention = str_to_sentence(intervention)) %>%
-  filter(intervention %in% c(
-    "Amitriptyline", "Milnacipran", "Duloxetine"))
+  tar_target(
+    cspi_baseline_dat,
+    mod_dat %>%
+      filter(model_type == "smd") %>%
+      mutate(
+        intervention = fct_relevel(intervention, "placebo",
+                                   "cbt",
+                                   "cbt and milnacipran"),
+        class = toupper(class)
+      ) %>%
+      arrange(outcome, timepoint, study, intervention) %>%
+      group_by(outcome, timepoint, study) %>%
+      mutate(
+        arm = 1:n(),
+        mi = sum(n) - n(),
+        cmi = exp(lgamma(mi / 2) - log(sqrt(mi / 2)) - lgamma((mi - 1) /
+                                                                2)),
+        sdpool = sqrt(weighted.mean(sd ^ 2, n - 1)),
+        smd = if_else(arm == 1, NA_real_, (mean - first(mean)) / sdpool * cmi),
+        se_smd = if_else(arm == 1,
+                         se / sdpool * cmi,
+                         sqrt((n + first(
+                           n
+                         )) / (n * first(
+                           n
+                         )) + smd ^ 2 / (2 * (
+                           n + first(n)
+                         ))))
+      ) %>%
+      select(study, intervention, smd, se_smd, n, everything()) %>%
+      mutate(intervention = str_to_sentence(intervention)) %>%
+      filter(
+        intervention %in% c("Amitriptyline", "Milnacipran", "Duloxetine")
+      )
     # %>%
-  #   select(outcome, timepoint, study, smd, se_smd, n)
-),
+    #   select(outcome, timepoint, study, smd, se_smd, n)
+  ),
 
 
-tar_target(
-  cspi_baseline_plot, {
-    cspi_baseline_dat %>%
-      ungroup() %>%
-      ggplot(
-        aes(
-          x = smd,
-          fill = intervention
-          )
-      ) +
+  tar_target(
+    dich_baseline_groups,
+    mod_dat %>%
+      filter(model_type == "lor") %>%
+      group_by(outcome, timepoint) %>%
+      tar_group(),
+    iteration = "group"
+  ),
+
+  tar_target(
+    dich_baseline_input,
+    dich_baseline_groups %>%
+      filter(intervention == dich_comparator) %>%
+      select(study, r_control = r, n_control = n) %>%
+      inner_join(dich_baseline_groups) %>%
+      distinct(),
+    pattern = map(dich_baseline_groups)
+  ),
+
+
+  tar_target(
+    dich_baseline_escalc,
+    escalc(
+      ai = r,
+      ci = r_control,
+      n1i = n,
+      n2i = n_control,
+      data = dich_baseline_input,
+      measure = "OR",
+      slab = study
+    ) %>%
+      mutate(intervention = str_to_sentence(intervention)) %>%
+      filter(
+        intervention %in% c("Amitriptyline", "Milnacipran", "Duloxetine")
+      )
+  ),
+
+  tar_target(
+    dich_baseline_plot,
+    dich_baseline_escalc %>%
+      mutate(x = exp(yi)) %>%
+    ggplot(aes(x = x,
+               colour = intervention,
+               fill = intervention)) +
       geom_density(alpha = 0.3) +
       # theme_minimal() +
-      facet_grid(timepoint_label ~ str_to_sentence(outcome_label),
-                 scales = "free",
-                 labeller = label_wrap_gen(width = 15)) +
+      facet_grid(
+        intervention ~ str_to_sentence(outcome_label),
+        scales = "free",
+        labeller = label_wrap_gen(width = 15)
+      ) +
       labs(
-        title = "Density of SMD at baseline",
-        subtitle = "Continuous outcomes",
-        x = "Standardised mean difference",
+        title = "Density of OR measures",
+        subtitle = "Count outcomes",
+        x = "Odds ratio",
         y = "Density"
       ) +
+      scale_color_discrete("Intervention") +
       scale_fill_discrete("Intervention") +
       ggthemes::theme_tufte(base_size = 18)
-  }
-),
+  ),
+
+  tar_target(
+    dich_baseline_write,
+    ggsave("report/img/dich-baseline.png",
+           dich_baseline_plot)
+  ),
+
+  tar_target(cspi_baseline_plot, {
+    cspi_baseline_dat %>%
+      ungroup() %>%
+      ggplot(aes(x = smd,
+                 colour = intervention,
+                 fill = intervention)) +
+      geom_density(alpha = 0.3) +
+      # theme_minimal() +
+      facet_grid(
+        timepoint ~ str_to_sentence(outcome_label),
+        scales = "free",
+        labeller = label_wrap_gen(width = 15)
+      ) +
+      labs(
+        title = "Density of SMD measures",
+        subtitle = "Continuous outcomes",
+        x = "Standardised mean difference",
+        y = "Density",
+        caption = "There were only post-intervention measures for these outcomes."
+      ) +
+      scale_color_discrete("Intervention") +
+      scale_fill_discrete("Intervention") +
+      ggthemes::theme_tufte(base_size = 18)
+  }),
+
+  tar_target(
+    cspi_baseline_write,
+    ggsave("report/img/cspi-baseline.png",
+           cspi_baseline_plot)
+  ),
 
 
   # null --------------------------------------------------------------------
