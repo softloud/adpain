@@ -172,12 +172,12 @@ x_title <- if_else(
     #     ~.*estimates_text,
     #     name = "estimates_text")
     # ) +
-    guides(
-      y.sec = ggh4x::guide_axis_manual(
-        labels = y_levels$intervention,
-        breaks = y_levels$estimates_text
-      )
-    ) +
+    # guides(
+    #   y.sec = ggh4x::guide_axis_manual(
+    #     labels = y_levels$intervention,
+    #     breaks = y_levels$estimates_text
+    #   )
+    # ) +
     theme_minimal(
      base_family = "serif",
      base_size = font_size
