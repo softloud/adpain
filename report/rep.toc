@@ -15,67 +15,69 @@
 \contentsline {subsubsection}{Duloxetine}{10}{section*.9}%
 \contentsline {subsubsection}{Milnacipran}{10}{section*.10}%
 \contentsline {subsubsection}{Amitriptyline}{10}{section*.11}%
-\contentsline {section}{\numberline {2.4}Mood (Change score results)}{13}{section.2.4}%
-\contentsline {subsection}{\numberline {2.4.1}Meta-analyses}{13}{subsection.2.4.1}%
+\contentsline {section}{\numberline {2.4}Pain intensity (combined results)}{10}{section.2.4}%
+\contentsline {section}{\numberline {2.5}Mood (Change score results)}{13}{section.2.5}%
+\contentsline {subsection}{\numberline {2.5.1}Meta-analyses}{13}{subsection.2.5.1}%
 \contentsline {subsubsection}{Duloxetine}{13}{section*.12}%
 \contentsline {subsubsection}{Milnacipran}{13}{section*.13}%
 \contentsline {subsubsection}{Amitriptyline}{13}{section*.14}%
-\contentsline {section}{\numberline {2.5}Mood (Post intervention results)}{13}{section.2.5}%
-\contentsline {subsection}{\numberline {2.5.1}Meta-analyses}{16}{subsection.2.5.1}%
-\contentsline {subsubsection}{Duloxetine}{16}{section*.15}%
-\contentsline {section}{\numberline {2.6}Mood}{16}{section.2.6}%
-\contentsline {section}{\numberline {2.7}Adverse events}{16}{section.2.7}%
-\contentsline {subsection}{\numberline {2.7.1}Meta-analyses}{16}{subsection.2.7.1}%
-\contentsline {subsubsection}{Duloxetine}{16}{section*.16}%
-\contentsline {subsubsection}{Milnacipran}{16}{section*.17}%
-\contentsline {subsubsection}{Amitriptyline}{20}{section*.18}%
-\contentsline {chapter}{\numberline {3}Secondary outcomes}{26}{chapter.3}%
-\contentsline {section}{\numberline {3.1}Serious adverse events (SAE)}{26}{section.3.1}%
-\contentsline {subsection}{\numberline {3.1.1}Meta-analyses}{26}{subsection.3.1.1}%
-\contentsline {subsubsection}{Duloxetine}{26}{section*.19}%
-\contentsline {subsubsection}{Milnacipran}{26}{section*.20}%
-\contentsline {subsubsection}{Amitritptyline}{26}{section*.21}%
-\contentsline {section}{\numberline {3.2}Dropout due to adverse events}{26}{section.3.2}%
-\contentsline {subsection}{\numberline {3.2.1}Meta-analysis results}{29}{subsection.3.2.1}%
-\contentsline {subsubsection}{Duloxetine}{29}{section*.22}%
-\contentsline {subsubsection}{Milnacipran}{29}{section*.23}%
-\contentsline {subsubsection}{Amitriptyline}{29}{section*.24}%
-\contentsline {section}{\numberline {3.3}Moderate pain relief (30 per cent reduction)}{29}{section.3.3}%
-\contentsline {subsubsection}{Summary of head to head comparisons}{35}{section*.25}%
-\contentsline {subsection}{\numberline {3.3.1}Meta-analyses}{35}{subsection.3.3.1}%
-\contentsline {subsubsection}{Duloxetine}{35}{section*.26}%
-\contentsline {subsubsection}{Milnacipran}{35}{section*.27}%
-\contentsline {section}{\numberline {3.4}PGIC (Much or very much improved)}{35}{section.3.4}%
-\contentsline {subsection}{\numberline {3.4.1}Meta-analyses}{35}{subsection.3.4.1}%
-\contentsline {subsubsection}{Duloxetine}{35}{section*.28}%
-\contentsline {subsubsection}{Milnacipran}{35}{section*.29}%
-\contentsline {section}{\numberline {3.5}PGIC (Any improvement)}{35}{section.3.5}%
-\contentsline {section}{\numberline {3.6}PGIC (Continuous measures)}{40}{section.3.6}%
-\contentsline {subsection}{\numberline {3.6.1}Meta-analyses}{42}{subsection.3.6.1}%
-\contentsline {subsubsection}{Duloxetine}{42}{section*.30}%
-\contentsline {section}{\numberline {3.7}Withdrawal}{42}{section.3.7}%
-\contentsline {subsection}{\numberline {3.7.1}Meta-analyses}{42}{subsection.3.7.1}%
-\contentsline {subsubsection}{Duloxetine}{42}{section*.31}%
-\contentsline {subsubsection}{Milnacipran}{44}{section*.32}%
-\contentsline {subsubsection}{Amitriptyline}{44}{section*.33}%
-\contentsline {section}{\numberline {3.8}Physical functioning (Change scores)}{44}{section.3.8}%
-\contentsline {subsection}{\numberline {3.8.1}Meta-analyses}{48}{subsection.3.8.1}%
-\contentsline {subsubsection}{Duloxetine}{48}{section*.34}%
-\contentsline {section}{\numberline {3.9}Physical functioning (Post intervention)}{48}{section.3.9}%
-\contentsline {subsection}{\numberline {3.9.1}Meta-analyses}{48}{subsection.3.9.1}%
-\contentsline {subsubsection}{Duloxetine}{48}{section*.35}%
-\contentsline {section}{\numberline {3.10}Sleep quality (Change score)}{48}{section.3.10}%
-\contentsline {subsection}{\numberline {3.10.1}Meta-analyses}{48}{subsection.3.10.1}%
-\contentsline {subsubsection}{Duloxetine}{48}{section*.36}%
-\contentsline {subsubsection}{Milnacipran}{53}{section*.37}%
-\contentsline {section}{\numberline {3.11}Sleep quality (post intervention)}{53}{section.3.11}%
-\contentsline {subsection}{\numberline {3.11.1}Meta-analyses}{53}{subsection.3.11.1}%
-\contentsline {subsubsection}{Duloxtine}{53}{section*.38}%
-\contentsline {subsubsection}{Amitriptyline}{53}{section*.39}%
-\contentsline {section}{\numberline {3.12}Quality of life}{53}{section.3.12}%
-\contentsline {subsection}{\numberline {3.12.1}Meta-analyses}{53}{subsection.3.12.1}%
+\contentsline {section}{\numberline {2.6}Mood (Post intervention results)}{13}{section.2.6}%
+\contentsline {subsection}{\numberline {2.6.1}Meta-analyses}{15}{subsection.2.6.1}%
+\contentsline {subsubsection}{Duloxetine}{15}{section*.15}%
+\contentsline {section}{\numberline {2.7}Mood (Combined results)}{15}{section.2.7}%
+\contentsline {section}{\numberline {2.8}Adverse events}{15}{section.2.8}%
+\contentsline {subsection}{\numberline {2.8.1}Meta-analyses}{18}{subsection.2.8.1}%
+\contentsline {subsubsection}{Duloxetine}{18}{section*.16}%
+\contentsline {subsubsection}{Milnacipran}{18}{section*.17}%
+\contentsline {subsubsection}{Amitriptyline}{18}{section*.18}%
+\contentsline {chapter}{\numberline {3}Secondary outcomes}{27}{chapter.3}%
+\contentsline {section}{\numberline {3.1}Serious adverse events (SAE)}{27}{section.3.1}%
+\contentsline {subsection}{\numberline {3.1.1}Meta-analyses}{27}{subsection.3.1.1}%
+\contentsline {subsubsection}{Duloxetine}{27}{section*.19}%
+\contentsline {subsubsection}{Milnacipran}{27}{section*.20}%
+\contentsline {subsubsection}{Amitritptyline}{27}{section*.21}%
+\contentsline {section}{\numberline {3.2}Dropout due to adverse events}{27}{section.3.2}%
+\contentsline {subsection}{\numberline {3.2.1}Meta-analysis results}{30}{subsection.3.2.1}%
+\contentsline {subsubsection}{Duloxetine}{30}{section*.22}%
+\contentsline {subsubsection}{Milnacipran}{30}{section*.23}%
+\contentsline {subsubsection}{Amitriptyline}{30}{section*.24}%
+\contentsline {section}{\numberline {3.3}Moderate pain relief (30 per cent reduction)}{30}{section.3.3}%
+\contentsline {subsubsection}{Summary of head to head comparisons}{36}{section*.25}%
+\contentsline {subsection}{\numberline {3.3.1}Meta-analyses}{36}{subsection.3.3.1}%
+\contentsline {subsubsection}{Duloxetine}{36}{section*.26}%
+\contentsline {subsubsection}{Milnacipran}{36}{section*.27}%
+\contentsline {section}{\numberline {3.4}PGIC (Much or very much improved)}{36}{section.3.4}%
+\contentsline {subsection}{\numberline {3.4.1}Meta-analyses}{36}{subsection.3.4.1}%
+\contentsline {subsubsection}{Duloxetine}{36}{section*.28}%
+\contentsline {subsubsection}{Milnacipran}{36}{section*.29}%
+\contentsline {section}{\numberline {3.5}PGIC (Any improvement)}{36}{section.3.5}%
+\contentsline {section}{\numberline {3.6}PGIC (Continuous measures)}{41}{section.3.6}%
+\contentsline {subsection}{\numberline {3.6.1}Meta-analyses}{43}{subsection.3.6.1}%
+\contentsline {subsubsection}{Duloxetine}{43}{section*.30}%
+\contentsline {section}{\numberline {3.7}Withdrawal}{43}{section.3.7}%
+\contentsline {subsection}{\numberline {3.7.1}Meta-analyses}{43}{subsection.3.7.1}%
+\contentsline {subsubsection}{Duloxetine}{43}{section*.31}%
+\contentsline {subsubsection}{Milnacipran}{45}{section*.32}%
+\contentsline {subsubsection}{Amitriptyline}{45}{section*.33}%
+\contentsline {section}{\numberline {3.8}Physical functioning (Change scores)}{45}{section.3.8}%
+\contentsline {subsection}{\numberline {3.8.1}Meta-analyses}{49}{subsection.3.8.1}%
+\contentsline {subsubsection}{Duloxetine}{49}{section*.34}%
+\contentsline {section}{\numberline {3.9}Physical functioning (Post intervention)}{49}{section.3.9}%
+\contentsline {subsection}{\numberline {3.9.1}Meta-analyses}{49}{subsection.3.9.1}%
+\contentsline {subsubsection}{Duloxetine}{49}{section*.35}%
+\contentsline {section}{\numberline {3.10}Sleep quality (Change score)}{49}{section.3.10}%
+\contentsline {subsection}{\numberline {3.10.1}Meta-analyses}{49}{subsection.3.10.1}%
+\contentsline {subsubsection}{Duloxetine}{49}{section*.36}%
+\contentsline {subsubsection}{Milnacipran}{54}{section*.37}%
+\contentsline {section}{\numberline {3.11}Sleep quality (post intervention)}{54}{section.3.11}%
+\contentsline {subsection}{\numberline {3.11.1}Meta-analyses}{54}{subsection.3.11.1}%
+\contentsline {subsubsection}{Duloxtine}{54}{section*.38}%
+\contentsline {subsubsection}{Amitriptyline}{54}{section*.39}%
+\contentsline {section}{\numberline {3.12}Sleep (Combined measures)}{54}{section.3.12}%
+\contentsline {section}{\numberline {3.13}Quality of life}{54}{section.3.13}%
+\contentsline {subsection}{\numberline {3.13.1}Meta-analyses}{56}{subsection.3.13.1}%
 \contentsline {subsubsection}{Duloxetine}{56}{section*.40}%
 \contentsline {subsubsection}{Milnacipran}{56}{section*.41}%
-\contentsline {chapter}{\numberline {4}Analyses across outcomes}{60}{chapter.4}%
-\contentsline {section}{\numberline {4.1}Risk of bias summaries}{60}{section.4.1}%
-\contentsline {section}{\numberline {4.2}Measure densities}{60}{section.4.2}%
+\contentsline {chapter}{\numberline {4}Analyses across outcomes}{61}{chapter.4}%
+\contentsline {section}{\numberline {4.1}Risk of bias summaries}{61}{section.4.1}%
+\contentsline {section}{\numberline {4.2}Measure densities}{61}{section.4.2}%

@@ -185,7 +185,16 @@ No serious inconsistency or imprecision was detected. Risk of bias is serious bu
 
 No imprecision, inconsistency, or publication bias was detected, however these observations have serious risk of bias. Heterogeneity of observations for amitriptyline was not explained by condition, risk of bias, or duration of study.
 
+\section{Pain intensity (combined results)}
 
+Table \ref{fig:pain-int-comb} shows combined results across post-intervention and change-score measures.
+
+\begin{table}
+\centering
+\caption{Pain intensity, weighted measures.}
+\label{fig:pain-int-comb}
+\includegraphics[width=0.6\textwidth]{img/pain_int-combined.png}
+\end{table}
 
 \section{Mood (Change score results)}
 
@@ -247,9 +256,18 @@ Heterogeneity was not explained by dose or study design. Possibly some heterogen
 \label{fig:moodpi-duration-dulox-plac}
 \end{figure}
 
-\section{Mood}
+\section{Mood (Combined results)}
 
 Mood was reported in 84 studies with 37 parallel-design studies reporting change score (CS) measures and 47 studies reporting post intervention (PI) measures (9 crossover, 38 parallel design). These trials include 16501 participants (CS 12,697, PI 3804) and comparing interventions (CS 18, PI 50) for adults with chronic pain. The direct evidence networks for the two measurement groups are shown in Summary of findings Tables \ref{tab:moodcs} and \ref{tab:moodpi}.
+
+Table \ref{fig:mood-comb} shows combined results across post-intervention and change-score measures.
+
+\begin{table}
+\centering
+\caption{Mood, weighted measures.}
+\label{fig:mood-comb}
+\includegraphics[width=0.6\textwidth]{img/mood-combined.png}
+\end{table}
 
 \section{Adverse events}
 
@@ -839,6 +857,16 @@ Meta-analyis results for duloxetine compared to placebo were consistent for both
 
 Meta-analysis of amitriptyline compared to placebo was consistent with findings of network meta-analysis estimates. The variation between studies accounts for most of the heterogeneity observed in the trials ($I^2 = 95$\%). Publication bias strongly suspected, as well as high risk of bias.
 
+\section{Sleep (Combined measures)}
+
+Table \ref{fig:sleep-comb} shows combined results across post-intervention and change-score measures.
+
+\begin{table}
+\centering
+\caption{Sleep, weighted measures.}
+\label{fig:sleep-comb}
+\includegraphics[width=0.6\textwidth]{img/sleep-combined.png}
+\end{table}
 
 \section{Quality of life}
 
