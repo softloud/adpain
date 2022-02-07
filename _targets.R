@@ -62,7 +62,7 @@ list(
 
   tar_target(
     r_obs_dat,
-    read_csv("data-raw/obs_dat-2021-12-08 02:20:22.csv") %>%
+    read_csv("data-raw/obs_dat-2022-01-29 11:03:52.csv") %>%
       clean_names() %>%
       mutate(across(where(is.character), tolower)) %>%
       mutate(gs_row = row_number() + 1) %>%
@@ -205,13 +205,13 @@ list(
         mean_dir =           model_type == "smd" &
           direction_of_improvement == "higher" &
           scale_dir == "lower" & !is.na(scale_dir),
-        mean = if_else(mean_dir, -mean,
+        mean = if_else(mean_dir,-mean,
                        mean),
 
         mean_calc = model_type == "smd" &
           direction_of_improvement == "lower" &
           scale_dir == "higher" & !is.na(scale_dir),
-        mean = if_else(mean_calc, -mean,
+        mean = if_else(mean_calc,-mean,
                        mean)
       )
   ),
@@ -293,7 +293,7 @@ list(
         values_fill = 0
       ) %>%
       mutate(high_risk_p = high / (high + low)) %>%
-      select(-high,-low)
+      select(-high, -low)
   ),
 
   tar_target(write_rob,
@@ -306,7 +306,7 @@ list(
   tar_target(
     outcome_key,
     w_outcome_key %>%
-      filter(outcome != "adverse_number", !str_detect(outcome,  "mood_")) %>%
+      filter(outcome != "adverse_number",!str_detect(outcome,  "mood_")) %>%
       # remove for pgic calcs tomorrow!str_detect(outcome, "pgic")) %>%
       select(-outcome) %>%
       rename(outcome = outcome_nma)
@@ -425,7 +425,8 @@ list(
         intervention =
           str_replace(intervention, "cognitive behaviou*ral therapy", "cbt") %>%
           str_replace("physical fitness training", "pft") %>%
-          str_replace("coping skills training", "cst"),
+          str_replace("coping skills training", "cst") %>%
+          str_replace("active placebo", "placebo"),
 
         # relevel
         dose = fct_relevel(dose, "high", "standard", "low"),
@@ -451,7 +452,8 @@ list(
       ) %>%
       mutate(class = if_else(
         intervention == "venlafaxine", "snri", class
-      ))
+      )
+      )
 
   ),
 
@@ -714,7 +716,7 @@ list(
                    )),
                    ", df = ",
                    .(res$k - res$p),
-                   ", p ",
+                   ", p = ",
                    .(metafor:::.pval(
                      res$QEp,
                      digits = 2,
@@ -833,13 +835,13 @@ list(
 
   tar_target(
     dich_nma_mod,
-    # nma(dich_nma_agd, trt_effects = "random")
-    sprintf("exports/%s-nma.rds", dich_outcome) %>%
-      read_rds()
+    nma(dich_nma_agd, trt_effects = "random")
+    # sprintf("exports/%s-nma.rds", dich_outcome) %>%
+      # read_rds()
   ),
 
   tar_target(dich_nma_write,
-             if (FALSE) {
+             if (TRUE) {
                write_rds(dich_nma_mod,
                          sprintf("exports/%s-nma.rds", dich_outcome))
              } else
@@ -1309,18 +1311,18 @@ list(
   tar_target(
     cspi_nma_cs,
     # NULL
-    # nma(cspi_net_cs, trt_effects = "random")
-    sprintf("exports/%s-change_score-nma.rds", cspi_outcome) %>% read_rds()
+    nma(cspi_net_cs, trt_effects = "random")
+    # sprintf("exports/%s-change_score-nma.rds", cspi_outcome) %>% read_rds()
   ),
 
   tar_target(
     cspi_nma_pi,
-    # nma(cspi_net_pi, trt_effects = "random")
-    sprintf("exports/%s-post_int-nma.rds", cspi_outcome) %>% read_rds()
+    nma(cspi_net_pi, trt_effects = "random")
+    # sprintf("exports/%s-post_int-nma.rds", cspi_outcome) %>% read_rds()
   ),
 
   tar_target(cspi_update_mod,
-             FALSE),
+             TRUE),
 
   tar_target(cspi_nma_write,
              if (cspi_update_mod) {
@@ -1609,7 +1611,8 @@ list(
     cspi_pw_escalc,
     cspi_dat %>%
       filter(
-        timepoint == cspi_timepoint,!is.na(smd),
+        timepoint == cspi_timepoint,
+        !is.na(smd),
         intervention %in% str_to_sentence(c(cspi_intervention, cspi_comparator))
       ) %>%
       ungroup()
@@ -1823,19 +1826,20 @@ list(
     bind_rows(cspi_cs_dat, cspi_pi_dat) %>%
       group_by(intervention) %>%
       group_split() %>%
-      purrr::discard(~ nrow(.x) < 2)
+      purrr::discard( ~ nrow(.x) < 2)
   ),
 
-  tar_target(cspi_comb_rma,
-             cspi_cspi_dat %>%
-               map(mutate, var = sd^2) %>%
-               map(~rma(
-                 yi = mean,
-                 vi = var,
-                 data = .x
-               ))
-               ,
-             ),
+  tar_target(
+    cspi_comb_rma,
+    cspi_cspi_dat %>%
+      map(mutate, var = sd ^ 2) %>%
+      map( ~ rma(
+        yi = mean,
+        vi = var,
+        data = .x
+      ))
+    ,
+  ),
 
   tar_target(
     cspi_comb_rels,
@@ -1849,78 +1853,69 @@ list(
       )
   ),
 
-  tar_target(cspi_comb_output_dat,
-             tibble(
-               intervention = cspi_cspi_dat %>%
-                 map("intervention") %>%
-                 map_chr(1)
-             ) %>%
-               mutate(
-                 mod = cspi_comb_rma,
-                 mean_cspi = map_dbl(mod, "beta"),
-                 ci_lb_cspi = map_dbl(mod, "ci.lb"),
-                 ci_ub_cspi = map_dbl(mod, "ci.ub")
-               ) %>%
-               full_join(
-                 cspi_comb_rels
-               )
-             ),
-
-  tar_target(cspi_comb_gt,
-             cspi_comb_output_dat %>%
-               select(-contains('mod')) %>%
-               mutate(across(where(is.double), round, 2)) %>%
-               mutate(
-                 cs = str_c(mean_cs, " (",
-                            ci_lb_cs,
-                            " to ",
-                            ci_ub_cs,
-                            ")"),
-                 pi = str_c(mean_pi, " (",
-                            ci_lb_pi,
-                            " to ",
-                            ci_ub_pi,
-                            ")"),
-                 cspi = str_c(mean_cspi, " (",
-                            ci_lb_cspi,
-                            " to ",
-                            ci_ub_cspi,
-                            ")")
-               ) %>%
-               select(
-                 intervention, cs,
-                 pi, cspi
-               ) %>%
-               gt() %>%
-               cols_label(
-                 intervention = "Intervention",
-                 cs = "Change score",
-                 pi = "Post intervention",
-                 cspi = "Weighted average"
-               ) %>%
-               tab_footnote(
-                 "Estimate (95% Credible interval)",
-                 locations = cells_column_labels(
-                   columns = -intervention
-                 )
-               ) %>%
-               tab_header(
-                 subtitle = "Weighted average of change score and post-intervention relative effects compared with placebo",
-                 title = outcome_label(cspi_outcome) %>% str_to_sentence())
-             ),
+  tar_target(
+    cspi_comb_output_dat,
+    tibble(intervention = cspi_cspi_dat %>%
+             map("intervention") %>%
+             map_chr(1)) %>%
+      mutate(
+        mod = cspi_comb_rma,
+        mean_cspi = map_dbl(mod, "beta"),
+        ci_lb_cspi = map_dbl(mod, "ci.lb"),
+        ci_ub_cspi = map_dbl(mod, "ci.ub")
+      ) %>%
+      full_join(cspi_comb_rels)
+  ),
 
   tar_target(
-    cspi_comb_write, {
-      img_path <- sprintf(
-        "report/img/%s-combined.png",
-        cspi_outcome
+    cspi_comb_gt,
+    cspi_comb_output_dat %>%
+      select(-contains('mod')) %>%
+      mutate(across(where(is.double), round, 2)) %>%
+      mutate(
+        cs = str_c(mean_cs, " (",
+                   ci_lb_cs,
+                   " to ",
+                   ci_ub_cs,
+                   ")"),
+        pi = str_c(mean_pi, " (",
+                   ci_lb_pi,
+                   " to ",
+                   ci_ub_pi,
+                   ")"),
+        cspi = str_c(mean_cspi, " (",
+                     ci_lb_cspi,
+                     " to ",
+                     ci_ub_cspi,
+                     ")")
+      ) %>%
+      select(intervention, cs,
+             pi, cspi) %>%
+      gt() %>%
+      cols_label(
+        intervention = "Intervention",
+        cs = "Change score",
+        pi = "Post intervention",
+        cspi = "Weighted average"
+      ) %>%
+      tab_footnote(
+        "Estimate (95% Credible interval)",
+        locations = cells_column_labels(columns = -intervention)
+      ) %>%
+      tab_header(
+        subtitle = "Weighted average of change score and post-intervention relative effects compared with placebo",
+        title = outcome_label(cspi_outcome) %>% str_to_sentence()
       )
-
-      dontpanic::msg(img_path)
-
-      gtsave(cspi_comb_gt, img_path)
-    }
   ),
+
+  tar_target(cspi_comb_write, {
+    img_path <- sprintf("report/img/%s-combined.png",
+                        cspi_outcome)
+
+    dontpanic::msg(img_path)
+
+    gtsave(cspi_comb_gt, img_path)
+  }),
 
   # set reporting things ----------------------------------------------------
 
@@ -2301,8 +2296,8 @@ list(
         count(main_aim_of_study) %>%
         filter(n > 1, .trt != "Placebo") %>%
         group_split(.trt) %>%
-        purrr::discard( ~ nrow(.x) < 2) %>%
-        purrr::discard( ~ sum(.x$n) < 4)
+        purrr::discard(~ nrow(.x) < 2) %>%
+        purrr::discard(~ sum(.x$n) < 4)
     } else {
       cspi_dat %>%
         group_by(timepoint, intervention) %>%
@@ -2310,8 +2305,8 @@ list(
         filter(n > 1,
                intervention != "Placebo") %>%
         group_split() %>%
-        purrr::discard( ~ nrow(.x) < 2) %>%
-        purrr::discard( ~ sum(.x$n) < 4)
+        purrr::discard(~ nrow(.x) < 2) %>%
+        purrr::discard(~ sum(.x$n) < 4)
 
     }
   }),
@@ -2463,17 +2458,16 @@ list(
         fill = intervention
       )) +
       geom_density(alpha = 0.3) +
-      facet_wrap(
-        ~ str_to_sentence(outcome_label),
+      facet_grid(
+        duration ~ str_to_sentence(outcome_label),
         scales = "free",
         labeller = label_wrap_gen(width = 15)
       ) +
       labs(
-        title = "Density of OR measures",
+        title = "Density of OR measures by duration of study",
         subtitle = "Count outcomes",
         x = "Odds ratio",
-        y = "Density",
-        caption = "There were only post-intervention measures for these outcomes."
+        y = "Density"
       ) +
       scale_color_discrete("Intervention") +
       scale_fill_discrete("Intervention") +
@@ -2546,12 +2540,13 @@ list(
 
   tar_target(
     rep_nma_for_class,
-    hpp_forest(
-      rep_nma,
-      mod_type = "lor",
-      dir = "lower",
-      this_class = "snri"
-    )
+    NULL
+    # hpp_forest(
+    #   rep_nma,
+    #   mod_type = "lor",
+    #   dir = "lower",
+    #   this_class = "snri"
+    # )
   ),
 
   # head to head comparisons ------------------------------------------------
@@ -2561,6 +2556,16 @@ list(
       group_by(outcome, timepoint) %>%
       filter(timepoint %in% c("post_int", "change_score")) %>%
       select(outcome, timepoint, intervention) %>%
+      mutate(
+        intervention = fct_relevel(
+          intervention,
+          "placebo",
+          "duloxetine",
+          "amitriptyline",
+          "milnacipran"
+        )
+      ) %>%
+      arrange(outcome, timepoint, intervention) %>%
       distinct() %>%
       nest() %>%
       # head(3) %>% # for testing
@@ -2569,91 +2574,348 @@ list(
   ),
 
 
-  tar_target(
-    hth_ints,
-    {
-      hth_groups %>%
-        mutate(comps = map(data,
-                           ~ combn(.x$intervention,
-                                   2, simplify = FALSE))) %>%
-        select(-data) %>%
-        unnest(comps) %>%
-        mutate(
-          comps = map(comps, as.character),
-          comp = map_chr(comps, ~ .x[1]),
-          int = map_chr(comps, ~ .x[2])
-        ) %>%
-        select(-comps) %>%
-        filter(comp != int) %>%
-        mutate(across(everything(), as.character))
-    },
-    pattern = map(hth_groups)
-  ),
+  tar_target(hth_ints,
+             {
+               hth_groups %>%
+                 mutate(comps = map(data,
+                                    ~ combn(.x$intervention,
+                                            2, simplify = FALSE))) %>%
+                 select(-data) %>%
+                 unnest(comps) %>%
+                 mutate(
+                   comps = map(comps, as.character),
+                   comp = map_chr(comps, ~ .x[1]),
+                   int = map_chr(comps, ~ .x[2])
+                 ) %>%
+                 select(-comps) %>%
+                 filter(comp != int) %>%
+                 mutate(across(everything(), as.character))
+             },
+             pattern = map(hth_groups)),
 
-  tar_target(
-    hth_dat,
-    {
-      this_dat <-
-        mod_dat %>%
-        filter(outcome == unique(hth_ints$outcome),
-               timepoint == unique(hth_ints$timepoint))
-      hth_ints %>%
-        mutate(dat = map2(
-          comp,
-          int,
-          ~ this_dat %>%
-            filter(intervention %in% c(.x, .y)) %>%
-            viable_observations()
-        ),
-        n_obs = map_int(dat, nrow)
-        )
+  tar_target(hth_dat,
+             {
+               this_dat <-
+                 mod_dat %>%
+                 filter(outcome == unique(hth_ints$outcome),
+                        timepoint == unique(hth_ints$timepoint))
+               hth_ints %>%
+                 mutate(
+                   dat = map2(
+                     comp,
+                     int,
+                     ~ this_dat %>%
+                       filter(intervention %in% c(.x, .y)) %>%
+                       viable_observations()
+                   ),
+                   n_obs = map_int(dat, nrow)
+                 )
 
-    },
-    pattern = map(hth_ints)
-  ),
+             },
+             pattern = map(hth_ints)),
 
-  tar_target(
-    hth_missing,
-    hth_dat %>%
-      filter(n_obs == 0)
-  ),
+  tar_target(hth_missing,
+             hth_dat %>%
+               filter(n_obs == 0)),
 
   tar_target(
     hth_viable,
     hth_dat %>%
       filter(n_obs != 0) %>%
       mutate(
-        mod = map_chr(outcome, outcome_mod)
+        mod = map_chr(outcome, outcome_mod),
+        pth_prefix =
+          glue(
+            "report/img/hth-outcome/{outcome}-{timepoint}-{int}-{comp}"
+          )
       )
   ),
 
   tar_target(
     hth_smd,
     hth_viable %>%
-      filter(
-        mod == "smd"
-      ) %>%
+      filter(mod == "smd") %>%
       mutate(
         mod_input = map(dat, smd_calc),
-        mod = map(mod_input, ~rma(
-          yi = smd,
-          sei = se_smd,
-          slab = study,
-          data = .x,
-          measure = "SMD"
-        )),
+        mod = map(
+          mod_input,
+          ~ rma(
+            yi = smd,
+            sei = se_smd,
+            slab = study,
+            data = .x,
+            measure = "SMD"
+          )
+        ),
         reg = map(mod, safe_regtest)
-       ) %>%
+      ) %>%
       select(-tar_group) %>%
       ungroup()
   ),
 
   tar_target(
-    hth_lor,
+    hth_lor_groups,
     hth_viable %>%
-      filter(
-        mod == "lor"
+      filter(mod == "lor") %>%
+      select(-tar_group) %>%
+      ungroup() %>%
+      select(-outcome, -timepoint) %>%
+      unnest(dat) %>%
+      select(outcome, timepoint, int, comp, everything()) %>%
+      group_by(outcome, timepoint, int, comp) %>%
+      arrange(outcome, timepoint, int, comp) %>%
+      tar_group(),
+    iteration = "group"
+  ),
+
+  tar_target(
+    hth_lor_escalc,
+    {
+      this_dat <-
+        hth_lor_groups %>%
+        filter(intervention == int) %>%
+        select(study, r_control = r, n_control = n) %>%
+        inner_join(hth_lor_groups %>% filter(intervention != int)) %>%
+        distinct()
+      escalc(
+        ai = r,
+        ci = r_control,
+        n1i = n,
+        n2i = n_control,
+        data = this_dat,
+        measure = "OR",
+        slab = study
       )
+    },
+    pattern = map(hth_lor_groups),
+    iteration = "list"
+  ),
+
+  tar_target(
+    hth_lor,
+    hth_lor_groups %>%
+      arrange(tar_group) %>%
+      select(outcome, timepoint, int, comp) %>%
+      distinct() %>%
+      mutate(mod_input = hth_lor_escalc,
+             mod =  map(
+               mod_input,
+               ~ rma(
+                 yi = yi,
+                 vi = vi,
+                 slab = study,
+                 data = .x,
+                 measure = "OR"
+               )
+             ))
+  ),
+
+  tar_target(
+    hth_rma,
+    bind_rows(hth_smd, hth_lor) %>%
+      left_join(outcome_key %>% select(outcome, outcome_label)) %>%
+      mutate(
+        pth_prefix =
+          glue(
+            "report/img/hth-outcome/{outcome}-{timepoint}-{int}-{comp}"
+          ),
+        mod_type = map_chr(outcome, outcome_mod)
+      )
+  ),
+
+
+  # outcome hth -------------------------------------------------------------
+  tar_target(
+    hth_outcome,
+    hth_rma %>%
+      # choose subgroup
+      filter(outcome == outcomes) %>%
+      # filename
+      mutate(
+        pth_for = glue("{pth_prefix}-forest.png"),
+        q = map_dbl(mod, "QE"),
+        df = map_dbl(mod, "k") - map_dbl(mod, "p"),
+        p = map_dbl(mod, "QEp"),
+        i_sq = map_dbl(mod, "I2"),
+        tau_sq = map_dbl(mod, "tau2"),
+        pth_fun = glue("{pth_prefix}-funnel.png"),
+        z = map(reg, pluck, "result", "zval"),
+        z = map(z, ~ifelse(is.null(.x), "", round(.x, 2))),
+        p_reg = map(reg, pluck, "result", "pval"),
+        p_reg = map(p_reg, ~ifelse(is.null(.x), "", round(.x, 2))),
+        reg_est = map(reg, pluck, "result", "est"),
+        reg_est = map(reg_est, ~ifelse(is.null(.x), "", round(.x, 2))),
+        reg_lb = map(reg, pluck, "result", "ci.lb"),
+        reg_lb = map(reg_lb, ~ifelse(is.null(.x), "", round(.x, 2))),
+        reg_ub = map(reg, pluck, "result", "ci.ub"),
+        reg_ub = map(reg_ub, ~ifelse(is.null(.x), "", round(.x, 2))),
+        reg_ci = if_else(
+          reg_ub == "",
+          "",
+          glue("{reg_est} ({reg_lb} to {reg_ub})") %>% as.character()
+        )
+      ),
+    pattern = map(outcomes)
+  ),
+
+  tar_target(hth_outcome_forest, {
+    map2(hth_outcome$mod,
+         hth_outcome$pth_for,
+         function(mod, pth_for) {
+           png(pth_for)
+
+           if (outcome_mod(outcomes) == "smd") {
+             forest(mod, refline = 0)
+           } else  {
+             forest(mod, transf = exp, refline = 1)
+           }
+
+           dev.off()
+         })
+
+    return(NULL)
+
+  },
+  pattern = outcomes),
+
+  tar_target(hth_outcome_funnel, {
+    map2(hth_outcome$mod,
+         hth_outcome$pth_fun,
+         function(mod, pth_fun) {
+           png(pth_fun)
+
+
+           if (outcome_mod(outcomes) == "smd") {
+             funnel(
+               mod,
+               level = c(90, 95, 99),
+               shade = c("white", "gray55", "gray75")
+             )
+           } else  {
+             funnel(
+               mod,
+               level = c(90, 95, 99),
+               transf = exp,
+               shade = c("white", "gray55", "gray75")
+             )
+           }
+
+           dev.off()
+         })
+
+
+
+    return(NULL)
+  },
+  pattern = map(outcomes)),
+
+  tar_target(hth_outcome_gt,
+             {
+               # this is just so the plots update
+               forplots <- hth_outcome_forest
+               funplots <- hth_outcome_funnel
+
+               this_tbl <-
+                 hth_outcome %>%
+                 # filter(outcome == "qol") %>%
+                 filter(outcome == outcomes) %>%
+                 mutate(outcome = outcome_label,
+                        timepoint = map_chr(timepoint, timepoint_label)) %>%
+                 mutate(across(c(outcome,
+                                 int,
+                                 timepoint,
+                                 comp), str_to_sentence)) %>%
+                 mutate(across(where(is.numeric), round, 2)) %>%
+                 select(-dat,
+                        -outcome,
+                        -n_obs,
+                        -mod, -reg,
+                        -reg_est,
+                        -reg_lb,
+                        -reg_ub,
+                        -pth_prefix,
+                        -mod_input,
+                        -outcome_label,
+                        -mod_type) %>%
+                 relocate(comp, .before = timepoint) %>%
+                 mutate(
+                   int = fct_relevel(int, "Duloxetine", "Milnacipran", "Amitriptyline")
+                 ) %>%
+                 arrange(int) %>%
+                 gt(rowname_col = "int") %>%
+                 # column labels
+                 cols_label(
+                   int = "Intervention",
+                   comp = "Comparator",
+                   timepoint = "Measure",
+                   q = "Q",
+                   pth_for = "",
+                   tau_sq = "Tau-sq",
+                   i_sq = "I-sq",
+                   pth_fun = "",
+                   p_reg = "p",
+                   reg_ci = "Estimates"
+                 ) %>%
+                 # add forest and funnel plots
+                 text_transform(
+                   locations = cells_body(c(pth_for, pth_fun)),
+                   fn = function(x) {
+                     # loop over the elements of the column
+                     map_chr(x, ~ local_image(filename = .x,
+                                              height = 300))
+                   }
+                 ) %>%
+                 tab_style(
+                   style = cell_text(weight = "bold"),
+                   locations = cells_body(columns = comp, rows = comp != "Placebo")
+                 ) %>%
+                 tab_footnote("Comparators that are not placebo are in bold.",
+                              locations = cells_column_labels(comp)) %>%
+                 tab_source_note("Forest and funnel plots were created using the R package metafor.") %>%
+                 tab_spanner(
+                   "Forest plot results",
+                   columns = c(pth_for, q, df, p, tau_sq, i_sq)
+                 ) %>%
+                 tab_spanner(
+                   "Funnel plot and regression test for asymmetry",
+                   columns = c(pth_fun, z, p_reg, reg_ci)
+                 ) %>%
+                 tab_header(
+                   title = outcome_label(outcomes) %>% str_to_sentence(),
+                   subtitle = "Head to head comparisons"
+                 )
+
+               img_path <- glue("report/img/hth-outcome/hth-{outcomes}.pdf")
+
+               dontpanic::msg(img_path)
+
+               # this_tbl
+
+               gtsave(this_tbl, img_path, expand = 100)
+
+             }
+             ,
+             pattern = map(outcomes)
+
+             ),
+
+
+
+# hth subgroups ---------------------------------------------------------------
+
+
+  tar_target(
+    hth_subgroups,
+    hth_rma %>%
+      select(outcome, timepoint,
+             comp, int, mod_input, pth_prefix) %>%
+      mutate(rob = map(
+        mod_input,
+        ~ .x %>%
+          group_by(rob) %>%
+          summarise(studies = n_distinct(study),
+                    obs = n())
+      ))
   ),
 
 
